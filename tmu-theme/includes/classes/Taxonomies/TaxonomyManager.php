@@ -67,6 +67,9 @@ class TaxonomyManager {
             'ProductionCompany',
             'Network',
             'Profession',
+            'Channel',
+            'Keyword',
+            'Nationality',
         ];
         
         foreach ($taxonomy_classes as $class) {
