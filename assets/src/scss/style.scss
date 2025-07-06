@@ -1,0 +1,410 @@
+/*!
+ * TMU Theme Styles
+ * 
+ * @package TMU
+ * @version 1.0.0
+ */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* Custom CSS Variables */
+:root {
+  --tmu-primary: theme('colors.tmu.primary.600');
+  --tmu-primary-dark: theme('colors.tmu.primary.700');
+  --tmu-secondary: theme('colors.tmu.secondary.600');
+  --tmu-accent: theme('colors.tmu.accent.600');
+  --tmu-success: theme('colors.tmu.success.600');
+  --tmu-warning: theme('colors.tmu.warning.600');
+  --tmu-danger: theme('colors.tmu.danger.600');
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', theme('fontFamily.sans');
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  line-height: 1.6;
+  color: theme('colors.gray.900');
+  background-color: theme('colors.gray.50');
+}
+
+/* WordPress Core Styles */
+.alignleft {
+  @apply float-left mr-4 mb-4;
+}
+
+.alignright {
+  @apply float-right ml-4 mb-4;
+}
+
+.aligncenter {
+  @apply mx-auto block mb-4;
+}
+
+.alignfull {
+  @apply w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw];
+}
+
+.alignwide {
+  @apply w-full max-w-5xl mx-auto;
+}
+
+.wp-caption {
+  @apply max-w-full mb-4;
+}
+
+.wp-caption-text {
+  @apply text-sm text-gray-600 italic mt-2;
+}
+
+.sticky {
+  @apply bg-yellow-100 border-l-4 border-yellow-400 p-4 mb-4;
+}
+
+/* Gallery Styles */
+.gallery {
+  @apply grid gap-4 mb-4;
+}
+
+.gallery-columns-1 { @apply grid-cols-1; }
+.gallery-columns-2 { @apply grid-cols-2; }
+.gallery-columns-3 { @apply grid-cols-3; }
+.gallery-columns-4 { @apply grid-cols-4; }
+.gallery-columns-5 { @apply grid-cols-5; }
+.gallery-columns-6 { @apply grid-cols-6; }
+
+.gallery-item {
+  @apply break-inside-avoid;
+}
+
+.gallery-caption {
+  @apply text-sm text-gray-600 mt-2;
+}
+
+/* Comment Styles */
+.comment-list {
+  @apply list-none space-y-6;
+}
+
+.comment {
+  @apply bg-white rounded-lg p-6 shadow-sm;
+}
+
+.comment-author {
+  @apply flex items-center space-x-3 mb-4;
+}
+
+.comment-author img {
+  @apply w-10 h-10 rounded-full;
+}
+
+.comment-meta {
+  @apply text-sm text-gray-600 mb-4;
+}
+
+.comment-content {
+  @apply prose prose-sm max-w-none;
+}
+
+.reply {
+  @apply ml-12;
+}
+
+/* Form Styles */
+.comment-form {
+  @apply bg-white rounded-lg p-6 shadow-sm;
+}
+
+.comment-form-author,
+.comment-form-email,
+.comment-form-url,
+.comment-form-comment {
+  @apply mb-4;
+}
+
+.comment-form label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.comment-form input[type="text"],
+.comment-form input[type="email"],
+.comment-form input[type="url"],
+.comment-form textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tmu-primary-500 focus:border-transparent;
+}
+
+.comment-form textarea {
+  @apply h-32 resize-vertical;
+}
+
+.form-submit {
+  @apply mb-0;
+}
+
+.submit {
+  @apply tmu-btn tmu-btn-primary;
+}
+
+/* Navigation Styles */
+.post-navigation {
+  @apply flex justify-between items-center py-8 border-t border-gray-200;
+}
+
+.nav-previous,
+.nav-next {
+  @apply flex-1;
+}
+
+.nav-next {
+  @apply text-right;
+}
+
+.nav-previous a,
+.nav-next a {
+  @apply text-tmu-primary-600 hover:text-tmu-primary-700 transition-colors;
+}
+
+/* Pagination */
+.page-numbers {
+  @apply inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700 transition-colors;
+}
+
+.page-numbers.current {
+  @apply bg-tmu-primary-600 text-white border-tmu-primary-600;
+}
+
+.page-numbers.dots {
+  @apply pointer-events-none;
+}
+
+.page-numbers:first-child {
+  @apply rounded-l-md;
+}
+
+.page-numbers:last-child {
+  @apply rounded-r-md;
+}
+
+/* Search Form */
+.search-form {
+  @apply relative;
+}
+
+.search-field {
+  @apply w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tmu-primary-500 focus:border-transparent;
+}
+
+.search-submit {
+  @apply absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-tmu-primary-600 text-white text-sm rounded hover:bg-tmu-primary-700 transition-colors;
+}
+
+/* Widget Styles */
+.widget {
+  @apply mb-8;
+}
+
+.widget-title {
+  @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+.widget ul {
+  @apply list-none space-y-2;
+}
+
+.widget li {
+  @apply text-gray-700;
+}
+
+.widget a {
+  @apply text-gray-700 hover:text-tmu-primary-600 transition-colors;
+}
+
+/* TMU Specific Styles */
+.tmu-rating {
+  @apply flex items-center space-x-1;
+}
+
+.rating-star {
+  @apply w-5 h-5 text-gray-300 cursor-pointer transition-colors;
+}
+
+.rating-star.active,
+.rating-star.highlighted {
+  @apply text-yellow-400;
+}
+
+.tmu-notification {
+  @apply animate-slide-down;
+}
+
+.tmu-notification-success {
+  @apply border-tmu-success-400 bg-tmu-success-50;
+}
+
+.tmu-notification-error {
+  @apply border-tmu-danger-400 bg-tmu-danger-50;
+}
+
+.tmu-notification-warning {
+  @apply border-tmu-warning-400 bg-tmu-warning-50;
+}
+
+.tmu-notification-info {
+  @apply border-tmu-primary-400 bg-tmu-primary-50;
+}
+
+/* Movie/TV Show Cards */
+.movie-card,
+.tv-card,
+.drama-card {
+  @apply tmu-card overflow-hidden transition-all duration-300 hover:shadow-large hover:-translate-y-1;
+}
+
+.movie-poster,
+.tv-poster,
+.drama-poster {
+  @apply aspect-poster overflow-hidden;
+}
+
+.movie-backdrop,
+.tv-backdrop,
+.drama-backdrop {
+  @apply aspect-backdrop overflow-hidden;
+}
+
+/* Cast Grid */
+.cast-grid {
+  @apply grid gap-4;
+}
+
+.cast-member {
+  @apply text-center;
+}
+
+.cast-photo {
+  @apply aspect-poster bg-gray-200 rounded-lg overflow-hidden mb-2;
+}
+
+.cast-name {
+  @apply font-medium text-sm text-gray-900;
+}
+
+.cast-character {
+  @apply text-xs text-gray-600;
+}
+
+/* Genre Tags */
+.genre-tag {
+  @apply inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full mr-2 mb-2;
+}
+
+/* Rating Display */
+.rating-display {
+  @apply flex items-center space-x-2;
+}
+
+.rating-value {
+  @apply text-lg font-bold text-gray-900;
+}
+
+.rating-count {
+  @apply text-sm text-gray-600;
+}
+
+/* Responsive Utilities */
+@screen xs {
+  .gallery-columns-2 { @apply grid-cols-1; }
+  .gallery-columns-3 { @apply grid-cols-2; }
+  .gallery-columns-4 { @apply grid-cols-2; }
+  .gallery-columns-5 { @apply grid-cols-2; }
+  .gallery-columns-6 { @apply grid-cols-3; }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    body {
+      @apply bg-gray-900 text-gray-100;
+    }
+    
+    .tmu-card {
+      @apply bg-gray-800 border-gray-700;
+    }
+    
+    .comment {
+      @apply bg-gray-800;
+    }
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    @apply hidden;
+  }
+  
+  body {
+    @apply text-black bg-white;
+  }
+  
+  .tmu-card {
+    @apply border border-gray-300 shadow-none;
+  }
+}
+
+/* Accessibility */
+.sr-only {
+  @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+}
+
+.focus\:not-sr-only:focus {
+  @apply static w-auto h-auto p-1 m-0 overflow-visible whitespace-normal;
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(10px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideDown {
+  from { 
+    transform: translateY(-10px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
