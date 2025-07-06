@@ -11,130 +11,158 @@ This step involves creating the theme's directory structure, setting up the deve
 ### Root Theme Structure
 ```
 tmu-theme/
-├── style.css                  # Theme identification file
-├── index.php                  # Fallback template
-├── functions.php              # Theme bootstrap
-├── package.json               # Node.js dependencies (CREATE NEW)
-├── tailwind.config.js         # Tailwind CSS configuration (CREATE NEW)
-├── webpack.config.js          # Asset bundling configuration (CREATE NEW)
-├── .babelrc                   # Babel configuration (CREATE NEW)
-├── composer.json              # PHP dependency management
-├── composer.lock              # Dependency lock file
-├── README.md                  # Theme documentation
-├── .gitignore                 # Git ignore rules
-├── screenshot.png             # Theme screenshot
-├── rtl.css                    # RTL support (if needed)
-├── assets/                    # Static assets
-│   ├── src/                  # Source files (CREATE NEW)
-│   │   ├── css/
-│   │   │   ├── main.css      # Main Tailwind CSS file (CREATE NEW)
-│   │   │   ├── admin.css     # Admin styles with Tailwind (CREATE NEW)
-│   │   │   └── components/   # Component-specific styles (CREATE NEW)
-│   │   └── js/
-│   │       ├── main.js       # Main JavaScript file (CREATE NEW)
-│   │       ├── admin.js      # Admin functionality (CREATE NEW)
-│   │       └── modules/      # JavaScript modules (CREATE NEW)
-│   ├── build/                # Compiled assets (CREATE NEW)
-│   │   ├── css/
-│   │   │   ├── main.css      # Compiled main CSS
-│   │   │   └── admin.css     # Compiled admin CSS
-│   │   └── js/
-│   │       ├── main.js       # Compiled main JS
-│   │       └── admin.js      # Compiled admin JS
-│   ├── images/
-│   │   ├── icons/            # SVG icons
-│   │   └── placeholders/     # Placeholder images
-│   └── fonts/                # Custom fonts (if any)
-├── templates/                 # Template files
-│   ├── archive/              # Archive templates
-│   ├── single/               # Single post templates
-│   ├── parts/                # Template parts
-│   │   ├── components/       # Reusable components (CREATE NEW)
-│   │   ├── header/           # Header components (CREATE NEW)
-│   │   ├── footer/           # Footer components (CREATE NEW)
-│   │   └── content/          # Content components (CREATE NEW)
-│   ├── blocks/               # Gutenberg block templates (CREATE NEW)
-│   └── search/               # Search templates
-├── includes/                  # Core functionality
-│   ├── classes/              # Class files
-│   │   ├── ThemeCore.php     # Main theme class (CREATE NEW)
-│   │   ├── Admin/           # Admin-related classes
-│   │   ├── API/             # API integration classes
-│   │   ├── Database/        # Database interaction classes
-│   │   ├── Frontend/        # Frontend classes
-│   │   ├── PostTypes/       # Post type classes
-│   │   ├── Taxonomies/      # Taxonomy classes
-│   │   ├── Blocks/          # Gutenberg block classes (CREATE NEW)
-│   │   ├── Fields/          # Custom fields classes
-│   │   └── Utils/           # Utility classes
-│   ├── config/              # Configuration files
-│   │   ├── constants.php    # Theme constants (CREATE NEW)
-│   │   ├── database.php     # Database configuration (CREATE NEW)
-│   │   └── assets.php       # Asset configuration (CREATE NEW)
-│   ├── migrations/          # Database migrations
-│   └── helpers/             # Helper functions
-├── languages/               # Translation files
-└── vendor/                  # Composer dependencies
+├── style.css                  # [CREATE NEW - STEP 1] Theme identification file - Required by WordPress
+├── index.php                  # [CREATE NEW - STEP 10] Fallback template - WordPress requirement
+├── functions.php              # [CREATE NEW - STEP 1] Theme bootstrap - Core theme initialization
+├── package.json               # [CREATE NEW - STEP 1] Node.js dependencies - FIRST TIME Tailwind CSS setup
+├── tailwind.config.js         # [CREATE NEW - STEP 1] Tailwind CSS configuration - FIRST TIME setup
+├── webpack.config.js          # [CREATE NEW - STEP 1] Asset bundling configuration - FIRST TIME setup
+├── .babelrc                   # [CREATE NEW - STEP 1] Babel configuration - Modern JS transpilation
+├── composer.json              # [CREATE NEW - STEP 1] PHP dependency management - PSR-4 autoloading
+├── composer.lock              # [AUTO-GENERATED] Dependency lock file - Created by Composer
+├── README.md                  # [CREATE NEW - STEP 1] Theme documentation - Project overview
+├── .gitignore                 # [CREATE NEW - STEP 1] Git ignore rules - Version control setup
+├── screenshot.png             # [CREATE NEW - STEP 1] Theme screenshot - WordPress admin display
+├── rtl.css                    # [OPTIONAL - STEP 1] RTL support - Only if RTL languages needed
+├── assets/                    # [CREATE DIR - STEP 1] Static assets directory
+│   ├── src/                  # [CREATE DIR - STEP 1] Source files - FIRST TIME Tailwind setup
+│   │   ├── css/              # [CREATE DIR - STEP 1] CSS source directory
+│   │   │   ├── main.css      # [CREATE NEW - STEP 1] Main Tailwind CSS file - FIRST TIME implementation
+│   │   │   ├── admin.css     # [CREATE NEW - STEP 1] Admin styles with Tailwind - FIRST TIME setup
+│   │   │   └── components/   # [CREATE DIR - STEP 1] Component-specific styles - Future use
+│   │   └── js/               # [CREATE DIR - STEP 1] JavaScript source directory
+│   │       ├── main.js       # [CREATE NEW - STEP 1] Main JavaScript file - Alpine.js integration
+│   │       ├── admin.js      # [CREATE NEW - STEP 1] Admin functionality - TMDB integration prep
+│   │       └── modules/      # [CREATE DIR - STEP 1] JavaScript modules - Future expansion
+│   ├── build/                # [CREATE DIR - STEP 1] Compiled assets - Webpack output
+│   │   ├── css/              # [CREATE DIR - STEP 1] Compiled CSS directory
+│   │   │   ├── main.css      # [AUTO-GENERATED] Compiled main CSS - Webpack creates this
+│   │   │   └── admin.css     # [AUTO-GENERATED] Compiled admin CSS - Webpack creates this
+│   │   └── js/               # [CREATE DIR - STEP 1] Compiled JS directory
+│   │       ├── main.js       # [AUTO-GENERATED] Compiled main JS - Webpack creates this
+│   │       └── admin.js      # [AUTO-GENERATED] Compiled admin JS - Webpack creates this
+│   ├── images/               # [CREATE DIR - STEP 1] Images directory
+│   │   ├── icons/            # [CREATE DIR - STEP 1] SVG icons - Theme icons
+│   │   └── placeholders/     # [CREATE DIR - STEP 1] Placeholder images - Default movie posters
+│   └── fonts/                # [CREATE DIR - STEP 1] Custom fonts - If custom fonts needed
+├── templates/                 # [CREATE DIR - STEP 1] Template files - WordPress template hierarchy
+│   ├── archive/              # [CREATE DIR - STEP 10] Archive templates - Created in frontend step
+│   ├── single/               # [CREATE DIR - STEP 10] Single post templates - Created in frontend step
+│   ├── parts/                # [CREATE DIR - STEP 1] Template parts - Component system
+│   │   ├── components/       # [CREATE DIR - STEP 1] Reusable components - Tailwind-based components
+│   │   ├── header/           # [CREATE DIR - STEP 1] Header components - Header variations
+│   │   ├── footer/           # [CREATE DIR - STEP 1] Footer components - Footer variations
+│   │   └── content/          # [CREATE DIR - STEP 1] Content components - Content display components
+│   ├── blocks/               # [CREATE DIR - STEP 7] Gutenberg block templates - Custom blocks
+│   └── search/               # [CREATE DIR - STEP 12] Search templates - Search functionality
+├── includes/                  # [CREATE DIR - STEP 1] Core functionality - PHP classes and logic
+│   ├── classes/              # [CREATE DIR - STEP 1] Class files - PSR-4 autoloaded classes
+│   │   ├── ThemeCore.php     # [CREATE NEW - STEP 1] Main theme class - Core theme functionality
+│   │   ├── Admin/           # [CREATE DIR - STEP 1] Admin-related classes - Created in Step 8
+│   │   ├── API/             # [CREATE DIR - STEP 1] API integration classes - Created in Step 9
+│   │   ├── Database/        # [CREATE DIR - STEP 1] Database interaction classes - Created in Step 3
+│   │   ├── Frontend/        # [CREATE DIR - STEP 1] Frontend classes - Created in Step 10
+│   │   ├── PostTypes/       # [CREATE DIR - STEP 1] Post type classes - Created in Step 5
+│   │   ├── Taxonomies/      # [CREATE DIR - STEP 1] Taxonomy classes - Created in Step 6
+│   │   ├── Blocks/          # [CREATE DIR - STEP 1] Gutenberg block classes - Created in Step 7
+│   │   ├── Fields/          # [CREATE DIR - STEP 1] Custom fields classes - Created in Step 8
+│   │   └── Utils/           # [CREATE DIR - STEP 1] Utility classes - Helper functions
+│   ├── config/              # [CREATE DIR - STEP 1] Configuration files - Theme configuration
+│   │   ├── constants.php    # [CREATE NEW - STEP 1] Theme constants - Central configuration
+│   │   ├── database.php     # [CREATE NEW - STEP 1] Database configuration - Table schemas
+│   │   └── assets.php       # [CREATE NEW - STEP 1] Asset configuration - Asset management
+│   ├── migrations/          # [CREATE DIR - STEP 1] Database migrations - Created in Step 3
+│   └── helpers/             # [CREATE DIR - STEP 1] Helper functions - Utility functions
+├── languages/               # [CREATE DIR - STEP 1] Translation files - i18n support
+└── vendor/                  # [AUTO-GENERATED] Composer dependencies - Composer creates this
 ```
+
+### **File Status Legend:**
+- **[CREATE NEW - STEP X]**: Create this file in the specified step
+- **[CREATE DIR - STEP X]**: Create this directory in the specified step
+- **[AUTO-GENERATED]**: File is created automatically by build tools
+- **[UPDATE - STEP X]**: Modify existing file in the specified step
+- **[REFERENCE ONLY]**: File mentioned for context, no action needed
+- **[OPTIONAL]**: File is optional based on requirements
+- **[FIRST TIME]**: This is the first implementation of this technology
 
 ### Detailed Class Structure
 ```
 includes/classes/
-├── Admin/
-│   ├── AdminInterface.php    # Admin UI management
-│   ├── MetaBoxes.php        # Meta box registration
-│   ├── AdminColumns.php     # Custom admin columns
-│   ├── BulkActions.php      # Bulk action handlers
-│   └── Settings.php         # Theme settings page
-├── API/
-│   ├── TMDBClient.php       # TMDB API client
-│   ├── DataProcessor.php    # API data processing
-│   ├── ImageManager.php     # Image handling
-│   └── CreditProcessor.php  # Cast/crew processing
-├── Database/
-│   ├── Migration.php        # Database migration handler
-│   ├── Schema.php           # Database schema definitions
-│   ├── QueryBuilder.php     # Custom query builder
-│   └── DataManager.php      # Data management operations
-├── Frontend/
-│   ├── TemplateLoader.php   # Template loading logic
-│   ├── AssetManager.php     # Asset enqueueing
-│   ├── SearchHandler.php    # Search functionality
-│   └── AjaxHandler.php      # AJAX request handling
-├── PostTypes/
-│   ├── PostTypeManager.php  # Post type registration manager
-│   ├── Movie.php            # Movie post type
-│   ├── TVShow.php           # TV show post type
-│   ├── Drama.php            # Drama post type
-│   ├── People.php           # People post type
-│   ├── Season.php           # Season post type
-│   ├── Episode.php          # Episode post type
-│   └── Video.php            # Video post type
-├── Taxonomies/
-│   ├── TaxonomyManager.php  # Taxonomy registration manager
-│   ├── Genre.php            # Genre taxonomy
-│   ├── Country.php          # Country taxonomy
-│   ├── Language.php         # Language taxonomy
-│   └── Network.php          # Network taxonomy
-├── Fields/
-│   ├── FieldManager.php     # Custom fields manager
-│   ├── MetaField.php        # Base meta field class
-│   ├── MovieFields.php      # Movie-specific fields
-│   ├── TVShowFields.php     # TV show-specific fields
-│   └── PeopleFields.php     # People-specific fields
-├── Utils/
-│   ├── Logger.php           # Logging functionality
-│   ├── Validator.php        # Data validation
-│   ├── Sanitizer.php        # Data sanitization
-│   └── Helper.php           # General helper functions
-└── ThemeCore.php            # Main theme class
+├── Admin/                   # [CREATE DIR - STEP 1] Admin functionality directory
+│   ├── AdminInterface.php  # [CREATE NEW - STEP 8] Admin UI management - Dashboard customization
+│   ├── MetaBoxes.php       # [CREATE NEW - STEP 8] Meta box registration - Custom post fields UI
+│   ├── AdminColumns.php    # [CREATE NEW - STEP 8] Custom admin columns - List table customization
+│   ├── BulkActions.php     # [CREATE NEW - STEP 8] Bulk action handlers - Mass operations
+│   └── Settings.php        # [CREATE NEW - STEP 2] Theme settings page - Configuration panel
+├── API/                     # [CREATE DIR - STEP 1] API integration directory
+│   ├── TMDBClient.php      # [CREATE NEW - STEP 9] TMDB API client - Core API communication
+│   ├── DataProcessor.php   # [CREATE NEW - STEP 9] API data processing - Response handling
+│   ├── ImageManager.php    # [CREATE NEW - STEP 9] Image handling - TMDB image management
+│   └── CreditProcessor.php # [CREATE NEW - STEP 9] Cast/crew processing - Credits management
+├── Database/                # [CREATE DIR - STEP 1] Database operations directory
+│   ├── Migration.php       # [CREATE NEW - STEP 3] Database migration handler - Table creation/updates
+│   ├── Schema.php          # [CREATE NEW - STEP 3] Database schema definitions - Table structures
+│   ├── QueryBuilder.php    # [CREATE NEW - STEP 3] Custom query builder - Complex queries
+│   └── DataManager.php     # [CREATE NEW - STEP 3] Data management operations - CRUD operations
+├── Frontend/                # [CREATE DIR - STEP 1] Frontend functionality directory
+│   ├── TemplateLoader.php  # [CREATE NEW - STEP 10] Template loading logic - Template hierarchy
+│   ├── AssetManager.php    # [CREATE NEW - STEP 1] Asset enqueueing - Tailwind CSS & JS management
+│   ├── SearchHandler.php   # [CREATE NEW - STEP 12] Search functionality - Advanced search
+│   └── AjaxHandler.php     # [CREATE NEW - STEP 12] AJAX request handling - Frontend interactions
+├── PostTypes/               # [CREATE DIR - STEP 1] Post type management directory
+│   ├── PostTypeManager.php # [CREATE NEW - STEP 5] Post type registration manager - Central registry
+│   ├── Movie.php           # [CREATE NEW - STEP 5] Movie post type - Films management
+│   ├── TVShow.php          # [CREATE NEW - STEP 5] TV show post type - Series management
+│   ├── Drama.php           # [CREATE NEW - STEP 5] Drama post type - Drama series management
+│   ├── People.php          # [CREATE NEW - STEP 5] People post type - Cast/crew profiles
+│   ├── Season.php          # [CREATE NEW - STEP 5] Season post type - TV seasons
+│   ├── Episode.php         # [CREATE NEW - STEP 5] Episode post type - TV episodes
+│   └── Video.php           # [CREATE NEW - STEP 5] Video post type - Trailers/clips
+├── Taxonomies/              # [CREATE DIR - STEP 1] Taxonomy management directory
+│   ├── TaxonomyManager.php # [CREATE NEW - STEP 6] Taxonomy registration manager - Central registry
+│   ├── Genre.php           # [CREATE NEW - STEP 6] Genre taxonomy - Content categorization
+│   ├── Country.php         # [CREATE NEW - STEP 6] Country taxonomy - Origin classification
+│   ├── Language.php        # [CREATE NEW - STEP 6] Language taxonomy - Language classification
+│   └── Network.php         # [CREATE NEW - STEP 6] Network taxonomy - Broadcasting networks
+├── Blocks/                  # [CREATE DIR - STEP 1] Gutenberg blocks directory
+│   ├── BlockManager.php    # [CREATE NEW - STEP 7] Block registration manager - Gutenberg integration
+│   ├── MovieBlock.php      # [CREATE NEW - STEP 7] Movie display block - Movie showcase
+│   ├── SearchBlock.php     # [CREATE NEW - STEP 7] Search form block - Search functionality
+│   └── RatingBlock.php     # [CREATE NEW - STEP 7] Rating display block - Rating system
+├── Fields/                  # [CREATE DIR - STEP 1] Custom fields directory
+│   ├── FieldManager.php    # [CREATE NEW - STEP 8] Custom fields manager - Meta field system
+│   ├── MetaField.php       # [CREATE NEW - STEP 8] Base meta field class - Field foundation
+│   ├── MovieFields.php     # [CREATE NEW - STEP 8] Movie-specific fields - Movie metadata
+│   ├── TVShowFields.php    # [CREATE NEW - STEP 8] TV show-specific fields - Series metadata
+│   └── PeopleFields.php    # [CREATE NEW - STEP 8] People-specific fields - Person metadata
+├── Utils/                   # [CREATE DIR - STEP 1] Utility classes directory
+│   ├── Logger.php          # [CREATE NEW - STEP 1] Logging functionality - Debug/error logging
+│   ├── Validator.php       # [CREATE NEW - STEP 1] Data validation - Input validation
+│   ├── Sanitizer.php       # [CREATE NEW - STEP 1] Data sanitization - Security cleaning
+│   └── Helper.php          # [CREATE NEW - STEP 1] General helper functions - Utility methods
+└── ThemeCore.php           # [CREATE NEW - STEP 1] Main theme class - Core theme initialization
 ```
+
+### **Class Implementation Dependencies:**
+- **Step 1 Files**: Required for basic theme functionality and Tailwind CSS setup
+- **Step 3 Files**: Database operations depend on constants.php from Step 1
+- **Step 5 Files**: Post types depend on Database classes from Step 3
+- **Step 6 Files**: Taxonomies depend on PostTypes from Step 5
+- **Step 7 Files**: Blocks depend on PostTypes and Taxonomies
+- **Step 8 Files**: Admin features depend on all content types
+- **Step 9 Files**: API integration depends on Database and PostTypes
+- **Step 10 Files**: Frontend depends on all previous steps
+- **Step 12 Files**: Search depends on Frontend and PostTypes
 
 ## Core Files Setup
 
 ### 1. Theme Identification (`style.css`)
-**File Path**: `tmu-theme/style.css` (CREATE NEW)
-**Purpose**: WordPress theme identification and basic info
+**File Status**: [CREATE NEW - STEP 1]
+**File Path**: `tmu-theme/style.css`
+**Purpose**: WordPress theme identification and basic info - REQUIRED by WordPress
+**Dependencies**: None - This is the first file WordPress looks for
+**Tailwind Status**: REFERENCED - Mentions Tailwind in description, actual CSS loaded via functions.php
 
 ```css
 /*
@@ -156,11 +184,18 @@ This theme replaces the TMU plugin with modern WordPress theme architecture and 
 */
 
 /* Main theme styles will be loaded via functions.php */
+/* Tailwind CSS is compiled and loaded from assets/build/css/main.css */
 ```
 
 ### 2. Theme Bootstrap (`functions.php`)
-**File Path**: `tmu-theme/functions.php` (CREATE NEW)
-**Purpose**: Theme bootstrap and initialization
+**File Status**: [CREATE NEW - STEP 1]
+**File Path**: `tmu-theme/functions.php`
+**Purpose**: Theme bootstrap and initialization - REQUIRED by WordPress
+**Dependencies**: 
+- Requires `includes/config/constants.php` [CREATE NEW - STEP 1]
+- Requires `includes/classes/ThemeCore.php` [CREATE NEW - STEP 1]
+- Requires `vendor/autoload.php` [AUTO-GENERATED by Composer]
+**Tailwind Status**: INTEGRATES - Loads ThemeCore which manages Tailwind CSS assets
 
 ```php
 <?php
@@ -182,28 +217,32 @@ define('TMU_THEME_DIR', get_template_directory());
 define('TMU_THEME_URL', get_template_directory_uri());
 define('TMU_INCLUDES_DIR', TMU_THEME_DIR . '/includes');
 define('TMU_ASSETS_URL', TMU_THEME_URL . '/assets');
-define('TMU_ASSETS_BUILD_URL', TMU_ASSETS_URL . '/build');
+define('TMU_ASSETS_BUILD_URL', TMU_ASSETS_URL . '/build'); // Webpack output for Tailwind CSS
 
-// Load configuration
+// Load configuration - Required for theme constants
 require_once TMU_INCLUDES_DIR . '/config/constants.php';
 
-// Composer autoloader
+// Composer autoloader - Required for PSR-4 namespacing
 if (file_exists(TMU_THEME_DIR . '/vendor/autoload.php')) {
     require_once TMU_THEME_DIR . '/vendor/autoload.php';
 }
 
-// Theme initialization
+// Theme initialization - Main theme class that manages everything
 require_once TMU_INCLUDES_DIR . '/classes/ThemeCore.php';
 
-// Initialize theme
+// Initialize theme - This starts Tailwind CSS asset loading
 if (class_exists('TMU\\ThemeCore')) {
     TMU\\ThemeCore::getInstance();
 }
 ```
 
 ### 3. Node.js Configuration (`package.json`)
-**File Path**: `tmu-theme/package.json` (CREATE NEW)
-**Purpose**: Node.js dependencies and build scripts for Tailwind CSS
+**File Status**: [CREATE NEW - STEP 1]
+**File Path**: `tmu-theme/package.json`
+**Purpose**: Node.js dependencies and build scripts for Tailwind CSS - FIRST TIME SETUP
+**Dependencies**: None - This is the foundation for frontend build process
+**Tailwind Status**: FIRST TIME IMPLEMENTATION - Sets up Tailwind CSS compilation
+**Build Process**: Creates `assets/build/` directory with compiled CSS/JS
 
 ```json
 {
@@ -236,54 +275,66 @@ if (class_exists('TMU\\ThemeCore')) {
 ```
 
 ### 4. Tailwind CSS Configuration (`tailwind.config.js`)
-**File Path**: `tmu-theme/tailwind.config.js` (CREATE NEW)
-**Purpose**: Tailwind CSS configuration for TMU theme
+**File Status**: [CREATE NEW - STEP 1]
+**File Path**: `tmu-theme/tailwind.config.js`
+**Purpose**: Tailwind CSS configuration for TMU theme - FIRST TIME SETUP
+**Dependencies**: 
+- Requires `package.json` [CREATE NEW - STEP 1] for Tailwind installation
+- Scans `templates/**/*.php` [CREATE DIR - STEP 1] for classes
+- Scans `includes/**/*.php` [CREATE DIR - STEP 1] for classes
+**Tailwind Status**: FIRST TIME IMPLEMENTATION - Core Tailwind configuration
+**Custom Features**: TMU-specific colors, movie poster aspect ratios, custom spacing
 
 ```javascript
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./templates/**/*.php",
-    "./includes/**/*.php",
-    "./assets/src/js/**/*.js",
-    "./*.php"
+    "./templates/**/*.php",    // [CREATE DIR - STEP 1] Template files
+    "./includes/**/*.php",     // [CREATE DIR - STEP 1] PHP class files
+    "./assets/src/js/**/*.js", // [CREATE DIR - STEP 1] JavaScript files
+    "./*.php"                  // Root PHP files (functions.php, etc.)
   ],
   theme: {
     extend: {
       colors: {
-        'tmu-primary': '#1e40af',
-        'tmu-secondary': '#dc2626',
-        'tmu-accent': '#059669',
-        'tmu-dark': '#1f2937',
-        'tmu-light': '#f9fafb',
-        'tmu-yellow': '#f59e0b',
-        'tmu-purple': '#7c3aed'
+        // TMU Brand Colors - FIRST TIME IMPLEMENTATION
+        'tmu-primary': '#1e40af',    // Blue for primary actions
+        'tmu-secondary': '#dc2626',  // Red for secondary actions
+        'tmu-accent': '#059669',     // Green for success states
+        'tmu-dark': '#1f2937',       // Dark gray for text
+        'tmu-light': '#f9fafb',      // Light gray for backgrounds
+        'tmu-yellow': '#f59e0b',     // Yellow for ratings/stars
+        'tmu-purple': '#7c3aed'      // Purple for special elements
       },
       fontFamily: {
+        // Custom font stacks for better typography
         'sans': ['Inter', 'system-ui', 'sans-serif'],
         'serif': ['Merriweather', 'serif'],
         'mono': ['JetBrains Mono', 'monospace']
       },
       spacing: {
+        // Custom spacing for movie/TV layouts
         '18': '4.5rem',
         '88': '22rem',
         '112': '28rem',
         '128': '32rem'
       },
       screens: {
+        // Additional breakpoints for responsive design
         'xs': '475px',
         '3xl': '1920px'
       },
       aspectRatio: {
-        'movie': '2/3',
-        'poster': '27/40'
+        // Movie poster specific aspect ratios - CUSTOM FOR TMU
+        'movie': '2/3',      // Standard movie poster ratio
+        'poster': '27/40'    // TMDB poster ratio
       }
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio')
+    require('@tailwindcss/forms'),        // Form styling
+    require('@tailwindcss/typography'),   // Rich text content
+    require('@tailwindcss/aspect-ratio')  // Aspect ratio utilities
   ],
 }
 ```
@@ -404,26 +455,33 @@ module.exports = (env, argv) => {
 ```
 
 ### 7. Main Tailwind CSS File (`assets/src/css/main.css`)
-**File Path**: `tmu-theme/assets/src/css/main.css` (CREATE NEW)
-**Purpose**: Main Tailwind CSS file with custom styles
+**File Status**: [CREATE NEW - STEP 1]
+**File Path**: `tmu-theme/assets/src/css/main.css`
+**Purpose**: Main Tailwind CSS file with custom styles - FIRST TIME IMPLEMENTATION
+**Dependencies**: 
+- Requires `tailwind.config.js` [CREATE NEW - STEP 1] for configuration
+- Requires `package.json` [CREATE NEW - STEP 1] for Tailwind installation
+**Tailwind Status**: FIRST TIME IMPLEMENTATION - Core Tailwind CSS setup
+**Output**: Compiled to `assets/build/css/main.css` by Webpack
+**Used By**: Loaded in `ThemeCore.php` [CREATE NEW - STEP 1] via `wp_enqueue_style`
 
 ```css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Base Styles */
+/* Custom Base Styles - FIRST TIME IMPLEMENTATION */
 @layer base {
   body {
     @apply font-sans text-gray-900 antialiased;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-tmu-dark;
+    @apply font-semibold text-tmu-dark; /* Uses custom TMU color */
   }
   
   a {
-    @apply text-tmu-primary hover:text-tmu-secondary transition-colors;
+    @apply text-tmu-primary hover:text-tmu-secondary transition-colors; /* TMU brand colors */
   }
   
   img {
@@ -431,7 +489,7 @@ module.exports = (env, argv) => {
   }
 }
 
-/* Custom Components */
+/* Custom Components - TMU-specific UI components */
 @layer components {
   .btn {
     @apply px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200;
@@ -457,8 +515,9 @@ module.exports = (env, argv) => {
     @apply px-6 py-4;
   }
   
+  /* Movie-specific components - CUSTOM FOR TMU */
   .movie-poster {
-    @apply aspect-movie bg-gray-200 rounded-lg overflow-hidden;
+    @apply aspect-movie bg-gray-200 rounded-lg overflow-hidden; /* Uses custom aspect ratio */
   }
   
   .rating-stars {
@@ -466,13 +525,14 @@ module.exports = (env, argv) => {
   }
   
   .rating-star {
-    @apply w-4 h-4 text-tmu-yellow;
+    @apply w-4 h-4 text-tmu-yellow; /* TMU yellow for ratings */
   }
   
   .genre-tag {
     @apply inline-block px-2 py-1 text-xs font-medium bg-tmu-light text-tmu-dark rounded-full;
   }
   
+  /* Search and filter components - Used in Step 12 */
   .search-form {
     @apply flex items-center space-x-2;
   }
@@ -485,6 +545,7 @@ module.exports = (env, argv) => {
     @apply relative inline-block text-left;
   }
   
+  /* Pagination components - Used in frontend templates */
   .pagination {
     @apply flex items-center justify-center space-x-2 mt-8;
   }
@@ -498,7 +559,7 @@ module.exports = (env, argv) => {
   }
 }
 
-/* Custom Utilities */
+/* Custom Utilities - Additional helper classes */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -1513,19 +1574,48 @@ Each plugin feature must be mapped to theme components:
 
 ## Implementation Instructions
 
-### Step-by-Step Setup Process
+### **CRITICAL: File Creation Order for AI Models**
 
-#### 1. Create Theme Directory Structure
-**Location**: `wp-content/themes/tmu/`
-**Action**: Create all directories and files as specified in the directory structure above
+The following order MUST be followed to ensure dependencies are met:
 
+#### **Phase 1: Directory Structure (REQUIRED FIRST)**
 ```bash
 # Create main theme directory
 mkdir wp-content/themes/tmu
 
-# Create directory structure
+# Create all required directories
 mkdir -p wp-content/themes/tmu/{assets/src/{css,js},assets/build/{css,js},includes/classes/{Admin,API,Database,Frontend,PostTypes,Taxonomies,Blocks,Utils},includes/config,includes/migrations,includes/helpers,templates/{archive,single,parts/{components,header,footer,content},blocks,search},languages}
 ```
+
+#### **Phase 2: Configuration Files (EXACT ORDER REQUIRED)**
+1. **[CREATE FIRST]** `package.json` - FIRST TIME Tailwind setup
+2. **[CREATE SECOND]** `tailwind.config.js` - Depends on package.json
+3. **[CREATE THIRD]** `webpack.config.js` - Asset bundling setup
+4. **[CREATE FOURTH]** `composer.json` - PHP dependencies
+5. **[CREATE FIFTH]** `.gitignore` - Version control
+6. **[CREATE SIXTH]** `style.css` - Theme identification
+
+#### **Phase 3: Core Configuration (EXACT ORDER REQUIRED)**
+1. **[CREATE FIRST]** `includes/config/constants.php` - Theme constants
+2. **[CREATE SECOND]** `includes/config/database.php` - Database schemas  
+3. **[CREATE THIRD]** `includes/config/assets.php` - Asset configuration
+
+#### **Phase 4: Asset Files (EXACT ORDER REQUIRED)**
+1. **[CREATE FIRST]** `assets/src/css/main.css` - FIRST TIME Tailwind implementation
+2. **[CREATE SECOND]** `assets/src/css/admin.css` - Admin Tailwind styles
+3. **[CREATE THIRD]** `assets/src/js/main.js` - Frontend JavaScript
+4. **[CREATE FOURTH]** `assets/src/js/admin.js` - Admin JavaScript
+
+#### **Phase 5: Core PHP Classes (EXACT ORDER REQUIRED)**
+1. **[CREATE FIRST]** `includes/classes/ThemeCore.php` - Main theme class
+2. **[CREATE SECOND]** `functions.php` - Depends on ThemeCore.php
+
+### Step-by-Step Setup Process
+
+#### 1. Create Theme Directory Structure
+**Location**: `wp-content/themes/tmu/`
+**Action**: Create all directories as specified above
+**Status**: [REQUIRED FIRST] - No dependencies
 
 #### 2. Create Configuration Files
 **Files to Create**:
