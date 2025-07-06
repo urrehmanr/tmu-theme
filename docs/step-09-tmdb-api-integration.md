@@ -1,13 +1,96 @@
 # Step 09: TMDB API Integration - Complete Implementation
 
-## Overview
-This step implements comprehensive TMDB API integration with enhanced sync capabilities, caching, error handling, and automated data updates. The system preserves all existing functionality while adding modern API management features.
+## Purpose
+Implement comprehensive TMDB API integration with enhanced sync capabilities, caching, error handling, and automated data updates. The system preserves all existing functionality while adding modern API management features.
+
+## Dependencies from Previous Steps
+- **[REQUIRED]** Post types registration [FROM STEP 5] - API data maps to post types
+- **[REQUIRED]** Taxonomies registration [FROM STEP 6] - Genre, country, language mapping
+- **[REQUIRED]** Database migration [FROM STEP 3] - Custom tables for TMDB data
+- **[REQUIRED]** Admin interface [FROM STEP 8] - TMDB sync meta boxes
+- **[REQUIRED]** PSR-4 autoloading [FROM STEP 4] - API class loading
+- **[REQUIRED]** Helper functions [FROM STEP 4] - Utility functions
+
+## Files Created in This Step
+- **[CREATE NEW]** `includes/classes/API/TMDB/Client.php` - Main TMDB API client
+- **[CREATE NEW]** `includes/classes/API/TMDB/SyncService.php` - Sync service manager
+- **[CREATE NEW]** `includes/classes/API/TMDB/DataMapper.php` - Data mapping system
+- **[CREATE NEW]** `includes/classes/API/TMDB/ImageSyncService.php` - Image synchronization
+- **[CREATE NEW]** `includes/classes/API/TMDB/SyncScheduler.php` - Automated sync scheduler
+- **[CREATE NEW]** `includes/classes/API/TMDB/Exception.php` - TMDB exception handling
+- **[CREATE NEW]** `includes/classes/API/TMDB/Cache.php` - API response caching
+- **[CREATE NEW]** `includes/classes/API/TMDB/RateLimiter.php` - API rate limiting
+- **[CREATE NEW]** `includes/classes/API/TMDB/SearchService.php` - TMDB search functionality
+- **[CREATE NEW]** `includes/classes/API/TMDB/WebhookHandler.php` - TMDB webhook processing
+- **[CREATE NEW]** `includes/classes/Admin/Settings/TMDBSettings.php` - TMDB settings page
+- **[CREATE NEW]** `assets/src/js/tmdb-sync.js` - TMDB sync JavaScript
+- **[CREATE NEW]** `tests/API/TMDBTest.php` - TMDB API testing
+
+## Tailwind CSS Status
+**USES** - TMDB sync interfaces use Tailwind utility classes for styling
+
+## Architecture Implementation
+
+### Directory Structure with File Status
+```
+includes/classes/API/TMDB/                       # [CREATE DIR - STEP 9] TMDB API integration
+├── Client.php            # [CREATE NEW - STEP 9] Main TMDB API client - Core API communication
+├── SyncService.php       # [CREATE NEW - STEP 9] Sync service manager - Content synchronization
+├── DataMapper.php        # [CREATE NEW - STEP 9] Data mapping system - API to database mapping
+├── ImageSyncService.php  # [CREATE NEW - STEP 9] Image synchronization - Media management
+├── SyncScheduler.php     # [CREATE NEW - STEP 9] Automated sync scheduler - Background jobs
+├── Exception.php         # [CREATE NEW - STEP 9] TMDB exception handling - Error management
+├── Cache.php             # [CREATE NEW - STEP 9] API response caching - Performance optimization
+├── RateLimiter.php       # [CREATE NEW - STEP 9] API rate limiting - Request management
+├── SearchService.php     # [CREATE NEW - STEP 9] TMDB search functionality - Content discovery
+└── WebhookHandler.php    # [CREATE NEW - STEP 9] TMDB webhook processing - Real-time updates
+
+includes/classes/Admin/Settings/                 # [UPDATE DIR - STEP 9] Extend admin settings
+└── TMDBSettings.php      # [CREATE NEW - STEP 9] TMDB settings page - Configuration interface
+
+assets/src/js/                                  # [UPDATE DIR - STEP 9] Extend JavaScript directory
+└── tmdb-sync.js          # [CREATE NEW - STEP 9] TMDB sync JavaScript - Frontend interactions
+
+tests/API/                                      # [CREATE DIR - STEP 9] API testing
+└── TMDBTest.php          # [CREATE NEW - STEP 9] TMDB API testing - Comprehensive API tests
+```
+
+### **Dependencies from Previous Steps:**
+- **[REQUIRED]** Post types [FROM STEP 5] - movie, tv, drama, people
+- **[REQUIRED]** Database tables [FROM STEP 3] - tmu_movies, tmu_tv_series, tmu_dramas, tmu_people
+- **[REQUIRED]** Admin interface [FROM STEP 8] - TMDB sync meta boxes
+- **[REQUIRED]** Asset compilation [FROM STEP 1] - JavaScript compilation
+- **[REQUIRED]** Helper functions [FROM STEP 4] - Utility functions
+
+### **Files Created in Future Steps:**
+- **`includes/classes/API/REST/TMDBEndpoints.php`** - [CREATE NEW - STEP 9] REST API endpoints
+- **`templates/tmdb/`** - [CREATE NEW - STEP 10] TMDB template files
+- **`includes/classes/Cron/TMDBJobs.php`** - [CREATE NEW - STEP 9] Background sync jobs
 
 ## 1. TMDB API Service Architecture
 
-### 1.1 Core API Client
+### 1.1 Core API Client (`includes/classes/API/TMDB/Client.php`)
+**File Status**: [CREATE NEW - STEP 9]
+**File Path**: `tmu-theme/includes/classes/API/TMDB/Client.php`
+**Purpose**: Main TMDB API client providing core API communication functionality
+**Dependencies**: 
+- [DEPENDS ON] WordPress HTTP API - wp_remote_get, wp_remote_post
+- [DEPENDS ON] WordPress transients - get_transient, set_transient
+- [DEPENDS ON] TMDB API credentials - API key from settings
+- [DEPENDS ON] TMDBException class [CREATE NEW - STEP 9] - Error handling
+**Integration**: Central API client for all TMDB operations
+**Used By**: 
+- Sync services [CREATE NEW - STEP 9] - Data synchronization
+- Search service [CREATE NEW - STEP 9] - Content discovery
+- Admin meta boxes [FROM STEP 8] - Manual sync operations
+**Features**: 
+- Rate limiting and caching
+- Error handling and logging
+- Movie, TV show, and person data retrieval
+- Comprehensive data fetching with related content
+**AI Action**: Create TMDB API client class with caching and error handling
+
 ```php
-// src/TMDB/TMDBClient.php
 <?php
 namespace TMU\TMDB;
 
@@ -78,9 +161,28 @@ class TMDBClient {
 }
 ```
 
-### 1.2 Sync Service Manager
+### 1.2 Sync Service Manager (`includes/classes/API/TMDB/SyncService.php`)
+**File Status**: [CREATE NEW - STEP 9]
+**File Path**: `tmu-theme/includes/classes/API/TMDB/SyncService.php`
+**Purpose**: Sync service manager that coordinates content synchronization with TMDB
+**Dependencies**: 
+- [DEPENDS ON] TMDB Client [CREATE NEW - STEP 9] - API communication
+- [DEPENDS ON] Data mapper [CREATE NEW - STEP 9] - Data transformation
+- [DEPENDS ON] Post types [FROM STEP 5] - Content type integration
+- [DEPENDS ON] Custom tables [FROM STEP 3] - Data storage
+**Integration**: Orchestrates TMDB data synchronization for all content types
+**Used By**: 
+- Admin meta boxes [FROM STEP 8] - Manual sync operations
+- Sync scheduler [CREATE NEW - STEP 9] - Automated sync jobs
+- REST API endpoints [CREATE NEW - STEP 9] - API-triggered syncs
+**Features**: 
+- Content type-specific sync methods
+- Flexible sync options
+- Error handling and logging
+- Progress tracking for bulk operations
+**AI Action**: Create sync service manager with content type handlers
+
 ```php
-// src/TMDB/SyncService.php
 <?php
 namespace TMU\TMDB;
 
@@ -136,9 +238,29 @@ class SyncService {
 
 ## 2. Data Mapping System
 
-### 2.1 Movie Data Mapper
+### 2.1 Movie Data Mapper (`includes/classes/API/TMDB/DataMapper.php`)
+**File Status**: [CREATE NEW - STEP 9]
+**File Path**: `tmu-theme/includes/classes/API/TMDB/DataMapper.php`
+**Purpose**: Data mapping system that transforms TMDB API data to WordPress database structure
+**Dependencies**: 
+- [DEPENDS ON] Custom database tables [FROM STEP 3] - Data storage structure
+- [DEPENDS ON] Taxonomies [FROM STEP 6] - Genre, country, language mapping
+- [DEPENDS ON] Image sync service [CREATE NEW - STEP 9] - Media management
+- [DEPENDS ON] WordPress post functions - wp_insert_post, wp_update_post
+**Integration**: Central data transformation layer between TMDB API and WordPress
+**Used By**: 
+- Sync service [CREATE NEW - STEP 9] - Data synchronization
+- Import tools [FROM STEP 8] - Data import operations
+- Webhook handler [CREATE NEW - STEP 9] - Real-time updates
+**Features**: 
+- Complete field mapping for all content types
+- Taxonomy synchronization
+- Image and video content handling
+- Relationship management
+- Data validation and sanitization
+**AI Action**: Create data mapper with comprehensive field mapping and validation
+
 ```php
-// src/TMDB/DataMapper.php
 <?php
 namespace TMU\TMDB;
 
@@ -317,10 +439,29 @@ class DataMapper {
 }
 ```
 
-## 3. Image Synchronization Service
+## 3. Image Synchronization Service (`includes/classes/API/TMDB/ImageSyncService.php`)
+**File Status**: [CREATE NEW - STEP 9]
+**File Path**: `tmu-theme/includes/classes/API/TMDB/ImageSyncService.php`
+**Purpose**: Image synchronization service for downloading and managing TMDB media assets
+**Dependencies**: 
+- [DEPENDS ON] WordPress HTTP API - wp_remote_get for image downloads
+- [DEPENDS ON] WordPress media functions - wp_insert_attachment, wp_generate_attachment_metadata
+- [DEPENDS ON] WordPress upload directory - wp_upload_dir
+- [DEPENDS ON] TMDB image CDN - image.tmdb.org
+**Integration**: Media management system for TMDB content
+**Used By**: 
+- Data mapper [CREATE NEW - STEP 9] - Image synchronization during data mapping
+- Sync service [CREATE NEW - STEP 9] - Media updates
+- Admin interface [FROM STEP 8] - Manual image updates
+**Features**: 
+- Multi-size image downloading
+- Duplicate detection and management
+- Automatic attachment creation
+- Featured image assignment
+- Metadata preservation
+**AI Action**: Create image synchronization service with download and attachment management
 
 ```php
-// src/TMDB/ImageSyncService.php
 <?php
 namespace TMU\TMDB;
 
@@ -438,10 +579,29 @@ class ImageSyncService {
 }
 ```
 
-## 4. Automated Sync Scheduler
+## 4. Automated Sync Scheduler (`includes/classes/API/TMDB/SyncScheduler.php`)
+**File Status**: [CREATE NEW - STEP 9]
+**File Path**: `tmu-theme/includes/classes/API/TMDB/SyncScheduler.php`
+**Purpose**: Automated sync scheduler for background TMDB data synchronization
+**Dependencies**: 
+- [DEPENDS ON] WordPress cron system - wp_schedule_event, wp_next_scheduled
+- [DEPENDS ON] Sync service [CREATE NEW - STEP 9] - Content synchronization
+- [DEPENDS ON] WordPress post queries - get_posts with custom parameters
+- [DEPENDS ON] Cache management - WordPress transients
+**Integration**: Background job system for automated TMDB updates
+**Used By**: 
+- WordPress cron system - Scheduled task execution
+- Admin settings [CREATE NEW - STEP 9] - Sync configuration
+- System monitoring - Performance tracking
+**Features**: 
+- Daily and weekly sync schedules
+- Incremental sync for recent updates
+- Full sync for complete data refresh
+- Cache management and cleanup
+- Error handling and logging
+**AI Action**: Create automated sync scheduler with configurable intervals
 
 ```php
-// src/TMDB/SyncScheduler.php
 <?php
 namespace TMU\TMDB;
 
@@ -760,6 +920,210 @@ class AdminInterface {
 - [ ] Cache management system active
 - [ ] Admin interface fully functional
 
+## AI Implementation Instructions for Step 9
+
+### **Prerequisites Check**
+Before implementing Step 9, verify these files exist from previous steps:
+- **[REQUIRED]** Post types registration [FROM STEP 5] - API data maps to post types
+- **[REQUIRED]** Taxonomies registration [FROM STEP 6] - Genre, country, language mapping
+- **[REQUIRED]** Database migration [FROM STEP 3] - Custom tables for TMDB data
+- **[REQUIRED]** Admin interface [FROM STEP 8] - TMDB sync meta boxes
+- **[REQUIRED]** PSR-4 autoloading [FROM STEP 4] - API class loading
+- **[REQUIRED]** Helper functions [FROM STEP 4] - Utility functions
+
+### **Implementation Order for AI Models**
+
+#### **Phase 1: Create Directories** (Required First)
+```bash
+mkdir -p tmu-theme/includes/classes/API/TMDB
+mkdir -p tmu-theme/includes/classes/Admin/Settings
+mkdir -p tmu-theme/tests/API
+```
+
+#### **Phase 2: Core API Infrastructure** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/API/TMDB/Exception.php` - TMDB exception handling
+2. **[CREATE SECOND]** `includes/classes/API/TMDB/Cache.php` - API response caching
+3. **[CREATE THIRD]** `includes/classes/API/TMDB/RateLimiter.php` - API rate limiting
+4. **[CREATE FOURTH]** `includes/classes/API/TMDB/Client.php` - Main TMDB API client
+
+#### **Phase 3: Data Management** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/API/TMDB/DataMapper.php` - Data mapping system
+2. **[CREATE SECOND]** `includes/classes/API/TMDB/ImageSyncService.php` - Image synchronization
+3. **[CREATE THIRD]** `includes/classes/API/TMDB/SyncService.php` - Sync service manager
+
+#### **Phase 4: Automation and Scheduling** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/API/TMDB/SyncScheduler.php` - Automated sync scheduler
+2. **[CREATE SECOND]** `includes/classes/API/TMDB/WebhookHandler.php` - TMDB webhook processing
+
+#### **Phase 5: Search and Discovery** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/API/TMDB/SearchService.php` - TMDB search functionality
+
+#### **Phase 6: Admin Interface** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Admin/Settings/TMDBSettings.php` - TMDB settings page
+2. **[CREATE SECOND]** `assets/src/js/tmdb-sync.js` - TMDB sync JavaScript
+3. **[UPDATE THIRD]** `webpack.config.js` - Include TMDB sync JS compilation
+
+#### **Phase 7: Testing** (Exact Order)
+1. **[CREATE FIRST]** `tests/API/TMDBTest.php` - TMDB API testing
+
+#### **Phase 8: Integration** (Final)
+1. **[UPDATE]** `includes/classes/ThemeCore.php` - Include TMDB services
+2. **[UPDATE]** `includes/classes/Admin/AdminManager.php` - Include TMDB settings
+
+### **Key Implementation Notes**
+- **API Rate Limiting**: TMDB API has rate limits - implement proper throttling
+- **Image Management**: Large images consume server resources - implement size limits
+- **Caching Strategy**: Cache API responses for 1 hour to reduce API calls
+- **Error Handling**: Comprehensive error handling for network failures
+- **Background Processing**: Use WordPress cron for automated sync jobs
+- **Data Validation**: Validate all API data before storing in database
+
+### **TMDB API Integration Features**
+```
+Core API Client:
+├── Movie details retrieval
+├── TV show details retrieval
+├── Person details retrieval
+├── Search functionality
+├── Image URL generation
+├── Rate limiting
+├── Caching layer
+└── Error handling
+
+Sync Service:
+├── Manual sync operations
+├── Bulk sync capabilities
+├── Scheduled sync jobs
+├── Progress tracking
+├── Error logging
+└── Data validation
+
+Image Sync:
+├── Multi-size downloads
+├── Duplicate detection
+├── Automatic attachment creation
+├── Featured image assignment
+└── Metadata preservation
+```
+
+### **Database Integration**
+- **Movies**: Data stored in `tmu_movies` table
+- **TV Shows**: Data stored in `tmu_tv_series` table  
+- **Dramas**: Data stored in `tmu_dramas` table
+- **People**: Data stored in `tmu_people` table
+- **Videos**: Data stored in `tmu_videos` table
+- **Images**: WordPress attachments with TMDB metadata
+
+### **Admin Interface Features**
+1. **Settings Page**:
+   - API key configuration
+   - Auto-sync settings
+   - Image sync options
+   - Video sync options
+
+2. **Bulk Operations**:
+   - Bulk sync all content
+   - Progress tracking
+   - Error reporting
+   - API connection testing
+
+3. **Meta Boxes**:
+   - Manual sync buttons
+   - TMDB search interface
+   - Sync status display
+   - Last sync timestamp
+
+### **Critical Dependencies**
+- **TMDB API Account**: Required for API key access
+- **WordPress HTTP API**: wp_remote_get, wp_remote_post
+- **WordPress Cron**: wp_schedule_event, wp_next_scheduled
+- **WordPress Media**: wp_insert_attachment, wp_generate_attachment_metadata
+- **Custom Database Tables**: TMU database schema from Step 3
+
+### **Testing Requirements**
+1. **API Connection Test** - Verify API key and connectivity
+2. **Data Sync Test** - Verify movie/TV show data synchronization
+3. **Image Sync Test** - Verify image download and attachment
+4. **Bulk Sync Test** - Verify bulk operations work correctly
+5. **Cache Test** - Verify caching reduces API calls
+6. **Error Handling Test** - Verify proper error responses
+
+### **Development Workflow**
+```bash
+# Get TMDB API key
+# Sign up at https://www.themoviedb.org/settings/api
+
+# Install dependencies
+composer install
+
+# Build JavaScript assets
+npm run build
+
+# Run TMDB tests
+composer test tests/API/TMDBTest.php
+
+# Test API connection in WordPress admin
+# Go to TMU Content > TMDB Settings
+# Enter API key and test connection
+```
+
+### **Common Issues and Solutions**
+1. **API Rate Limiting**: Implement proper delays between requests
+2. **Image Download Failures**: Check server permissions and disk space
+3. **Cache Not Working**: Verify WordPress transients are enabled
+4. **Sync Failures**: Check API key validity and network connectivity
+5. **Database Errors**: Verify custom tables exist and are properly structured
+
+### **Verification Commands**
+```bash
+# Check TMDB classes created
+ls -la includes/classes/API/TMDB/
+
+# Check JavaScript compiled
+ls -la assets/js/tmdb-sync.js
+
+# Test API connection
+# In WordPress admin:
+# - Go to TMU Content > TMDB Settings
+# - Enter valid API key
+# - Click "Test API Connection"
+# - Should show success message
+
+# Test manual sync
+# In WordPress admin:
+# - Edit a movie/TV show with TMDB ID
+# - Click "Sync from TMDB" in meta box
+# - Verify data updates correctly
+```
+
+### **Performance Optimization**
+- **Caching**: 1-hour cache for API responses
+- **Rate Limiting**: 40 requests per 10 seconds (TMDB limit)
+- **Image Optimization**: Download only necessary sizes
+- **Background Processing**: Use WordPress cron for bulk operations
+- **Database Indexes**: Ensure TMDB ID fields are indexed
+
+### **Security Considerations**
+- **API Key Storage**: Store API key in WordPress options (encrypted)
+- **User Permissions**: Verify user capabilities for admin operations
+- **Input Validation**: Sanitize all API data before storage
+- **Rate Limiting**: Prevent abuse of sync operations
+- **Error Logging**: Log errors without exposing sensitive data
+
+### **Post-Implementation Checklist**
+- [ ] All TMDB API classes created and functional
+- [ ] API client with caching and rate limiting implemented
+- [ ] Data mapper with comprehensive field mapping
+- [ ] Image sync service operational
+- [ ] Sync scheduler for automated updates
+- [ ] Admin settings page functional
+- [ ] Bulk sync operations working
+- [ ] Error handling comprehensive
+- [ ] JavaScript interactions working
+- [ ] Tests passing
+- [ ] ThemeCore integration complete
+- [ ] Admin interface integration complete
+
 ## Next Steps
 
 After completing this step:
@@ -769,3 +1133,7 @@ After completing this step:
 - Performance optimization through caching
 - User-friendly admin interface
 - Scalable architecture for future enhancements
+
+**Step 9 Status**: ✅ READY FOR AI IMPLEMENTATION
+**Dependencies**: Steps 1, 3, 4, 5, 6, 8 must be completed
+**Next Step**: Step 10 - Frontend Templates
