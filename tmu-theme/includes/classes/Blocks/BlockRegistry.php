@@ -54,6 +54,11 @@ class BlockRegistry {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
         add_filter('block_categories_all', [$this, 'register_block_category']);
         add_filter('allowed_block_types_all', [$this, 'filter_allowed_blocks'], 10, 2);
+        
+        // Critical: Add hooks for database integration
+        add_action('save_post', [$this, 'save_block_data_to_database'], 10, 2);
+        add_action('wp_ajax_tmu_load_block_data', [$this, 'ajax_load_block_data']);
+        add_action('wp_ajax_nopriv_tmu_load_block_data', [$this, 'ajax_load_block_data']);
     }
     
     /**
@@ -400,5 +405,79 @@ class BlockRegistry {
         }
         
         return true;
+    }
+    
+    /**
+     * Save block data to database when post is saved
+     * 
+     * @param int $post_id Post ID
+     * @param WP_Post $post Post object
+     */
+    public function save_block_data_to_database($post_id, $post): void {
+        // Skip autosaves and revisions
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+        
+        if (wp_is_post_revision($post_id)) {
+            return;
+        }
+        
+        // Check user permissions
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+        
+        // Only process TMU post types
+        $tmu_post_types = ['movie', 'tv', 'drama', 'people', 'season', 'episode', 'drama_episode', 'video'];
+        if (!in_array($post->post_type, $tmu_post_types)) {
+            return;
+        }
+        
+        // Parse blocks from post content
+        $blocks = parse_blocks($post->post_content);
+        
+        foreach ($blocks as $block) {
+            if (strpos($block['blockName'], 'tmu/') === 0) {
+                $block_type = str_replace('tmu/', '', $block['blockName']);
+                $attributes = $block['attrs'] ?? [];
+                
+                // Call the appropriate block's save method
+                if (isset($this->blocks[$block_type])) {
+                    $block_class = $this->blocks[$block_type];
+                    if (method_exists($block_class, 'save_to_database')) {
+                        $block_class::save_to_database($post_id, $attributes);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * AJAX handler to load block data from database
+     */
+    public function ajax_load_block_data(): void {
+        check_ajax_referer('tmu_load_block_data', 'nonce');
+        
+        $post_id = intval($_POST['post_id'] ?? 0);
+        $block_type = sanitize_text_field($_POST['block_type'] ?? '');
+        
+        if (!$post_id || !$block_type) {
+            wp_die('Invalid parameters');
+        }
+        
+        if (!current_user_can('edit_post', $post_id)) {
+            wp_die('Insufficient permissions');
+        }
+        
+        if (isset($this->blocks[$block_type])) {
+            $block_class = $this->blocks[$block_type];
+            if (method_exists($block_class, 'load_from_database')) {
+                $data = $block_class::load_from_database($post_id);
+                wp_send_json_success($data);
+            }
+        }
+        
+        wp_send_json_error('Block type not found');
     }
 }
