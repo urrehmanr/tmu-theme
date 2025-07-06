@@ -68,9 +68,9 @@ TMU\                           # Root namespace
     "license": "MIT",
     "authors": [
         {
-            "name": "Your Name",
-            "email": "your.email@example.com",
-            "homepage": "https://your-website.com",
+            "name": "TheMovieUpdates",
+            "email": "info@themovieupdates.com",
+            "homepage": "https://www.themovieupdates.com/",
             "role": "Developer"
         }
     ],
@@ -83,10 +83,10 @@ TMU\                           # Root namespace
         "entertainment",
         "database"
     ],
-    "homepage": "https://github.com/your-username/tmu-theme",
+    "homepage": "https://github.com/urrehmanr/tmu-theme",
     "support": {
-        "issues": "https://github.com/your-username/tmu-theme/issues",
-        "docs": "https://your-website.com/docs/tmu-theme"
+        "issues": "https://github.com/urrehmanr/tmu-theme/issues",
+        "docs": "https://www.themovieupdates.com/docs/tmu-theme"
     },
     "require": {
         "php": ">=7.4",

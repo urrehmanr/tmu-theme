@@ -118,8 +118,8 @@ includes/classes/
 Theme Name: TMU
 Description: Modern Movie & TV Database Theme - A comprehensive entertainment content management system with TMDB integration
 Version: 1.0.0
-Author: Your Name
-Author URI: https://your-website.com
+Author: TheMovieUpdates
+Author URI: https://www.themovieupdates.com
 Text Domain: tmu
 Domain Path: /languages
 Requires at least: 6.0
