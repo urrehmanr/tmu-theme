@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<ruleset name="TMU Theme Coding Standards">
+    <description>TMU Theme coding standards</description>
+
+    <!-- Files to check -->
+    <file>includes/</file>
+    
+    <!-- Exclude vendor directory -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+    <exclude-pattern>tests/bootstrap.php</exclude-pattern>
+    
+    <!-- Use WordPress coding standards -->
+    <rule ref="WordPress">
+        <!-- Allow array short syntax -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        <!-- Allow short open tags in templates -->
+        <exclude name="Generic.PHP.DisallowShortOpenTag.EchoFound"/>
+        <!-- Allow camelCase for modern PHP -->
+        <exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
+        <!-- Allow PSR-4 class names -->
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <!-- Allow modern PHP features -->
+        <exclude name="PHPCompatibility.FunctionDeclarations.NewReturnTypeDeclarations"/>
+        <exclude name="PHPCompatibility.FunctionDeclarations.NewParamTypeDeclarations"/>
+    </rule>
+    
+    <!-- Set text domain -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array" value="tmu"/>
+        </properties>
+    </rule>
+    
+    <!-- Verify that everything in the global namespace is prefixed -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array" value="tmu,TMU"/>
+        </properties>
+    </rule>
+    
+    <!-- Allow modern PHP syntax -->
+    <rule ref="WordPress.PHP.YodaConditions.NotYoda">
+        <severity>0</severity>
+    </rule>
+    
+    <!-- Set minimum PHP version for compatibility checks -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+    <config name="testVersion" value="7.4-"/>
+</ruleset>

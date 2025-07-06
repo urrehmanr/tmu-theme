@@ -16,6 +16,34 @@ if (!defined('ABSPATH')) {
  * This preserves the existing plugin database structure
  */
 return [
+    'version' => '1.0.0',
+    'charset' => 'utf8mb4',
+    'collate' => 'utf8mb4_unicode_520_ci',
+    'engine' => 'InnoDB',
+    
+    'table_names' => [
+        'movies' => 'tmu_movies',
+        'people' => 'tmu_people',
+        'dramas' => 'tmu_dramas',
+        'tv_series' => 'tmu_tv_series',
+        'videos' => 'tmu_videos',
+        'seo_options' => 'tmu_seo_options',
+        'movies_cast' => 'tmu_movies_cast',
+        'movies_crew' => 'tmu_movies_crew',
+        'dramas_cast' => 'tmu_dramas_cast',
+        'dramas_crew' => 'tmu_dramas_crew',
+        'tv_series_cast' => 'tmu_tv_series_cast',
+        'tv_series_crew' => 'tmu_tv_series_crew',
+        'tv_series_episodes' => 'tmu_tv_series_episodes',
+        'tv_series_seasons' => 'tmu_tv_series_seasons',
+        'dramas_episodes' => 'tmu_dramas_episodes',
+        'dramas_seasons' => 'tmu_dramas_seasons',
+    ],
+    
+    'foreign_keys' => true,
+    'create_indexes' => true,
+    'backup_before_migration' => true,
+    
     'tables' => [
         'tmu_movies' => [
             'fields' => [

@@ -1,42 +1,102 @@
 {
     "name": "tmu/wordpress-theme",
-    "description": "Modern Movie & TV Database WordPress Theme",
+    "description": "Modern Movie & TV Database WordPress Theme with TMDB Integration",
     "type": "wordpress-theme",
     "version": "1.0.0",
     "license": "MIT",
     "authors": [
         {
-            "name": "TMU Team",
-            "email": "info@themovieupdates.com"
+            "name": "TheMovieUpdates",
+            "email": "info@themovieupdates.com",
+            "homepage": "https://www.themovieupdates.com/",
+            "role": "Developer"
         }
     ],
+    "keywords": [
+        "wordpress",
+        "theme",
+        "movie",
+        "tv-show",
+        "tmdb",
+        "entertainment",
+        "database"
+    ],
+    "homepage": "https://github.com/urrehmanr/tmu-theme",
+    "support": {
+        "issues": "https://github.com/urrehmanr/tmu-theme/issues",
+        "docs": "https://www.themovieupdates.com/docs/tmu-theme"
+    },
     "require": {
         "php": ">=7.4",
-        "composer/installers": "^1.0"
+        "ext-json": "*",
+        "ext-curl": "*",
+        "composer/installers": "^1.0|^2.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.0",
+        "phpunit/phpunit": "^9.5",
         "squizlabs/php_codesniffer": "^3.6",
-        "wp-coding-standards/wpcs": "^2.3"
+        "wp-coding-standards/wpcs": "^2.3",
+        "phpstan/phpstan": "^1.8",
+        "mockery/mockery": "^1.4",
+        "phpmd/phpmd": "^2.12"
     },
     "autoload": {
         "psr-4": {
             "TMU\\": "includes/classes/"
-        }
+        },
+        "files": [
+            "includes/helpers/functions.php",
+            "includes/helpers/template-functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
-            "TMU\\Tests\\": "tests/"
+            "TMU\\Tests\\": "tests/",
+            "TMU\\Fixtures\\": "tests/fixtures/"
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "cs-check": "phpcs --standard=WordPress includes/",
-        "cs-fix": "phpcbf --standard=WordPress includes/"
+        "test": [
+            "phpunit --configuration phpunit.xml"
+        ],
+        "test-coverage": [
+            "phpunit --configuration phpunit.xml --coverage-html coverage/"
+        ],
+        "cs-check": [
+            "phpcs --standard=WordPress includes/ --extensions=php"
+        ],
+        "cs-fix": [
+            "phpcbf --standard=WordPress includes/ --extensions=php"
+        ],
+        "analyze": [
+            "phpstan analyse includes/ --level=5"
+        ],
+        "mess-detect": [
+            "phpmd includes/ text cleancode,codesize,controversial,design,naming,unusedcode"
+        ],
+        "quality": [
+            "@cs-check",
+            "@analyze",
+            "@mess-detect"
+        ],
+        "post-install-cmd": [
+            "@php -r \"file_exists('vendor/bin/phpcs') && shell_exec('vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs');\""
+        ],
+        "post-update-cmd": [
+            "@php -r \"file_exists('vendor/bin/phpcs') && shell_exec('vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs');\""
+        ]
     },
     "config": {
         "allow-plugins": {
             "composer/installers": true
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "extra": {
+        "installer-paths": {
+            "vendor/{$vendor}/{$name}/": ["type:wordpress-plugin"],
+            "vendor/{$vendor}/{$name}/": ["type:wordpress-muplugin"]
         }
     }
 }

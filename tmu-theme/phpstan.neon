@@ -1,0 +1,47 @@
+parameters:
+    level: 5
+    paths:
+        - includes/classes
+    excludePaths:
+        - includes/classes/vendor/*
+    ignoreErrors:
+        - '#Call to function is_plugin_active\(\) with incorrect case#'
+        - '#Function get_template_directory not found#'
+        - '#Function get_template_directory_uri not found#'
+        - '#Function add_action not found#'
+        - '#Function add_filter not found#'
+        - '#Function wp_create_nonce not found#'
+        - '#Function wp_verify_nonce not found#'
+        - '#Function get_option not found#'
+        - '#Function update_option not found#'
+        - '#Function delete_option not found#'
+        - '#Function get_transient not found#'
+        - '#Function set_transient not found#'
+        - '#Function delete_transient not found#'
+        - '#Function home_url not found#'
+        - '#Function admin_url not found#'
+        - '#Function rest_url not found#'
+        - '#Function esc_url not found#'
+        - '#Function esc_html not found#'
+        - '#Function esc_attr not found#'
+        - '#Function sanitize_text_field not found#'
+        - '#Function sanitize_email not found#'
+        - '#Function wp_kses_post not found#'
+        - '#Function current_user_can not found#'
+        - '#Function get_current_user_id not found#'
+        - '#Function is_user_logged_in not found#'
+        - '#Function wp_get_current_user not found#'
+        - '#Function get_post_meta not found#'
+        - '#Function update_post_meta not found#'
+        - '#Function get_the_title not found#'
+        - '#Function get_the_ID not found#'
+        - '#Function get_post_type not found#'
+        - '#Function wp_remote_get not found#'
+        - '#Function wp_remote_retrieve_body not found#'
+        - '#Function is_wp_error not found#'
+        - '#Function error_log not found#'
+        - '#Access to an undefined property \$wpdb#'
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    bootstrapFiles:
+        - includes/bootstrap.php
