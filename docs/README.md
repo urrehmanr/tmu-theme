@@ -11,6 +11,19 @@ This comprehensive documentation provides a complete roadmap for migrating the T
 
 ## Documentation Structure
 
+### **📚 Complete Documentation Index**
+- **[Documentation Index](documentation-index.md)** - Comprehensive guide to all documentation files, organized by purpose and development phase
+
+### **🤖 AI-Ready Development (NEW)**
+- **[AI-Ready Development Guide](ai-ready-development-guide.md)** - Complete guide for AI-assisted development with all references and patterns
+- **[Development Quick Reference](development-quick-reference.md)** - Essential quick reference for developers
+- **[Master Departments & Jobs Configuration](master-departments-jobs-config.php)** - Complete department/job definitions (800+ jobs)
+
+### **🔍 Field Analysis & Configuration (NEW)**
+- **[TMU Plugin Field Analysis](tmu-plugin-field-analysis.md)** - Complete field structure analysis from TMU plugin
+- **[TMU Field Implementation Summary](tmu-field-implementation-summary.md)** - Critical findings and implementation requirements
+- **[TMU Departments & Jobs Configuration](tmu-departments-jobs-config.php)** - Basic department/job configuration
+
 ### Phase 1: Foundation Setup (Weeks 1-2)
 - **[Step 00: Master Documentation](step-00-master-documentation.md)** - Project overview, architecture, and success metrics
 - **[Step 01: Project Setup and Structure](step-01-project-setup-and-structure.md)** - Theme directory structure and development environment
@@ -43,6 +56,16 @@ This comprehensive documentation provides a complete roadmap for migrating the T
 
 ### Summary Documents
 - **[Project Completion Summary](project-completion-summary.md)** - Final project overview and success metrics
+
+### AI-Ready Development Documentation
+- **[AI-Ready Development Guide](ai-ready-development-guide.md)** - Comprehensive guide for AI-assisted development
+- **[Development Quick Reference](development-quick-reference.md)** - Essential reference for developers
+- **[Master Departments & Jobs Configuration](master-departments-jobs-config.php)** - Complete department/job definitions (800+ jobs)
+
+### Field Analysis & Configuration
+- **[TMU Plugin Field Analysis](tmu-plugin-field-analysis.md)** - Complete field structure analysis from TMU plugin
+- **[TMU Field Implementation Summary](tmu-field-implementation-summary.md)** - Critical findings and implementation requirements
+- **[TMU Departments & Jobs Configuration](tmu-departments-jobs-config.php)** - Basic department/job configuration file
 
 ## Key Features Migrated
 
