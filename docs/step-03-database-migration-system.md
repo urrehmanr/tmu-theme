@@ -43,29 +43,59 @@ wp_posts (with seo_title, seo_description, meta_keywords columns)
 
 ## Migration System Architecture
 
-### Directory Structure
+### Directory Structure with File Status
 ```
 includes/
 ├── classes/
-│   └── Database/
-│       ├── Migration.php          # Main migration handler
-│       ├── Schema.php             # Schema definitions
-│       ├── MigrationRunner.php    # Migration execution
-│       └── DataValidator.php      # Data validation
-├── migrations/
-│   ├── 001_create_core_tables.php     # Core tables creation
-│   ├── 002_create_cast_crew_tables.php # Cast/crew relationship tables
-│   ├── 003_create_episode_tables.php   # Episode/season tables
-│   ├── 004_extend_core_tables.php      # Extend wp_posts and wp_comments
-│   ├── 005_create_indexes.php          # Performance indexes
-│   └── 006_seed_initial_data.php       # Initial data seeding
-├── config/
-│   └── database.php               # Database configuration
+│   └── Database/                   # [UPDATE DIR - STEP 3] Extend existing directory from Step 1
+│       ├── Migration.php          # [CREATE NEW - STEP 3] Main migration handler - Core migration logic
+│       ├── Schema.php             # [CREATE NEW - STEP 3] Schema definitions - Table structures
+│       ├── MigrationRunner.php    # [CREATE NEW - STEP 3] Migration execution - Migration workflow
+│       ├── DataValidator.php      # [CREATE NEW - STEP 3] Data validation - Data integrity checks
+│       ├── QueryBuilder.php       # [CREATE NEW - STEP 3] Custom query builder - Complex queries
+│       └── DataManager.php        # [CREATE NEW - STEP 3] Data management operations - CRUD operations
+├── migrations/                     # [CREATE DIR - STEP 3] Migration files directory
+│   ├── 001_create_core_tables.php     # [CREATE NEW - STEP 3] Core tables creation - Movies, People, TV, Dramas
+│   ├── 002_create_cast_crew_tables.php # [CREATE NEW - STEP 3] Cast/crew relationship tables
+│   ├── 003_create_episode_tables.php   # [CREATE NEW - STEP 3] Episode/season tables - Hierarchical content
+│   ├── 004_extend_core_tables.php      # [CREATE NEW - STEP 3] Extend wp_posts and wp_comments - SEO fields
+│   ├── 005_create_indexes.php          # [CREATE NEW - STEP 3] Performance indexes - Query optimization
+│   └── 006_seed_initial_data.php       # [CREATE NEW - STEP 3] Initial data seeding - Default content
+├── config/                         # [UPDATE DIR - STEP 3] Extend existing directory from Step 1
+│   └── database.php               # [UPDATE - STEP 3] Database configuration - Extended from Step 1
 ```
+
+### **Dependencies from Previous Steps:**
+- **[REQUIRED]** `includes/classes/ThemeCore.php` [FROM STEP 1] - Main theme class
+- **[REQUIRED]** `includes/config/constants.php` [FROM STEP 1] - Database table constants
+- **[REQUIRED]** `includes/config/database.php` [FROM STEP 1] - Basic database configuration
+- **[REQUIRED]** `functions.php` [FROM STEP 1] - Theme bootstrap for autoloading
+- **[REQUIRED]** `includes/classes/ThemeInitializer.php` [FROM STEP 2] - Theme activation hooks
+
+### **Files Created in Future Steps:**
+- **`includes/classes/PostTypes/PostTypeManager.php`** - [CREATE NEW - STEP 5] Post type registration
+- **`includes/classes/API/TMDBClient.php`** - [CREATE NEW - STEP 9] API integration
+- **`includes/classes/Admin/Settings.php`** - [CREATE NEW - STEP 2] Settings management
+
+### **Tailwind CSS Status**: NOT APPLICABLE - Database operations don't use CSS
 
 ## Migration Class Implementation
 
 ### 1. Main Migration Class (`includes/classes/Database/Migration.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/classes/Database/Migration.php`
+**Purpose**: Core migration handler that manages database table creation and updates
+**Dependencies**: 
+- [DEPENDS ON] `includes/config/constants.php` [FROM STEP 1] - Database table constants
+- [DEPENDS ON] `includes/config/database.php` [FROM STEP 1] - Database configuration
+- [DEPENDS ON] WordPress `$wpdb` global - Database abstraction layer
+- [DEPENDS ON] Migration files in `includes/migrations/` [CREATE NEW - STEP 3]
+**Integration**: Hooks into WordPress theme activation system from Step 2
+**Used By**: 
+- `ThemeInitializer.php` [FROM STEP 2] - Calls during theme activation
+- Admin migration page [CREATE NEW - STEP 8] - Manual migration triggers
+**AI Action**: Create singleton class that handles database schema creation and updates
+
 ```php
 <?php
 /**
@@ -339,6 +369,20 @@ class Migration {
 ```
 
 ### 2. Schema Definition Class (`includes/classes/Database/Schema.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/classes/Database/Schema.php`
+**Purpose**: Database schema definitions preserving plugin table structures
+**Dependencies**: 
+- [DEPENDS ON] WordPress `$wpdb` global - Database prefix and connection
+- [DEPENDS ON] `includes/config/database.php` [FROM STEP 1] - Schema configuration
+- [REFERENCES] `tmu-plugin/setup/tables.php` [REFERENCE ONLY] - Original plugin schemas
+**Integration**: Provides schema definitions for Migration class
+**Used By**: 
+- `Migration.php` [CREATE NEW - STEP 3] - Uses schema definitions
+- Individual migration files [CREATE NEW - STEP 3] - Reference schemas
+- `DataValidator.php` [CREATE NEW - STEP 3] - Validates against schemas
+**AI Action**: Create static class with methods returning SQL CREATE TABLE statements
+
 ```php
 <?php
 /**
@@ -615,6 +659,17 @@ class Schema {
 ## Migration Files
 
 ### 1. Core Tables Migration (`includes/migrations/001_create_core_tables.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/migrations/001_create_core_tables.php`
+**Purpose**: Creates core TMU tables (movies, people, TV series, dramas, videos, SEO options)
+**Dependencies**: 
+- [DEPENDS ON] `includes/classes/Database/Schema.php` [CREATE NEW - STEP 3] - Schema definitions
+- [DEPENDS ON] WordPress `dbDelta()` function - Database table creation
+- [DEPENDS ON] WordPress `$wpdb` global - Database operations
+**Integration**: Called by Migration.php during theme activation
+**Tables Created**: tmu_movies, tmu_people, tmu_tv_series, tmu_dramas, tmu_videos, tmu_seo_options
+**AI Action**: Create migration class that executes table creation SQL
+
 ```php
 <?php
 /**
@@ -710,7 +765,36 @@ class CreateCoreTables {
 }
 ```
 
-### 2. Extend Core Tables Migration (`includes/migrations/004_extend_core_tables.php`)
+### 2. Cast/Crew Tables Migration (`includes/migrations/002_create_cast_crew_tables.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/migrations/002_create_cast_crew_tables.php`
+**Purpose**: Creates relationship tables for cast and crew connections
+**Dependencies**: 
+- [DEPENDS ON] Core tables from 001_create_core_tables.php [CREATE NEW - STEP 3]
+- [DEPENDS ON] WordPress `$wpdb` and `dbDelta()` functions
+**Tables Created**: tmu_movies_cast, tmu_movies_crew, tmu_tv_series_cast, tmu_tv_series_crew, tmu_dramas_cast, tmu_dramas_crew
+**AI Action**: Create migration for relationship tables
+
+### 3. Episode/Season Tables Migration (`includes/migrations/003_create_episode_tables.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/migrations/003_create_episode_tables.php`
+**Purpose**: Creates hierarchical tables for TV series and drama episodes/seasons
+**Dependencies**: 
+- [DEPENDS ON] TV series and drama tables from 001_create_core_tables.php [CREATE NEW - STEP 3]
+**Tables Created**: tmu_tv_series_episodes, tmu_tv_series_seasons, tmu_dramas_episodes, tmu_dramas_seasons
+**AI Action**: Create migration for hierarchical content tables
+
+### 4. Extend Core Tables Migration (`includes/migrations/004_extend_core_tables.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/migrations/004_extend_core_tables.php`
+**Purpose**: Extends WordPress core tables (wp_posts, wp_comments) with SEO and rating fields
+**Dependencies**: 
+- [DEPENDS ON] WordPress core tables - wp_posts, wp_comments
+- [DEPENDS ON] `includes/classes/Database/Schema.php` [CREATE NEW - STEP 3] - Extension definitions
+**Integration**: Preserves existing plugin column additions
+**Columns Added**: seo_title, seo_description, meta_keywords (posts), comment_rating, parent_post_id (comments)
+**AI Action**: Create migration that adds columns to existing WordPress tables
+
 ```php
 <?php
 /**
@@ -774,7 +858,39 @@ class ExtendCoreTables {
 
 ## Data Validation and Safety
 
+### 5. Performance Indexes Migration (`includes/migrations/005_create_indexes.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/migrations/005_create_indexes.php`
+**Purpose**: Creates database indexes for improved query performance
+**Dependencies**: 
+- [DEPENDS ON] All core tables from previous migrations [CREATE NEW - STEP 3]
+**Indexes Created**: tmdb_id, popularity, release_timestamp, rating indexes
+**AI Action**: Create migration that adds performance indexes
+
+### 6. Initial Data Seeding Migration (`includes/migrations/006_seed_initial_data.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/migrations/006_seed_initial_data.php`
+**Purpose**: Seeds initial data like default SEO settings and taxonomies
+**Dependencies**: 
+- [DEPENDS ON] All previous migrations [CREATE NEW - STEP 3]
+- [DEPENDS ON] `includes/classes/Taxonomies/TaxonomyManager.php` [CREATE NEW - STEP 6] - Default terms
+**AI Action**: Create migration that inserts default configuration data
+
+## Data Validation and Safety
+
 ### Data Validator (`includes/classes/Database/DataValidator.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/classes/Database/DataValidator.php`
+**Purpose**: Validates database integrity and existing plugin data before migration
+**Dependencies**: 
+- [DEPENDS ON] WordPress `$wpdb` global - Database operations
+- [DEPENDS ON] Database table constants from Step 1
+**Integration**: Used by Migration.php for pre-migration validation
+**Used By**: 
+- `Migration.php` [CREATE NEW - STEP 3] - Pre-migration checks
+- Admin migration page [CREATE NEW - STEP 8] - Data validation display
+**AI Action**: Create class that performs database integrity checks
+
 ```php
 <?php
 /**
@@ -882,7 +998,44 @@ class DataValidator {
 
 ## Admin Interface Integration
 
+### Query Builder (`includes/classes/Database/QueryBuilder.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/classes/Database/QueryBuilder.php`
+**Purpose**: Custom query builder for complex TMU database operations
+**Dependencies**: 
+- [DEPENDS ON] WordPress `$wpdb` global - Database operations
+- [DEPENDS ON] Database table constants from Step 1
+**Used By**: 
+- Post type classes [CREATE NEW - STEP 5] - Custom queries
+- API integration [CREATE NEW - STEP 9] - Data retrieval
+- Search functionality [CREATE NEW - STEP 12] - Complex searches
+**AI Action**: Create class for building complex SQL queries
+
+### Data Manager (`includes/classes/Database/DataManager.php`)
+**File Status**: [CREATE NEW - STEP 3]
+**File Path**: `tmu-theme/includes/classes/Database/DataManager.php`
+**Purpose**: High-level data management operations and CRUD functionality
+**Dependencies**: 
+- [DEPENDS ON] `QueryBuilder.php` [CREATE NEW - STEP 3] - Query building
+- [DEPENDS ON] `DataValidator.php` [CREATE NEW - STEP 3] - Data validation
+**Used By**: 
+- TMDB API integration [CREATE NEW - STEP 9] - Data synchronization
+- Admin interfaces [CREATE NEW - STEP 8] - Data management
+**AI Action**: Create class that handles data operations
+
+## Admin Interface Integration
+
 ### Migration Admin Page
+**File Status**: [CREATE NEW - STEP 8]
+**File Path**: `tmu-theme/includes/classes/Admin/MigrationAdmin.php`
+**Purpose**: Admin interface for manual database migration management
+**Dependencies**: 
+- [DEPENDS ON] `Migration.php` [CREATE NEW - STEP 3] - Migration operations
+- [DEPENDS ON] `DataValidator.php` [CREATE NEW - STEP 3] - Data validation
+- [DEPENDS ON] Tailwind CSS admin styles [FROM STEP 1] - UI styling
+**Integration**: Added to WordPress admin menu in Step 8
+**AI Action**: Create admin page class (implementation in Step 8)
+
 ```php
 <?php
 /**
@@ -1161,6 +1314,70 @@ After completing this migration system:
 - [ ] Performance optimizations applied
 - [ ] Documentation completed
 
+## AI Implementation Instructions for Step 3
+
+### **Prerequisites Check**
+Before implementing Step 3, verify these files exist from previous steps:
+- **[REQUIRED]** `includes/classes/ThemeCore.php` [FROM STEP 1]
+- **[REQUIRED]** `includes/config/constants.php` [FROM STEP 1] 
+- **[REQUIRED]** `includes/config/database.php` [FROM STEP 1]
+- **[REQUIRED]** `includes/classes/ThemeInitializer.php` [FROM STEP 2]
+- **[REQUIRED]** `functions.php` [FROM STEP 1]
+
+### **Implementation Order for AI Models**
+
+#### **Phase 1: Create Directories** (Required First)
+```bash
+mkdir -p tmu-theme/includes/migrations
+# Database directory already exists from Step 1
+```
+
+#### **Phase 2: Core Classes** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Database/Schema.php` - Schema definitions
+2. **[CREATE SECOND]** `includes/classes/Database/DataValidator.php` - Data validation
+3. **[CREATE THIRD]** `includes/classes/Database/QueryBuilder.php` - Query building
+4. **[CREATE FOURTH]** `includes/classes/Database/DataManager.php` - Data management
+5. **[CREATE FIFTH]** `includes/classes/Database/Migration.php` - Main migration class
+
+#### **Phase 3: Migration Files** (Exact Order)
+1. **[CREATE FIRST]** `includes/migrations/001_create_core_tables.php`
+2. **[CREATE SECOND]** `includes/migrations/002_create_cast_crew_tables.php`
+3. **[CREATE THIRD]** `includes/migrations/003_create_episode_tables.php`
+4. **[CREATE FOURTH]** `includes/migrations/004_extend_core_tables.php`
+5. **[CREATE FIFTH]** `includes/migrations/005_create_indexes.php`
+6. **[CREATE SIXTH]** `includes/migrations/006_seed_initial_data.php`
+
+#### **Phase 4: Configuration Update**
+1. **[UPDATE]** `includes/config/database.php` - Add migration configuration
+
+#### **Phase 5: Integration**
+1. **[UPDATE]** `includes/classes/ThemeCore.php` - Load Database classes
+2. **[UPDATE]** `includes/classes/ThemeInitializer.php` - Hook migration system
+
+### **Key Implementation Notes**
+- **Database Preservation**: All existing plugin tables MUST be preserved
+- **Schema Compatibility**: Use exact schema from `tmu-plugin/setup/tables.php`
+- **Migration Safety**: Always validate before executing migrations
+- **Error Handling**: Implement comprehensive error logging
+- **Rollback Support**: Each migration must support rollback
+
+### **Testing Requirements**
+1. **Test with existing plugin data** - Verify data preservation
+2. **Test fresh installation** - Verify clean table creation
+3. **Test rollback functionality** - Verify migration reversal
+4. **Test data validation** - Verify integrity checks
+5. **Test admin interface** - Verify migration management
+
+### **Integration Points**
+- **ThemeInitializer.php** - Calls Migration::runMigrations() on theme activation
+- **ThemeCore.php** - Loads Database namespace classes
+- **Future Steps** - Post types (Step 5) depend on these tables
+- **Admin Interface** - Migration admin page (Step 8) uses these classes
+
 ---
 
 This migration system ensures seamless transition from the TMU plugin to the theme while preserving all existing data and maintaining database integrity.
+
+**Step 3 Status**: ✅ READY FOR AI IMPLEMENTATION
+**Dependencies**: Steps 1-2 must be completed
+**Next Step**: Step 4 - Autoloading and Namespace Setup

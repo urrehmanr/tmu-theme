@@ -11,6 +11,26 @@ This step establishes:
 4. Dependency management
 5. Development tools integration
 
+## Dependencies from Previous Steps
+- **[REQUIRED]** `composer.json` [FROM STEP 1] - Basic PHP dependency management
+- **[REQUIRED]** `includes/classes/ThemeCore.php` [FROM STEP 1] - Main theme class
+- **[REQUIRED]** `includes/config/constants.php` [FROM STEP 1] - Theme constants
+- **[REQUIRED]** `functions.php` [FROM STEP 1] - Theme bootstrap
+- **[REQUIRED]** Database classes [FROM STEP 3] - Classes to be autoloaded
+
+## Files Created in This Step
+- **[UPDATE]** `composer.json` - Enhanced with comprehensive autoloading
+- **[CREATE NEW]** `includes/classes/Autoloader.php` - Custom PSR-4 autoloader
+- **[CREATE NEW]** `includes/bootstrap.php` - Theme bootstrap with autoloading
+- **[CREATE NEW]** `includes/helpers/functions.php` - General helper functions
+- **[CREATE NEW]** `includes/helpers/template-functions.php` - Template helper functions
+- **[CREATE NEW]** `includes/helpers/admin-functions.php` - Admin helper functions
+- **[CREATE NEW]** `phpunit.xml` - PHPUnit configuration
+- **[CREATE NEW]** `phpcs.xml` - PHP CodeSniffer configuration
+
+## Tailwind CSS Status
+**NOT APPLICABLE** - This step focuses on PHP autoloading and doesn't involve CSS
+
 ## Modern PHP Standards Implementation
 
 ### Namespace Structure
@@ -59,6 +79,20 @@ TMU\                           # Root namespace
 ## Composer Configuration
 
 ### Enhanced `composer.json`
+**File Status**: [UPDATE - STEP 4]
+**File Path**: `tmu-theme/composer.json`
+**Purpose**: Enhanced PHP dependency management with comprehensive autoloading and development tools
+**Dependencies**: 
+- [EXTENDS] Basic `composer.json` [FROM STEP 1] - Extends existing configuration
+- [DEPENDS ON] `includes/classes/` directory structure [FROM STEP 1] - Autoloading targets
+- [DEPENDS ON] `includes/helpers/` directory [CREATE NEW - STEP 4] - Helper functions
+**Integration**: Used by all PHP classes for PSR-4 autoloading
+**Used By**: 
+- All PHP classes in `includes/classes/` namespace
+- Development tools (PHPUnit, CodeSniffer, PHPStan)
+- Helper functions autoloading
+**AI Action**: Update existing composer.json with comprehensive autoloading configuration
+
 ```json
 {
     "name": "tmu/wordpress-theme",
@@ -167,6 +201,24 @@ TMU\                           # Root namespace
 ## Autoloader Implementation
 
 ### Primary Autoloader (`includes/classes/Autoloader.php`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/includes/classes/Autoloader.php`
+**Purpose**: Custom PSR-4 compliant autoloader for fallback when Composer is not available
+**Dependencies**: 
+- [DEPENDS ON] `includes/config/constants.php` [FROM STEP 1] - Theme constants like TMU_INCLUDES_DIR
+- [DEPENDS ON] `includes/classes/` directory structure [FROM STEP 1] - Classes to autoload
+- [DEPENDS ON] Namespace structure defined in this step - Target classes
+**Integration**: Fallback autoloader when Composer autoloader is not available
+**Used By**: 
+- `includes/bootstrap.php` [CREATE NEW - STEP 4] - Bootstrap autoloading
+- All theme classes when Composer is not installed
+**Features**: 
+- PSR-4 compliant autoloading
+- Namespace registration
+- Class aliases for backward compatibility
+- Directory mapping for all TMU namespaces
+**AI Action**: Create comprehensive autoloader class with all TMU namespaces
+
 ```php
 <?php
 /**
@@ -385,6 +437,25 @@ class Autoloader {
 ```
 
 ### Bootstrap Integration (`includes/bootstrap.php`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/includes/bootstrap.php`
+**Purpose**: Theme bootstrap that initializes autoloading, helper functions, and error handling
+**Dependencies**: 
+- [DEPENDS ON] `includes/classes/Autoloader.php` [CREATE NEW - STEP 4] - Fallback autoloader
+- [DEPENDS ON] `vendor/autoload.php` [AUTO-GENERATED] - Composer autoloader (preferred)
+- [DEPENDS ON] `includes/config/constants.php` [FROM STEP 1] - Theme constants
+- [DEPENDS ON] Helper files [CREATE NEW - STEP 4] - Helper functions
+**Integration**: Core bootstrap file that sets up the entire theme environment
+**Used By**: 
+- `functions.php` [FROM STEP 1] - Main theme entry point
+- `includes/classes/ThemeCore.php` [FROM STEP 1] - Theme initialization
+**Features**: 
+- Composer autoloader detection and fallback
+- Helper functions loading
+- Error handling setup
+- System requirements checking
+**AI Action**: Create bootstrap file that handles all theme initialization
+
 ```php
 <?php
 /**
@@ -585,6 +656,25 @@ tmu_init_compatibility();
 ## Helper Functions Implementation
 
 ### Core Functions (`includes/helpers/functions.php`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/includes/helpers/functions.php`
+**Purpose**: Core helper functions used throughout the theme
+**Dependencies**: 
+- [DEPENDS ON] `TMU\Config\ThemeConfig` [CREATE NEW - STEP 7] - Theme configuration
+- [DEPENDS ON] `TMU\Utils\Logger` [CREATE NEW - STEP 11] - Logging functionality
+- [DEPENDS ON] WordPress core functions - get_option, sanitize_text_field, etc.
+**Integration**: Auto-loaded by bootstrap.php and Composer
+**Used By**: 
+- Template files - Theme templates
+- Admin interfaces - Settings and admin pages
+- Other helper functions - Function composition
+**Features**: 
+- Configuration management
+- Logging and debugging
+- Caching utilities
+- Sanitization and validation helpers
+**AI Action**: Create comprehensive helper functions file
+
 ```php
 <?php
 /**
@@ -749,6 +839,25 @@ function tmu_is_development(): bool {
 ```
 
 ### Template Functions (`includes/helpers/template-functions.php`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/includes/helpers/template-functions.php`
+**Purpose**: Template-specific helper functions for frontend display
+**Dependencies**: 
+- [DEPENDS ON] `TMU\Database\DataManager` [CREATE NEW - STEP 3] - Database operations
+- [DEPENDS ON] `TMU\Frontend\TemplateLoader` [CREATE NEW - STEP 10] - Template loading
+- [DEPENDS ON] WordPress template functions - get_post_meta, get_template_part, etc.
+**Integration**: Auto-loaded by bootstrap.php and Composer
+**Used By**: 
+- Template files - Single, archive, and custom templates
+- Widget classes - Custom widgets
+- Shortcode handlers - Content display
+**Features**: 
+- Meta data retrieval
+- Template part loading
+- Rating display
+- Breadcrumb generation
+**AI Action**: Create template helper functions file
+
 ```php
 <?php
 /**
@@ -871,9 +980,97 @@ function tmu_breadcrumbs(bool $echo = true) {
 }
 ```
 
+### Admin Functions (`includes/helpers/admin-functions.php`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/includes/helpers/admin-functions.php`
+**Purpose**: Admin-specific helper functions for backend functionality
+**Dependencies**: 
+- [DEPENDS ON] WordPress admin functions - add_action, add_filter, etc.
+- [DEPENDS ON] TMU admin classes - Settings, MetaBoxes, etc.
+**Integration**: Auto-loaded by bootstrap.php and Composer
+**Used By**: 
+- Admin interface classes - Settings pages, meta boxes
+- Admin hooks and filters - WordPress integration
+**Features**: 
+- Admin utility functions
+- Settings helpers
+- Meta box utilities
+- Admin notice helpers
+**AI Action**: Create admin helper functions file
+
+```php
+<?php
+/**
+ * TMU Admin Helper Functions
+ *
+ * @package TMU
+ * @version 1.0.0
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Add TMU admin notice
+ *
+ * @param string $message Notice message
+ * @param string $type Notice type (success, error, warning, info)
+ * @param bool $dismissible Whether notice is dismissible
+ */
+function tmu_add_admin_notice(string $message, string $type = 'info', bool $dismissible = true): void {
+    $class = "notice notice-{$type}";
+    if ($dismissible) {
+        $class .= ' is-dismissible';
+    }
+    
+    add_action('admin_notices', function() use ($message, $class) {
+        echo "<div class=\"{$class}\"><p>{$message}</p></div>";
+    });
+}
+
+/**
+ * Get TMU admin setting
+ *
+ * @param string $setting Setting name
+ * @param mixed $default Default value
+ * @return mixed
+ */
+function tmu_get_admin_setting(string $setting, $default = null) {
+    $settings = get_option('tmu_settings', []);
+    return $settings[$setting] ?? $default;
+}
+
+/**
+ * Save TMU admin setting
+ *
+ * @param string $setting Setting name
+ * @param mixed $value Setting value
+ * @return bool
+ */
+function tmu_save_admin_setting(string $setting, $value): bool {
+    $settings = get_option('tmu_settings', []);
+    $settings[$setting] = $value;
+    return update_option('tmu_settings', $settings);
+}
+```
+
 ## Development Tools Configuration
 
 ### PHPUnit Configuration (`phpunit.xml`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/phpunit.xml`
+**Purpose**: PHPUnit testing framework configuration
+**Dependencies**: 
+- [DEPENDS ON] `tests/bootstrap.php` [CREATE NEW - STEP 17] - Test bootstrap
+- [DEPENDS ON] `includes/classes/` directory - Classes to test
+**Integration**: Used by Composer scripts for testing
+**Used By**: 
+- Development testing - Unit and integration tests
+- CI/CD pipelines - Automated testing
+**AI Action**: Create PHPUnit configuration file
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
@@ -908,6 +1105,18 @@ function tmu_breadcrumbs(bool $echo = true) {
 ```
 
 ### PHPStan Configuration (`phpstan.neon`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/phpstan.neon`
+**Purpose**: PHPStan static analysis configuration
+**Dependencies**: 
+- [DEPENDS ON] `includes/classes/` directory - Classes to analyze
+- [DEPENDS ON] PHPStan WordPress stubs - WordPress function definitions
+**Integration**: Used by Composer scripts for static analysis
+**Used By**: 
+- Development quality checks - Static analysis
+- CI/CD pipelines - Code quality enforcement
+**AI Action**: Create PHPStan configuration file
+
 ```yaml
 parameters:
     level: 5
@@ -922,6 +1131,18 @@ parameters:
 ```
 
 ### PHPCS Configuration (`.phpcs.xml`)
+**File Status**: [CREATE NEW - STEP 4]
+**File Path**: `tmu-theme/.phpcs.xml`
+**Purpose**: PHP CodeSniffer configuration for code standards enforcement
+**Dependencies**: 
+- [DEPENDS ON] `includes/classes/` directory - Classes to check
+- [DEPENDS ON] WordPress Coding Standards - WPCS rules
+**Integration**: Used by Composer scripts for code style checking
+**Used By**: 
+- Development quality checks - Code style enforcement
+- CI/CD pipelines - Code standards validation
+**AI Action**: Create PHPCS configuration file
+
 ```xml
 <?xml version="1.0"?>
 <ruleset name="TMU Theme Coding Standards">
@@ -1072,6 +1293,106 @@ if (class_exists('TMU\\ThemeCore')) {
 - [ ] Performance optimizations applied
 - [ ] Documentation complete
 
+## AI Implementation Instructions for Step 4
+
+### **Prerequisites Check**
+Before implementing Step 4, verify these files exist from previous steps:
+- **[REQUIRED]** `composer.json` [FROM STEP 1] - Basic PHP dependency management
+- **[REQUIRED]** `includes/classes/ThemeCore.php` [FROM STEP 1] - Main theme class
+- **[REQUIRED]** `includes/config/constants.php` [FROM STEP 1] - Theme constants
+- **[REQUIRED]** `functions.php` [FROM STEP 1] - Theme bootstrap
+- **[REQUIRED]** Database classes [FROM STEP 3] - Classes to be autoloaded
+
+### **Implementation Order for AI Models**
+
+#### **Phase 1: Create Directories** (Required First)
+```bash
+mkdir -p tmu-theme/includes/helpers
+mkdir -p tmu-theme/tests
+# Other directories already exist from previous steps
+```
+
+#### **Phase 2: Update Composer Configuration** (Critical First)
+1. **[UPDATE FIRST]** `composer.json` - Enhanced autoloading configuration
+2. **[RUN AFTER UPDATE]** `composer install` - Install dependencies
+3. **[RUN AFTER INSTALL]** `composer dump-autoload` - Generate autoloader
+
+#### **Phase 3: Core Autoloading Classes** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Autoloader.php` - Custom PSR-4 autoloader
+2. **[CREATE SECOND]** `includes/bootstrap.php` - Theme bootstrap with autoloading
+
+#### **Phase 4: Helper Functions** (Exact Order)
+1. **[CREATE FIRST]** `includes/helpers/functions.php` - Core helper functions
+2. **[CREATE SECOND]** `includes/helpers/template-functions.php` - Template helpers
+3. **[CREATE THIRD]** `includes/helpers/admin-functions.php` - Admin helpers
+
+#### **Phase 5: Development Tools** (Exact Order)
+1. **[CREATE FIRST]** `phpunit.xml` - PHPUnit configuration
+2. **[CREATE SECOND]** `phpstan.neon` - PHPStan configuration
+3. **[CREATE THIRD]** `.phpcs.xml` - PHPCS configuration
+
+#### **Phase 6: Testing Framework** (Exact Order)
+1. **[CREATE FIRST]** `tests/bootstrap.php` - Test bootstrap
+2. **[CREATE SECOND]** `tests/AutoloaderTest.php` - Autoloader tests
+
+#### **Phase 7: Integration Updates** (Final)
+1. **[UPDATE]** `functions.php` - Include bootstrap
+2. **[UPDATE]** `includes/classes/ThemeCore.php` - Use autoloaded classes
+
+### **Key Implementation Notes**
+- **Composer Priority**: Always try Composer autoloader first, fallback to custom
+- **PSR-4 Compliance**: All classes must follow PSR-4 naming conventions
+- **Helper Functions**: Auto-loaded via Composer files directive
+- **Development Tools**: Optional but recommended for code quality
+- **Testing**: Essential for maintaining code quality
+
+### **Critical Dependencies**
+- **PHP Version**: Minimum 7.4 (as specified in composer.json)
+- **WordPress Version**: Minimum 6.0 (as specified in bootstrap)
+- **PHP Extensions**: json, curl, gd (required for functionality)
+- **Composer**: Required for autoloading and dependency management
+
+### **Testing Requirements**
+1. **Autoloader Test** - Verify PSR-4 autoloading works
+2. **Helper Functions Test** - Verify helper functions load correctly
+3. **Namespace Resolution** - Verify all namespaces resolve correctly
+4. **Composer Integration** - Verify Composer autoloader works
+5. **Development Tools** - Verify all development tools function
+
+### **Integration Points**
+- **functions.php** - Includes bootstrap.php to initialize autoloading
+- **ThemeCore.php** - Uses autoloaded classes from other steps
+- **Future Steps** - All subsequent steps depend on this autoloading
+- **Development Workflow** - Composer scripts provide development tools
+
+### **Verification Commands**
+```bash
+# Install dependencies
+composer install
+
+# Run tests
+composer test
+
+# Check code style
+composer cs-check
+
+# Run static analysis
+composer analyze
+
+# Run all quality checks
+composer quality
+```
+
+### **Common Issues and Solutions**
+1. **Autoloader Not Found**: Ensure bootstrap.php is included in functions.php
+2. **Class Not Found**: Verify PSR-4 namespace mapping in composer.json
+3. **Helper Functions Missing**: Check files array in composer.json autoload section
+4. **Development Tools Failing**: Run `composer install` to install dev dependencies
+
 ---
 
 This autoloading and namespace setup provides a solid foundation for modern PHP development while maintaining WordPress compatibility and ensuring scalable code organization.
+
+**Step 4 Status**: ✅ READY FOR AI IMPLEMENTATION
+**Dependencies**: Steps 1-3 must be completed
+**Next Step**: Step 5 - Post Types Registration
