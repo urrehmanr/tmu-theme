@@ -24,24 +24,46 @@ From `tmu-plugin/setup/settings.php`, the plugin uses:
 
 ## Theme Initialization Architecture
 
-### Directory Structure
+### Directory Structure with File Status
 ```
 includes/classes/
-├── ThemeInitializer.php      # Main initialization class
-├── Admin/
-│   ├── Settings.php          # Theme settings page
-│   ├── SettingsAPI.php       # Settings API handler
-│   └── Welcome.php           # Welcome screen
-├── Config/
-│   ├── ThemeConfig.php       # Configuration manager
-│   └── DefaultSettings.php   # Default settings
-└── Migration/
-    └── SettingsMigrator.php   # Plugin settings migration
+├── ThemeInitializer.php      # [CREATE NEW - STEP 2] Main initialization class
+├── Admin/                    # [UPDATE DIR - STEP 2] Extend existing directory from Step 1
+│   ├── Settings.php          # [CREATE NEW - STEP 2] Theme settings page - Admin interface
+│   ├── SettingsAPI.php       # [CREATE NEW - STEP 2] Settings API handler - AJAX endpoints
+│   └── Welcome.php           # [CREATE NEW - STEP 2] Welcome screen - First-time setup
+├── Config/                   # [CREATE DIR - STEP 2] Configuration management
+│   ├── ThemeConfig.php       # [CREATE NEW - STEP 2] Configuration manager - Central config
+│   └── DefaultSettings.php   # [CREATE NEW - STEP 2] Default settings - Initial values
+└── Migration/                # [CREATE DIR - STEP 2] Migration functionality
+    └── SettingsMigrator.php   # [CREATE NEW - STEP 2] Plugin settings migration - Legacy compatibility
 ```
+
+### **Dependencies from Step 1:**
+- **[REQUIRED]** `includes/classes/ThemeCore.php` - Main theme class from Step 1
+- **[REQUIRED]** `includes/config/constants.php` - Constants from Step 1
+- **[REQUIRED]** `functions.php` - Theme bootstrap from Step 1
+- **[REQUIRED]** Tailwind CSS setup - Admin styling depends on admin.css from Step 1
+
+### **Files Referenced but Created in Other Steps:**
+- **`tmu-plugin/setup/settings.php`** - [REFERENCE ONLY] Analyzed for migration logic
+- **`includes/classes/Database/Migration.php`** - [CREATE NEW - STEP 3] Database operations
+- **`includes/classes/Admin/AdminInterface.php`** - [CREATE NEW - STEP 8] Main admin interface
 
 ## Core Implementation
 
 ### 1. Theme Initializer (`includes/classes/ThemeInitializer.php`)
+**File Status**: [CREATE NEW - STEP 2]
+**File Path**: `tmu-theme/includes/classes/ThemeInitializer.php`
+**Purpose**: Main initialization class handling theme activation, settings migration
+**Dependencies**: 
+- [DEPENDS ON] `ThemeCore.php` [FROM STEP 1] - Main theme class
+- [DEPENDS ON] `includes/config/constants.php` [FROM STEP 1] - Theme constants
+- [DEPENDS ON] `ThemeConfig.php` [CREATE NEW - STEP 2] - Configuration manager
+- [DEPENDS ON] `SettingsMigrator.php` [CREATE NEW - STEP 2] - Migration functionality
+**Tailwind Status**: USES - Admin interface uses Tailwind CSS from Step 1
+**Integration**: Hooks into WordPress theme activation/deactivation system
+
 ```php
 <?php
 /**
@@ -448,6 +470,15 @@ class ThemeInitializer {
 ```
 
 ### 2. Settings Migrator (`includes/classes/Migration/SettingsMigrator.php`)
+**File Status**: [CREATE NEW - STEP 2]
+**File Path**: `tmu-theme/includes/classes/Migration/SettingsMigrator.php`
+**Purpose**: Migrate existing plugin settings to theme options for backward compatibility
+**Dependencies**: 
+- [DEPENDS ON] None - Standalone migration functionality
+- [REFERENCES] `tmu-plugin/setup/settings.php` [REFERENCE ONLY] - Analyzed for setting names
+**Migration Logic**: Preserves existing plugin configuration during theme switch
+**AI Action**: Create class that reads existing plugin options and converts to theme options
+
 ```php
 <?php
 /**

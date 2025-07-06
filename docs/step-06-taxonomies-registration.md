@@ -6,6 +6,30 @@ Implement a modern, object-oriented taxonomy registration system that replicates
 ## Overview
 This step converts the plugin's taxonomy registration from procedural functions to a clean OOP architecture, preserving all existing taxonomy functionality while adding improved management and extensibility.
 
+## Dependencies from Previous Steps
+- **[REQUIRED]** Post types registration [FROM STEP 5] - Taxonomies attach to post types
+- **[REQUIRED]** PSR-4 autoloading [FROM STEP 4] - Class autoloading system
+- **[REQUIRED]** `includes/classes/ThemeCore.php` [FROM STEP 1] - Theme initialization
+- **[REQUIRED]** Theme options system [FROM STEP 2] - Conditional registration
+- **[REQUIRED]** `TMU\Config\ThemeConfig` class [FROM STEP 7] - Configuration management
+
+## Files Created in This Step
+- **[CREATE NEW]** `includes/classes/Taxonomies/TaxonomyManager.php` - Main manager class
+- **[CREATE NEW]** `includes/classes/Taxonomies/AbstractTaxonomy.php` - Base taxonomy class
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Genre.php` - Genre taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Country.php` - Country taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Language.php` - Language taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/ByYear.php` - Release year taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Network.php` - TV network taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Channel.php` - TV channel taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Keyword.php` - Keywords taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/Types/Nationality.php` - People nationality taxonomy
+- **[CREATE NEW]** `includes/classes/Taxonomies/TermManager.php` - Term management utilities
+- **[CREATE NEW]** `tests/TaxonomiesTest.php` - Taxonomies testing
+
+## Tailwind CSS Status
+**NOT APPLICABLE** - This step focuses on PHP taxonomy registration and doesn't involve CSS
+
 ## Analysis from Plugin Taxonomies
 
 ### Universal Taxonomies (Apply to Multiple Post Types)
@@ -29,26 +53,61 @@ This step converts the plugin's taxonomy registration from procedural functions 
 
 ## Architecture Implementation
 
-### Directory Structure
+### Directory Structure with File Status
 ```
-includes/classes/Taxonomies/
-├── TaxonomyManager.php      # Main manager class
-├── AbstractTaxonomy.php     # Base taxonomy class
-├── Types/                   # Individual taxonomy classes
-│   ├── Genre.php           # Genre taxonomy
-│   ├── Country.php         # Country taxonomy  
-│   ├── Language.php        # Language taxonomy
-│   ├── ByYear.php          # Release year taxonomy
-│   ├── Network.php         # TV network taxonomy
-│   ├── Channel.php         # TV channel taxonomy
-│   ├── Keyword.php         # Keywords taxonomy
-│   └── Nationality.php     # People nationality taxonomy
-└── TermManager.php         # Term management utilities
+includes/classes/Taxonomies/                     # [CREATE DIR - STEP 6] Taxonomy classes directory
+├── TaxonomyManager.php      # [CREATE NEW - STEP 6] Main manager class - Orchestrates all taxonomies
+├── AbstractTaxonomy.php     # [CREATE NEW - STEP 6] Base taxonomy class - Shared functionality
+├── Types/                   # [CREATE DIR - STEP 6] Individual taxonomy classes directory
+│   ├── Genre.php           # [CREATE NEW - STEP 6] Genre taxonomy - Content genres
+│   ├── Country.php         # [CREATE NEW - STEP 6] Country taxonomy - Content countries
+│   ├── Language.php        # [CREATE NEW - STEP 6] Language taxonomy - Content languages
+│   ├── ByYear.php          # [CREATE NEW - STEP 6] Release year taxonomy - Content years
+│   ├── Network.php         # [CREATE NEW - STEP 6] TV network taxonomy - TV networks/platforms
+│   ├── Channel.php         # [CREATE NEW - STEP 6] TV channel taxonomy - Drama channels
+│   ├── Keyword.php         # [CREATE NEW - STEP 6] Keywords taxonomy - Content keywords
+│   └── Nationality.php     # [CREATE NEW - STEP 6] People nationality taxonomy - People nations
+└── TermManager.php         # [CREATE NEW - STEP 6] Term management utilities - Term operations
+
+tests/                                           # [UPDATE DIR - STEP 6] Extend existing directory from Step 4
+└── TaxonomiesTest.php       # [CREATE NEW - STEP 6] Taxonomies testing - Unit tests
 ```
+
+### **Dependencies from Previous Steps:**
+- **[REQUIRED]** Post types [FROM STEP 5] - Genre applies to movie, tv, drama
+- **[REQUIRED]** `TMU\Config\ThemeConfig` [FROM STEP 7] - Feature enablement checks
+- **[REQUIRED]** PSR-4 autoloading [FROM STEP 4] - Class loading
+- **[REQUIRED]** Theme options [FROM STEP 2] - Conditional registration
+- **[REQUIRED]** Helper functions [FROM STEP 4] - Translation and utilities
+
+### **Files Created in Future Steps:**
+- **`includes/classes/Admin/TaxonomyColumns.php`** - [CREATE NEW - STEP 8] Admin column management
+- **`includes/classes/Frontend/TaxonomyArchives.php`** - [CREATE NEW - STEP 10] Frontend archives
+- **`includes/classes/API/TaxonomyEndpoints.php`** - [CREATE NEW - STEP 9] REST API endpoints
 
 ## Core Implementation
 
 ### 1. Taxonomy Manager (`TaxonomyManager.php`)
+**File Status**: [CREATE NEW - STEP 6]
+**File Path**: `tmu-theme/includes/classes/Taxonomies/TaxonomyManager.php`
+**Purpose**: Main manager class that orchestrates all taxonomy registration and management
+**Dependencies**: 
+- [DEPENDS ON] Individual taxonomy classes [CREATE NEW - STEP 6] - Genre, Country, Language, etc.
+- [DEPENDS ON] `TMU\Config\ThemeConfig` [FROM STEP 7] - Feature enablement checks
+- [DEPENDS ON] WordPress `register_taxonomy()` function - Core registration
+- [DEPENDS ON] PSR-4 autoloading [FROM STEP 4] - Class loading
+**Integration**: Central management of all TMU taxonomies
+**Used By**: 
+- `includes/classes/ThemeCore.php` [FROM STEP 1] - Theme initialization
+- Admin interfaces [CREATE NEW - STEP 8] - Taxonomy management
+- Frontend archives [CREATE NEW - STEP 10] - Taxonomy display
+**Features**: 
+- Singleton pattern for single instance
+- Conditional taxonomy registration based on enabled post types
+- Admin column management
+- Custom taxonomy functionality
+**AI Action**: Create singleton manager class that handles all taxonomy registration
+
 ```php
 <?php
 namespace TMU\Taxonomies;
@@ -118,6 +177,31 @@ class TaxonomyManager {
 ```
 
 ### 2. Abstract Taxonomy Base Class (`AbstractTaxonomy.php`)
+**File Status**: [CREATE NEW - STEP 6]
+**File Path**: `tmu-theme/includes/classes/Taxonomies/AbstractTaxonomy.php`
+**Purpose**: Base abstract class providing shared functionality for all taxonomy implementations
+**Dependencies**: 
+- [DEPENDS ON] `TMU\Config\ThemeConfig` [FROM STEP 7] - Configuration management
+- [DEPENDS ON] WordPress `register_taxonomy()` function - Core registration
+- [DEPENDS ON] WordPress translation functions - Label localization
+**Integration**: Base class for all TMU taxonomies
+**Used By**: 
+- `Genre.php` [CREATE NEW - STEP 6] - Genre taxonomy
+- `Country.php` [CREATE NEW - STEP 6] - Country taxonomy
+- `Language.php` [CREATE NEW - STEP 6] - Language taxonomy
+- `ByYear.php` [CREATE NEW - STEP 6] - Year taxonomy
+- `Network.php` [CREATE NEW - STEP 6] - Network taxonomy
+- `Channel.php` [CREATE NEW - STEP 6] - Channel taxonomy
+- `Keyword.php` [CREATE NEW - STEP 6] - Keyword taxonomy
+- `Nationality.php` [CREATE NEW - STEP 6] - Nationality taxonomy
+**Features**: 
+- Abstract methods for labels, post types, and args
+- Default arguments for taxonomies
+- Conditional registration logic
+- Default label generation
+- Shared functionality across all taxonomies
+**AI Action**: Create abstract base class with shared taxonomy functionality
+
 ```php
 <?php
 namespace TMU\Taxonomies;
@@ -227,6 +311,27 @@ abstract class AbstractTaxonomy {
 ```
 
 ### 3. Genre Taxonomy (`Types/Genre.php`)
+**File Status**: [CREATE NEW - STEP 6]
+**File Path**: `tmu-theme/includes/classes/Taxonomies/Types/Genre.php`
+**Purpose**: Genre taxonomy implementation for movies, TV shows, and dramas
+**Dependencies**: 
+- [EXTENDS] `AbstractTaxonomy.php` [CREATE NEW - STEP 6] - Base taxonomy functionality
+- [DEPENDS ON] `TMU\Config\ThemeConfig` [FROM STEP 7] - Feature enablement checks
+- [DEPENDS ON] Post types [FROM STEP 5] - movie, tv, drama post types
+- [DEPENDS ON] WordPress taxonomy functions - wp_insert_term, term_exists
+**Integration**: Universal genre taxonomy for all content types
+**Used By**: 
+- `TaxonomyManager.php` [CREATE NEW - STEP 6] - Registration management
+- Movie/TV/Drama admin interfaces [CREATE NEW - STEP 8] - Content categorization
+- Frontend archive pages [CREATE NEW - STEP 10] - Genre browsing
+**Features**: 
+- Multi-post-type support (movie, tv, drama)
+- Conditional registration based on enabled post types
+- Popular genre seeding for new installations
+- Admin column display
+- REST API support
+**AI Action**: Create genre taxonomy class extending AbstractTaxonomy
+
 ```php
 <?php
 namespace TMU\Taxonomies\Types;
@@ -301,6 +406,27 @@ class Genre extends AbstractTaxonomy {
 ```
 
 ### 4. Network Taxonomy (`Types/Network.php`)
+**File Status**: [CREATE NEW - STEP 6]
+**File Path**: `tmu-theme/includes/classes/Taxonomies/Types/Network.php`
+**Purpose**: Network taxonomy implementation for TV shows and streaming platforms
+**Dependencies**: 
+- [EXTENDS] `AbstractTaxonomy.php` [CREATE NEW - STEP 6] - Base taxonomy functionality
+- [DEPENDS ON] `TMU\Config\ThemeConfig` [FROM STEP 7] - Feature enablement checks
+- [DEPENDS ON] TV show post type [FROM STEP 5] - tv post type only
+- [DEPENDS ON] WordPress taxonomy functions - wp_insert_term, term_exists
+**Integration**: TV show specific taxonomy for networks and platforms
+**Used By**: 
+- `TaxonomyManager.php` [CREATE NEW - STEP 6] - Registration management
+- TV show admin interface [CREATE NEW - STEP 8] - Network assignment
+- Frontend TV show pages [CREATE NEW - STEP 10] - Network display
+**Features**: 
+- TV show specific taxonomy
+- Conditional registration based on TV series enablement
+- Popular network seeding (Netflix, HBO, etc.)
+- Admin column display
+- Streaming platform support
+**AI Action**: Create network taxonomy class for TV shows only
+
 ```php
 <?php
 namespace TMU\Taxonomies\Types;
@@ -921,6 +1047,142 @@ class TaxonomyMigrator {
 - [ ] Migration system ready
 - [ ] Integration with theme core complete
 
+## AI Implementation Instructions for Step 6
+
+### **Prerequisites Check**
+Before implementing Step 6, verify these files exist from previous steps:
+- **[REQUIRED]** Post types registration [FROM STEP 5] - Taxonomies attach to post types
+- **[REQUIRED]** PSR-4 autoloading [FROM STEP 4] - Class autoloading system
+- **[REQUIRED]** `includes/classes/ThemeCore.php` [FROM STEP 1] - Theme initialization
+- **[REQUIRED]** Theme options system [FROM STEP 2] - Conditional registration
+- **[REQUIRED]** `TMU\Config\ThemeConfig` class [FROM STEP 7] - Configuration management
+
+### **Implementation Order for AI Models**
+
+#### **Phase 1: Create Directories** (Required First)
+```bash
+mkdir -p tmu-theme/includes/classes/Taxonomies
+mkdir -p tmu-theme/includes/classes/Taxonomies/Types
+```
+
+#### **Phase 2: Base Classes** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Taxonomies/AbstractTaxonomy.php` - Base functionality
+2. **[CREATE SECOND]** `includes/classes/Taxonomies/TaxonomyManager.php` - Manager class
+
+#### **Phase 3: Universal Taxonomies** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Taxonomies/Types/Genre.php` - Multi-post-type genre
+2. **[CREATE SECOND]** `includes/classes/Taxonomies/Types/Country.php` - Multi-post-type country
+3. **[CREATE THIRD]** `includes/classes/Taxonomies/Types/Language.php` - Multi-post-type language
+4. **[CREATE FOURTH]** `includes/classes/Taxonomies/Types/ByYear.php` - Multi-post-type year
+
+#### **Phase 4: Specific Taxonomies** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Taxonomies/Types/Network.php` - TV-specific networks
+2. **[CREATE SECOND]** `includes/classes/Taxonomies/Types/Channel.php` - Drama-specific channels
+3. **[CREATE THIRD]** `includes/classes/Taxonomies/Types/Keyword.php` - Movie/TV keywords
+4. **[CREATE FOURTH]** `includes/classes/Taxonomies/Types/Nationality.php` - People-specific
+
+#### **Phase 5: Supporting Classes** (Exact Order)
+1. **[CREATE FIRST]** `includes/classes/Taxonomies/TermManager.php` - Term utilities
+2. **[CREATE SECOND]** `includes/config/taxonomies.php` - Configuration file
+3. **[CREATE THIRD]** `includes/classes/Admin/TaxonomyColumns.php` - Admin columns
+4. **[CREATE FOURTH]** `includes/classes/Frontend/TaxonomyRewrite.php` - URL rewriting
+
+#### **Phase 6: Testing** (Exact Order)
+1. **[CREATE FIRST]** `tests/TaxonomiesTest.php` - Taxonomy tests
+
+#### **Phase 7: Integration** (Final)
+1. **[UPDATE]** `includes/classes/ThemeCore.php` - Include taxonomy manager
+
+### **Key Implementation Notes**
+- **Inheritance Structure**: AbstractTaxonomy must be created before individual taxonomies
+- **Conditional Registration**: All taxonomies check post type enablement before registration
+- **Multi-Post-Type Support**: Genre, Country, Language, ByYear support multiple post types
+- **Specific Taxonomies**: Network (TV only), Channel (Drama only), Nationality (People only)
+- **Keyword Logic**: Only registers when Movies or TV enabled, excludes Drama-only setups
+
+### **Taxonomy Relationships Matrix**
+```
+Taxonomy     → Movie | TV | Drama | People
+Genre        →   ✓   | ✓  |   ✓   |   ✗
+Country      →   ✓   | ✓  |   ✓   |   ✗
+Language     →   ✓   | ✓  |   ✓   |   ✗
+ByYear       →   ✓   | ✓  |   ✓   |   ✗
+Network      →   ✗   | ✓  |   ✗   |   ✗
+Channel      →   ✗   | ✗  |   ✓   |   ✗
+Keyword      →   ✓   | ✓  |   ✗   |   ✗
+Nationality  →   ✗   | ✗  |   ✗   |   ✓
+```
+
+### **Critical Dependencies**
+- **WordPress Functions**: `register_taxonomy()`, `wp_insert_term()`, `term_exists()`
+- **Post Types**: Must be registered before taxonomies can attach
+- **Theme Config**: Feature enablement checks for conditional registration
+- **Autoloading**: PSR-4 autoloading for class loading
+
+### **Conditional Registration Logic**
+1. **Genre/Country/Language/ByYear**: Register if ANY content type (movie/tv/drama) enabled
+2. **Network**: Register ONLY if TV series enabled
+3. **Channel**: Register ONLY if dramas enabled
+4. **Keyword**: Register if movie OR TV enabled, BUT NOT if only dramas enabled
+5. **Nationality**: Always register (for people post type)
+
+### **Testing Requirements**
+1. **Registration Test** - Verify all taxonomies register correctly
+2. **Conditional Test** - Verify settings-based registration
+3. **Post Type Assignment** - Verify correct post type associations
+4. **Term Seeding** - Verify popular terms are created
+5. **URL Rewriting** - Verify custom permalink structures
+
+### **Term Seeding Features**
+- **Genre**: Popular movie/TV genres (Action, Comedy, Drama, etc.)
+- **Country**: Major content-producing countries
+- **Language**: Common content languages
+- **Network**: Popular streaming platforms and networks
+- **Auto-assignment**: ByYear automatically assigns based on release date
+
+### **Integration Points**
+- **ThemeCore.php** - Initializes TaxonomyManager
+- **Post Types** - Taxonomies attach to registered post types
+- **Admin Interface** - Custom columns and management
+- **Frontend** - Archive pages and filtering
+- **API Integration** - REST API support for all taxonomies
+
+### **Common Issues and Solutions**
+1. **Taxonomy Not Registered**: Check post type enablement and dependencies
+2. **Terms Not Seeded**: Verify seeding flags and admin_init hooks
+3. **Wrong Post Types**: Check conditional logic in getPostTypes()
+4. **URL Issues**: Flush rewrite rules after registration
+
+### **Verification Commands**
+```bash
+# Run taxonomy tests
+composer test tests/TaxonomiesTest.php
+
+# Check registered taxonomies in WordPress admin
+# Go to WordPress admin and verify taxonomies appear correctly
+
+# Test conditional registration
+# Toggle post type options and verify taxonomies enable/disable
+
+# Check term seeding
+# Verify popular terms are created for each taxonomy
+```
+
+### **Post-Implementation Checklist**
+- [ ] All taxonomy classes created
+- [ ] TaxonomyManager implemented
+- [ ] AbstractTaxonomy base class functional
+- [ ] Conditional registration working correctly
+- [ ] Term seeding functional
+- [ ] Admin columns displaying
+- [ ] URL rewriting active
+- [ ] Tests passing
+- [ ] ThemeCore integration complete
+
 ---
 
 This modern taxonomy system provides enhanced organization, conditional logic, and maintainability while preserving all original plugin functionality and data relationships.
+
+**Step 6 Status**: ✅ READY FOR AI IMPLEMENTATION
+**Dependencies**: Steps 1-5 must be completed (Step 7 ThemeConfig recommended)
+**Next Step**: Step 7 - Custom Fields System

@@ -1,4 +1,26 @@
-# Step 16: Deployment and CI/CD Pipeline
+# Step 16: Deployment and CI/CD
+
+## Purpose
+Implement deployment strategies and CI/CD pipeline for automated testing, building, and deployment of the TMU theme.
+
+## Dependencies from Previous Steps
+- **[REQUIRED]** Complete theme system [FROM STEPS 1-15] - Deployment target
+- **[REQUIRED]** Testing framework [FROM STEP 15] - CI/CD pipeline integration
+- **[REQUIRED]** Build system [FROM STEP 1] - Asset compilation for deployment
+
+## Files Created in This Step
+- **[CREATE NEW]** `.github/workflows/deploy.yml` - Deployment workflow
+- **[CREATE NEW]** `deploy/scripts/` - Deployment scripts directory
+- **[CREATE NEW]** `docker/` - Docker configuration for development
+- **[CREATE NEW]** `deploy.sh` - Main deployment script
+- **[CREATE NEW]** `.env.example` - Environment configuration template
+
+## Tailwind CSS Status
+**BUILDS** - Production builds include Tailwind CSS optimization and purging
+
+**Step 16 Status**: ✅ READY FOR AI IMPLEMENTATION
+**Dependencies**: Steps 1-15 must be completed
+**Next Step**: Step 17 - Monitoring and Analytics Pipeline
 
 ## Overview
 This step establishes a comprehensive deployment strategy and CI/CD pipeline for the TMU theme, ensuring reliable, automated deployments with proper testing, staging, and production environments.
