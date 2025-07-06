@@ -46,7 +46,8 @@
         },
         "files": [
             "includes/helpers/functions.php",
-            "includes/helpers/template-functions.php"
+            "includes/helpers/template-functions.php",
+            "includes/helpers/admin-functions.php"
         ]
     },
     "autoload-dev": {
