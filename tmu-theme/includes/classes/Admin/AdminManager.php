@@ -110,6 +110,11 @@ class AdminManager {
         if (class_exists('TMU\Admin\Navigation\MenuManager')) {
             $this->components['menu_manager'] = new Navigation\MenuManager();
         }
+        
+        // Load TMDB settings
+        if (class_exists('TMU\Admin\Settings\TMDBSettings')) {
+            $this->components['tmdb_settings'] = new Settings\TMDBSettings();
+        }
     }
     
     /**
