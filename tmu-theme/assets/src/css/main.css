@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Base Styles - FIRST TIME IMPLEMENTATION */
+@layer base {
+  body {
+    @apply font-sans text-gray-900 antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-tmu-dark; /* Uses custom TMU color */
+  }
+  
+  a {
+    @apply text-tmu-primary hover:text-tmu-secondary transition-colors; /* TMU brand colors */
+  }
+  
+  img {
+    @apply max-w-full h-auto;
+  }
+}
+
+/* Custom Components - TMU-specific UI components */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200;
+  }
+  
+  .btn-primary {
+    @apply btn bg-tmu-primary text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-tmu-secondary text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply px-6 py-4;
+  }
+  
+  /* Movie-specific components - CUSTOM FOR TMU */
+  .movie-poster {
+    @apply aspect-movie bg-gray-200 rounded-lg overflow-hidden; /* Uses custom aspect ratio */
+  }
+  
+  .rating-stars {
+    @apply flex items-center space-x-1;
+  }
+  
+  .rating-star {
+    @apply w-4 h-4 text-tmu-yellow; /* TMU yellow for ratings */
+  }
+  
+  .genre-tag {
+    @apply inline-block px-2 py-1 text-xs font-medium bg-tmu-light text-tmu-dark rounded-full;
+  }
+  
+  /* Search and filter components - Used in Step 12 */
+  .search-form {
+    @apply flex items-center space-x-2;
+  }
+  
+  .search-input {
+    @apply flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tmu-primary focus:border-transparent;
+  }
+  
+  .filter-dropdown {
+    @apply relative inline-block text-left;
+  }
+  
+  /* Pagination components - Used in frontend templates */
+  .pagination {
+    @apply flex items-center justify-center space-x-2 mt-8;
+  }
+  
+  .pagination-link {
+    @apply px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50;
+  }
+  
+  .pagination-current {
+    @apply pagination-link bg-tmu-primary text-white border-tmu-primary;
+  }
+}
+
+/* Custom Utilities - Additional helper classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

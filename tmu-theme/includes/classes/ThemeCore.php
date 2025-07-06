@@ -1,0 +1,227 @@
+<?php
+/**
+ * TMU Theme Core Class
+ *
+ * @package TMU
+ * @version 1.0.0
+ */
+
+namespace TMU;
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Main Theme Core Class
+ */
+class ThemeCore {
+    
+    /**
+     * Theme instance
+     *
+     * @var ThemeCore
+     */
+    private static $instance = null;
+    
+    /**
+     * Theme version
+     *
+     * @var string
+     */
+    private $version = TMU_VERSION;
+    
+    /**
+     * Get theme instance
+     *
+     * @return ThemeCore
+     */
+    public static function getInstance(): ThemeCore {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        
+        return self::$instance;
+    }
+    
+    /**
+     * Private constructor to prevent direct instantiation
+     */
+    private function __construct() {
+        $this->initHooks();
+        $this->loadDependencies();
+    }
+    
+    /**
+     * Initialize WordPress hooks
+     */
+    private function initHooks(): void {
+        add_action('init', [$this, 'initTheme']);
+        add_action('after_setup_theme', [$this, 'themeSetup']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueAssets']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
+    }
+    
+    /**
+     * Load required dependencies
+     */
+    private function loadDependencies(): void {
+        // Load configuration files
+        require_once TMU_INCLUDES_DIR . '/config/constants.php';
+        require_once TMU_INCLUDES_DIR . '/config/database.php';
+        require_once TMU_INCLUDES_DIR . '/config/assets.php';
+        
+        // Load placeholder classes - will be created in future steps
+        // require_once TMU_INCLUDES_DIR . '/classes/Database/Migration.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/PostTypes/PostTypeManager.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/TaxonomyManager.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlockManager.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/Admin/AdminInterface.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
+        // require_once TMU_INCLUDES_DIR . '/classes/Frontend/AssetManager.php';
+    }
+    
+    /**
+     * Initialize theme functionality
+     */
+    public function initTheme(): void {
+        // Initialize managers - will be activated in future steps
+        // Database\Migration::getInstance();
+        // PostTypes\PostTypeManager::getInstance();
+        // Taxonomies\TaxonomyManager::getInstance();
+        // Blocks\BlockManager::getInstance();
+        // Admin\AdminInterface::getInstance();
+        // API\TMDBClient::getInstance();
+        // Frontend\TemplateLoader::getInstance();
+        // Frontend\AssetManager::getInstance();
+    }
+    
+    /**
+     * Theme setup
+     */
+    public function themeSetup(): void {
+        // Add theme support
+        add_theme_support('post-thumbnails');
+        add_theme_support('title-tag');
+        add_theme_support('html5', ['search-form', 'comment-form', 'comment-list', 'gallery', 'caption']);
+        add_theme_support('customize-selective-refresh-widgets');
+        add_theme_support('editor-styles');
+        add_theme_support('wp-block-styles');
+        add_theme_support('responsive-embeds');
+        
+        // Set image sizes for movie posters and media
+        add_image_size('tmu-poster-small', 185, 278, true);    // Movie poster small
+        add_image_size('tmu-poster-medium', 300, 450, true);   // Movie poster medium
+        add_image_size('tmu-poster-large', 500, 750, true);    // Movie poster large
+        add_image_size('tmu-backdrop-small', 533, 300, true);  // Backdrop small
+        add_image_size('tmu-backdrop-medium', 800, 450, true); // Backdrop medium
+        add_image_size('tmu-backdrop-large', 1280, 720, true); // Backdrop large
+        
+        // Load text domain
+        load_theme_textdomain('tmu', TMU_THEME_DIR . '/languages');
+        
+        // Register nav menus
+        register_nav_menus([
+            'primary' => __('Primary Menu', 'tmu'),
+            'footer' => __('Footer Menu', 'tmu'),
+            'mobile' => __('Mobile Menu', 'tmu'),
+        ]);
+    }
+    
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueueAssets(): void {
+        // Main stylesheet (compiled Tailwind CSS)
+        wp_enqueue_style(
+            'tmu-main-style',
+            TMU_ASSETS_BUILD_URL . '/css/main.css',
+            [],
+            $this->version
+        );
+        
+        // Main JavaScript (compiled)
+        wp_enqueue_script(
+            'tmu-main-script',
+            TMU_ASSETS_BUILD_URL . '/js/main.js',
+            ['jquery'],
+            $this->version,
+            true
+        );
+        
+        // Localize scripts with AJAX data
+        wp_localize_script('tmu-main-script', 'tmu_ajax', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tmu_ajax_nonce'),
+            'loading_text' => __('Loading...', 'tmu'),
+            'error_text' => __('Something went wrong. Please try again.', 'tmu'),
+            'api_url' => home_url('/wp-json/tmu/v1/'),
+        ]);
+        
+        // Enqueue Alpine.js for enhanced interactivity
+        wp_enqueue_script(
+            'alpinejs',
+            'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
+            [],
+            '3.13.0',
+            true
+        );
+        
+        // Add defer attribute to Alpine.js
+        add_filter('script_loader_tag', function($tag, $handle) {
+            if ($handle === 'alpinejs') {
+                return str_replace(' src', ' defer src', $tag);
+            }
+            return $tag;
+        }, 10, 2);
+    }
+    
+    /**
+     * Enqueue admin assets
+     */
+    public function enqueueAdminAssets(): void {
+        // Admin stylesheet (compiled Tailwind CSS)
+        wp_enqueue_style(
+            'tmu-admin-style',
+            TMU_ASSETS_BUILD_URL . '/css/admin.css',
+            [],
+            $this->version
+        );
+        
+        // Admin JavaScript
+        wp_enqueue_script(
+            'tmu-admin-script',
+            TMU_ASSETS_BUILD_URL . '/js/admin.js',
+            ['jquery', 'wp-api'],
+            $this->version,
+            true
+        );
+        
+        // Localize admin scripts
+        wp_localize_script('tmu-admin-script', 'tmu_admin', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tmu_admin_nonce'),
+            'rest_nonce' => wp_create_nonce('wp_rest'),
+            'api_url' => home_url('/wp-json/tmu/v1/'),
+            'tmdb_api_key' => get_option('tmu_tmdb_api_key', ''),
+            'strings' => [
+                'sync_success' => __('Data synchronized successfully!', 'tmu'),
+                'sync_error' => __('Error synchronizing data. Please try again.', 'tmu'),
+                'confirm_delete' => __('Are you sure you want to delete this item?', 'tmu'),
+                'loading' => __('Loading...', 'tmu'),
+                'tmdb_id_required' => __('TMDB ID is required for synchronization.', 'tmu'),
+            ],
+        ]);
+    }
+    
+    /**
+     * Get theme version
+     *
+     * @return string
+     */
+    public function getVersion(): string {
+        return $this->version;
+    }
+}
