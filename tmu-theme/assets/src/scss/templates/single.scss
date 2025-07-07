@@ -1,0 +1,300 @@
+/**
+ * Single Template Styles
+ * 
+ * Styles for single post templates (movie, TV, drama, people)
+ * 
+ * @package TMU
+ * @since 1.0.0
+ */
+
+/* ===================================
+   Single Template Base Styles
+   =================================== */
+
+.tmu-single {
+  @apply bg-gray-50 min-h-screen;
+}
+
+/* Hero Section */
+.tmu-movie-hero,
+.tmu-tv-hero,
+.tmu-drama-hero,
+.tmu-people-hero {
+  @apply relative overflow-hidden bg-gray-900;
+  min-height: 60vh;
+}
+
+.tmu-hero-backdrop {
+  @apply absolute inset-0;
+  
+  &::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent;
+  }
+}
+
+.tmu-hero-content {
+  @apply relative z-10 text-white py-12;
+}
+
+/* Poster Styles */
+.tmu-movie-poster,
+.tmu-person-photo {
+  @apply max-w-sm mx-auto lg:mx-0;
+  
+  img {
+    @apply w-full h-auto rounded-lg shadow-2xl;
+  }
+  
+  .tmu-poster-placeholder {
+    @apply w-full aspect-[2/3] bg-gray-300 rounded-lg flex items-center justify-center;
+    
+    span {
+      @apply text-gray-500 text-4xl;
+    }
+  }
+}
+
+/* Action Buttons */
+.tmu-movie-actions,
+.tmu-person-actions {
+  @apply mt-6 space-y-3;
+  
+  .tmu-btn {
+    @apply w-full py-3 px-6 rounded-lg font-semibold text-center flex items-center justify-center transition-colors;
+    
+    &.tmu-btn-primary {
+      @apply bg-red-600 hover:bg-red-700 text-white;
+    }
+    
+    &.tmu-btn-secondary {
+      @apply bg-gray-800 hover:bg-gray-700 text-white;
+    }
+  }
+}
+
+/* Movie Info */
+.tmu-movie-info,
+.tmu-tv-info,
+.tmu-drama-info,
+.tmu-people-info {
+  h1 {
+    @apply text-4xl lg:text-5xl font-bold mb-4;
+  }
+  
+  .tmu-tagline {
+    @apply text-xl text-gray-300 mb-6 italic;
+  }
+  
+  .tmu-overview {
+    @apply mb-8;
+    
+    h3 {
+      @apply text-xl font-semibold mb-3;
+    }
+    
+    p {
+      @apply text-gray-300 leading-relaxed;
+    }
+  }
+}
+
+/* Meta Information */
+.tmu-meta-info {
+  @apply flex flex-wrap items-center gap-6 mb-6 text-sm;
+  
+  .tmu-rating {
+    @apply flex items-center space-x-2;
+    
+    .tmu-rating-value {
+      @apply text-yellow-400 font-semibold;
+    }
+  }
+  
+  .tmu-meta-item {
+    @apply flex items-center space-x-1;
+    
+    .tmu-icon {
+      @apply text-gray-400;
+    }
+  }
+}
+
+/* Genres */
+.tmu-genres {
+  @apply mb-6;
+  
+  .tmu-genre-list {
+    @apply flex flex-wrap gap-2;
+    
+    .tmu-genre-tag {
+      @apply px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-medium transition-colors;
+    }
+  }
+}
+
+/* Quick Stats */
+.tmu-quick-stats {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4 text-center;
+  
+  .tmu-stat-item {
+    .tmu-stat-value {
+      @apply text-2xl font-bold;
+      
+      &.budget, &.revenue { @apply text-green-400; }
+      &.votes { @apply text-blue-400; }
+      &.popularity { @apply text-purple-400; }
+    }
+    
+    .tmu-stat-label {
+      @apply text-sm text-gray-400;
+    }
+  }
+}
+
+/* Content Tabs */
+.tmu-content-tabs {
+  @apply bg-gray-100 py-12;
+  
+  .tmu-tab-nav {
+    @apply border-b border-gray-300 mb-8;
+    
+    .tmu-tab-button {
+      @apply pb-4 px-1 border-b-2 font-medium transition-colors;
+      
+      &.active {
+        @apply border-blue-600 text-blue-600;
+      }
+      
+      &:not(.active) {
+        @apply border-transparent text-gray-500 hover:text-gray-700;
+      }
+    }
+  }
+  
+  .tmu-tab-content {
+    .tmu-tab-pane {
+      @apply hidden;
+      
+      &.active {
+        @apply block;
+      }
+    }
+  }
+}
+
+/* ===================================
+   People Template Specific Styles
+   =================================== */
+
+.tmu-people-single {
+  .tmu-person-bio {
+    @apply bg-white rounded-lg p-6 shadow-sm mb-8;
+    
+    h3 {
+      @apply text-xl font-semibold mb-4 text-gray-900;
+    }
+    
+    .tmu-bio-text {
+      @apply text-gray-700 leading-relaxed;
+    }
+  }
+  
+  .tmu-filmography {
+    @apply bg-white rounded-lg p-6 shadow-sm;
+    
+    .tmu-filmography-grid {
+      @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+    }
+  }
+  
+  .tmu-person-stats {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+    
+    .tmu-stat-card {
+      @apply bg-white rounded-lg p-6 shadow-sm text-center;
+      
+      .tmu-stat-number {
+        @apply text-3xl font-bold text-blue-600 mb-2;
+      }
+      
+      .tmu-stat-description {
+        @apply text-gray-600;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Status Badges
+   =================================== */
+
+.tmu-status-badge {
+  @apply px-2 py-1 rounded text-xs font-medium;
+  
+  &.status-released {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  &.status-active {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  &.status-canceled {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  &.status-default {
+    @apply bg-gray-100 text-gray-800;
+  }
+}
+
+/* ===================================
+   Responsive Adjustments
+   =================================== */
+
+@media (max-width: 768px) {
+  .tmu-movie-hero,
+  .tmu-tv-hero,
+  .tmu-drama-hero {
+    min-height: 50vh;
+  }
+  
+  .tmu-hero-content {
+    @apply py-8;
+    
+    h1 {
+      @apply text-2xl lg:text-3xl;
+    }
+  }
+  
+  .tmu-quick-stats {
+    @apply grid-cols-2;
+  }
+  
+  .tmu-tab-nav {
+    @apply flex-wrap;
+    
+    .tmu-tab-button {
+      @apply mb-2;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .tmu-meta-info {
+    @apply flex-col items-start gap-3;
+  }
+  
+  .tmu-genres .tmu-genre-list {
+    @apply gap-1;
+    
+    .tmu-genre-tag {
+      @apply text-xs px-2;
+    }
+  }
+  
+  .tmu-quick-stats {
+    @apply grid-cols-1 gap-3;
+  }
+}

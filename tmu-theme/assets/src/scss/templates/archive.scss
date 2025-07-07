@@ -1,0 +1,401 @@
+/**
+ * Archive Template Styles
+ * 
+ * Styles for archive pages (movie, TV, drama listings)
+ * 
+ * @package TMU
+ * @since 1.0.0
+ */
+
+/* ===================================
+   Archive Page Base Styles
+   =================================== */
+
+.tmu-archive {
+  @apply bg-gray-50 min-h-screen py-8;
+}
+
+.tmu-archive-header {
+  @apply mb-8;
+  
+  .tmu-archive-title {
+    @apply text-3xl font-bold text-gray-900 mb-6;
+  }
+  
+  .tmu-archive-description {
+    @apply text-gray-600 mb-6;
+  }
+}
+
+/* ===================================
+   Archive Filters Styles
+   =================================== */
+
+.tmu-archive-filters {
+  @apply bg-white rounded-lg shadow-sm p-6 mb-8;
+  
+  .tmu-filters-header {
+    @apply flex justify-between items-center mb-6;
+    
+    h3 {
+      @apply text-lg font-semibold text-gray-900 flex items-center;
+    }
+    
+    .tmu-results-count {
+      @apply text-sm text-gray-600;
+    }
+    
+    .tmu-clear-filters {
+      @apply text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer;
+    }
+  }
+  
+  .tmu-filter-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+  
+  .tmu-filter-group {
+    label {
+      @apply block text-sm font-medium text-gray-700 mb-2;
+    }
+    
+    select {
+      @apply w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500;
+    }
+  }
+  
+  .tmu-active-filters {
+    @apply mt-6 pt-4 border-t border-gray-200;
+    
+    .tmu-filter-tag {
+      @apply inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full;
+      
+      .tmu-remove-filter {
+        @apply ml-2 text-blue-600 hover:text-blue-800 cursor-pointer;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Content Grid Styles
+   =================================== */
+
+.tmu-archive-content {
+  .tmu-view-toggle {
+    @apply flex items-center space-x-2 mb-6;
+    
+    .tmu-view-btn {
+      @apply p-2 border border-gray-300 rounded-md transition-colors;
+      
+      &.active {
+        @apply bg-blue-600 text-white border-blue-600;
+      }
+      
+      &:not(.active) {
+        @apply text-gray-600 hover:bg-gray-100;
+      }
+    }
+  }
+  
+  .tmu-sort-options {
+    @apply flex items-center space-x-4 mb-6;
+    
+    label {
+      @apply text-sm font-medium text-gray-700;
+    }
+    
+    select {
+      @apply border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500;
+    }
+  }
+}
+
+/* Grid View */
+.tmu-grid-view {
+  .tmu-content-grid {
+    @apply grid gap-6;
+    
+    &.tmu-movies-grid {
+      @apply grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5;
+    }
+    
+    &.tmu-tv-grid {
+      @apply grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5;
+    }
+    
+    &.tmu-people-grid {
+      @apply grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8;
+    }
+  }
+}
+
+/* List View */
+.tmu-list-view {
+  .tmu-content-list {
+    @apply space-y-4;
+  }
+  
+  .tmu-list-item {
+    @apply bg-white rounded-lg shadow-sm p-4 flex items-center space-x-4 hover:shadow-md transition-shadow;
+    
+    .tmu-list-poster {
+      @apply flex-shrink-0 w-16 h-24 bg-gray-200 rounded overflow-hidden;
+      
+      img {
+        @apply w-full h-full object-cover;
+      }
+    }
+    
+    .tmu-list-content {
+      @apply flex-1 min-w-0;
+      
+      .tmu-list-title {
+        @apply text-lg font-semibold text-gray-900 mb-1 truncate;
+        
+        a {
+          @apply hover:text-blue-600 transition-colors;
+        }
+      }
+      
+      .tmu-list-meta {
+        @apply flex items-center space-x-4 text-sm text-gray-600 mb-2;
+      }
+      
+      .tmu-list-description {
+        @apply text-sm text-gray-600 line-clamp-2;
+      }
+    }
+    
+    .tmu-list-rating {
+      @apply flex-shrink-0 text-center;
+      
+      .tmu-rating-value {
+        @apply text-lg font-bold text-yellow-500;
+      }
+      
+      .tmu-rating-stars {
+        @apply text-yellow-400;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Pagination Styles
+   =================================== */
+
+.tmu-pagination {
+  @apply mt-12 flex justify-center;
+  
+  .page-numbers {
+    @apply flex items-center space-x-2;
+    
+    a, span {
+      @apply px-3 py-2 border border-gray-300 text-sm font-medium transition-colors;
+      
+      &:first-child,
+      &:last-child {
+        @apply rounded-md;
+      }
+    }
+    
+    a {
+      @apply text-gray-700 hover:bg-gray-50;
+    }
+    
+    .current {
+      @apply bg-blue-600 text-white border-blue-600;
+    }
+    
+    .prev,
+    .next {
+      @apply px-4;
+    }
+    
+    .dots {
+      @apply text-gray-400;
+    }
+  }
+}
+
+/* Load More Button */
+.tmu-load-more {
+  @apply w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors;
+  
+  &:disabled {
+    @apply bg-gray-400 cursor-not-allowed;
+  }
+}
+
+/* ===================================
+   Archive Statistics
+   =================================== */
+
+.tmu-archive-stats {
+  @apply bg-white rounded-lg shadow-sm p-6 mb-8;
+  
+  .tmu-stats-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-6;
+  }
+  
+  .tmu-stat-item {
+    @apply text-center;
+    
+    .tmu-stat-number {
+      @apply text-2xl font-bold text-blue-600 mb-1;
+    }
+    
+    .tmu-stat-label {
+      @apply text-sm text-gray-600;
+    }
+  }
+}
+
+/* ===================================
+   No Results State
+   =================================== */
+
+.tmu-no-results {
+  @apply text-center py-12 bg-white rounded-lg shadow-sm;
+  
+  .tmu-no-results-icon {
+    @apply text-6xl text-gray-400 mb-4;
+  }
+  
+  h3 {
+    @apply text-lg font-semibold text-gray-900 mb-2;
+  }
+  
+  p {
+    @apply text-gray-600 mb-6;
+  }
+  
+  .tmu-search-suggestions {
+    @apply space-y-2;
+    
+    a {
+      @apply inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors;
+    }
+  }
+}
+
+/* ===================================
+   Featured Content
+   =================================== */
+
+.tmu-featured-section {
+  @apply mb-12;
+  
+  .tmu-featured-header {
+    @apply flex justify-between items-center mb-6;
+    
+    h2 {
+      @apply text-2xl font-bold text-gray-900;
+    }
+    
+    .tmu-view-all {
+      @apply text-blue-600 hover:text-blue-800 font-medium transition-colors;
+    }
+  }
+  
+  .tmu-featured-grid {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+  }
+}
+
+/* ===================================
+   Archive Breadcrumbs
+   =================================== */
+
+.tmu-archive-breadcrumbs {
+  @apply mb-6;
+  
+  .breadcrumb-list {
+    @apply flex items-center space-x-2 text-sm;
+    
+    li {
+      @apply flex items-center;
+      
+      a {
+        @apply text-blue-600 hover:text-blue-800 transition-colors;
+      }
+      
+      &.current {
+        @apply text-gray-600;
+      }
+      
+      .separator {
+        @apply text-gray-400 mx-2;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Responsive Adjustments
+   =================================== */
+
+@media (max-width: 768px) {
+  .tmu-archive-filters {
+    .tmu-filter-grid {
+      @apply grid-cols-1 gap-3;
+    }
+    
+    .tmu-filters-header {
+      @apply flex-col items-start space-y-4;
+    }
+  }
+  
+  .tmu-grid-view .tmu-content-grid {
+    &.tmu-movies-grid,
+    &.tmu-tv-grid {
+      @apply grid-cols-2;
+    }
+    
+    &.tmu-people-grid {
+      @apply grid-cols-3;
+    }
+  }
+  
+  .tmu-list-view .tmu-list-item {
+    @apply flex-col space-x-0 space-y-4 text-center;
+    
+    .tmu-list-poster {
+      @apply w-24 h-36 mx-auto;
+    }
+  }
+  
+  .tmu-archive-stats .tmu-stats-grid {
+    @apply grid-cols-2;
+  }
+}
+
+@media (max-width: 480px) {
+  .tmu-archive-header .tmu-archive-title {
+    @apply text-2xl;
+  }
+  
+  .tmu-grid-view .tmu-content-grid {
+    &.tmu-movies-grid,
+    &.tmu-tv-grid {
+      @apply grid-cols-2 gap-3;
+    }
+    
+    &.tmu-people-grid {
+      @apply grid-cols-2;
+    }
+  }
+  
+  .tmu-archive-stats .tmu-stats-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .tmu-pagination .page-numbers {
+    @apply space-x-1;
+    
+    a, span {
+      @apply px-2 py-1 text-xs;
+    }
+  }
+}

@@ -1,0 +1,426 @@
+/**
+ * Component Styles
+ * 
+ * Styles for reusable components (movie cards, person cards, etc.)
+ * 
+ * @package TMU
+ * @since 1.0.0
+ */
+
+/* ===================================
+   Movie Card Component
+   =================================== */
+
+.tmu-movie-card {
+  @apply relative border-radius-12 overflow-hidden bg-white transition-transform duration-300 ease-out;
+  
+  &:hover {
+    @apply transform -translate-y-2 shadow-lg;
+  }
+  
+  .tmu-card-image {
+    @apply relative overflow-hidden;
+    aspect-ratio: 2/3;
+    
+    .tmu-card-poster {
+      @apply w-full h-full object-cover transition-transform duration-300;
+    }
+    
+    .tmu-card-placeholder {
+      @apply w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-4xl;
+    }
+  }
+  
+  .tmu-card-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 transition-opacity duration-300;
+    
+    .tmu-card-actions {
+      @apply absolute bottom-4 left-4 right-4 flex space-x-2;
+      
+      button {
+        @apply flex-1 bg-white/20 backdrop-blur-sm text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-white/30 transition-colors;
+      }
+    }
+    
+    .tmu-card-rating {
+      @apply absolute top-4 right-4;
+      
+      .tmu-rating-badge {
+        @apply bg-yellow-500 text-white px-2 py-1 rounded-md text-sm font-bold;
+      }
+    }
+  }
+  
+  &:hover .tmu-card-overlay {
+    @apply opacity-100;
+  }
+  
+  &:hover .tmu-card-poster {
+    @apply scale-105;
+  }
+  
+  .tmu-card-content {
+    @apply p-4;
+    
+    .tmu-card-title {
+      @apply text-base font-semibold text-gray-900 mb-2 line-clamp-2;
+      
+      a {
+        @apply hover:text-blue-600 transition-colors;
+      }
+    }
+    
+    .tmu-card-year {
+      @apply text-sm text-gray-600 mb-2;
+    }
+    
+    .tmu-card-genres {
+      @apply text-xs text-gray-500 line-clamp-1;
+    }
+    
+    .tmu-card-rating {
+      @apply flex items-center space-x-1 mt-2;
+      
+      .tmu-stars {
+        @apply text-yellow-400;
+      }
+      
+      .tmu-rating-text {
+        @apply text-sm text-gray-600;
+      }
+    }
+  }
+  
+  /* Card Size Variants */
+  &.tmu-card-small {
+    .tmu-card-content {
+      @apply p-3;
+      
+      .tmu-card-title {
+        @apply text-sm;
+      }
+    }
+  }
+  
+  &.tmu-card-large {
+    .tmu-card-content {
+      @apply p-6;
+      
+      .tmu-card-title {
+        @apply text-lg;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Person Card Component
+   =================================== */
+
+.tmu-person-card {
+  @apply bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300;
+  
+  .tmu-person-image {
+    @apply relative overflow-hidden;
+    aspect-ratio: 3/4;
+    
+    .tmu-person-photo {
+      @apply w-full h-full object-cover;
+    }
+    
+    .tmu-person-placeholder {
+      @apply w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-4xl;
+    }
+  }
+  
+  .tmu-person-info {
+    @apply p-4;
+    
+    .tmu-person-name {
+      @apply text-sm font-semibold text-gray-900 mb-1 line-clamp-2;
+      
+      a {
+        @apply hover:text-blue-600 transition-colors;
+      }
+    }
+    
+    .tmu-person-role {
+      @apply text-xs text-gray-600 mb-1;
+    }
+    
+    .tmu-person-department {
+      @apply text-xs text-gray-500;
+    }
+  }
+  
+  /* Person Card in Cast/Crew context */
+  &.tmu-cast-card {
+    .tmu-person-image {
+      aspect-ratio: 3/4;
+    }
+    
+    .tmu-character-name {
+      @apply text-xs text-blue-600 font-medium;
+    }
+  }
+}
+
+/* ===================================
+   Rating Stars Component
+   =================================== */
+
+.tmu-rating-stars {
+  @apply flex items-center;
+  
+  .star {
+    @apply text-current;
+    
+    &.star-full {
+      @apply text-yellow-400;
+    }
+    
+    &.star-half {
+      @apply relative text-gray-300;
+      
+      &::before {
+        content: '★';
+        @apply absolute inset-0 text-yellow-400 overflow-hidden;
+        width: 50%;
+      }
+    }
+    
+    &.star-empty {
+      @apply text-gray-300;
+    }
+  }
+  
+  .rating-text {
+    @apply ml-2 text-sm font-medium text-gray-600;
+  }
+  
+  /* Size Variants */
+  &.size-small {
+    @apply text-sm;
+  }
+  
+  &.size-medium {
+    @apply text-base;
+  }
+  
+  &.size-large {
+    @apply text-lg;
+  }
+  
+  &.size-xl {
+    @apply text-xl;
+  }
+}
+
+/* ===================================
+   Search Form Component
+   =================================== */
+
+.tmu-search-form {
+  @apply relative;
+  
+  .tmu-search-input {
+    @apply w-full py-2 px-4 pr-10 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500;
+  }
+  
+  .tmu-search-button {
+    @apply absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600;
+  }
+  
+  .tmu-search-suggestions {
+    @apply absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto z-50;
+    
+    .tmu-suggestion-item {
+      @apply flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer;
+      
+      .tmu-suggestion-poster {
+        @apply w-10 h-14 bg-gray-200 rounded overflow-hidden flex-shrink-0;
+        
+        img {
+          @apply w-full h-full object-cover;
+        }
+      }
+      
+      .tmu-suggestion-info {
+        @apply flex-1 min-w-0;
+        
+        .tmu-suggestion-title {
+          @apply font-medium text-gray-900 truncate;
+        }
+        
+        .tmu-suggestion-meta {
+          @apply text-sm text-gray-600;
+        }
+      }
+      
+      .tmu-suggestion-type {
+        @apply px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Breadcrumb Component
+   =================================== */
+
+.tmu-breadcrumbs {
+  @apply mb-6;
+  
+  .breadcrumb-list {
+    @apply flex items-center space-x-2 text-sm;
+    
+    .breadcrumb-item {
+      @apply flex items-center;
+      
+      a {
+        @apply text-blue-600 hover:text-blue-800 transition-colors;
+      }
+      
+      &.current {
+        @apply text-gray-600 font-medium;
+      }
+      
+      .separator {
+        @apply text-gray-400 mx-2;
+      }
+    }
+  }
+}
+
+/* ===================================
+   Modal Components
+   =================================== */
+
+.tmu-modal {
+  @apply fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4;
+  
+  .tmu-modal-content {
+    @apply bg-white rounded-lg max-w-4xl w-full max-h-full overflow-auto;
+    
+    .tmu-modal-header {
+      @apply flex justify-between items-center p-4 border-b border-gray-200;
+      
+      .tmu-modal-title {
+        @apply text-lg font-semibold text-gray-900;
+      }
+      
+      .tmu-modal-close {
+        @apply text-gray-400 hover:text-gray-600 text-2xl cursor-pointer;
+      }
+    }
+    
+    .tmu-modal-body {
+      @apply p-4;
+    }
+  }
+  
+  .tmu-modal-overlay {
+    @apply absolute inset-0;
+  }
+}
+
+/* Video Modal */
+.tmu-video-modal {
+  .tmu-video-container {
+    @apply relative;
+    aspect-ratio: 16/9;
+    
+    iframe {
+      @apply absolute inset-0 w-full h-full;
+    }
+  }
+}
+
+/* ===================================
+   Loading States
+   =================================== */
+
+.tmu-loading {
+  @apply flex items-center justify-center py-8;
+  
+  .tmu-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+  }
+}
+
+.tmu-skeleton {
+  @apply animate-pulse;
+  
+  .tmu-skeleton-poster {
+    @apply bg-gray-300 rounded;
+    aspect-ratio: 2/3;
+  }
+  
+  .tmu-skeleton-text {
+    @apply bg-gray-300 rounded h-4;
+  }
+  
+  .tmu-skeleton-title {
+    @apply bg-gray-300 rounded h-6 mb-2;
+  }
+}
+
+/* ===================================
+   Responsive Adjustments
+   =================================== */
+
+@media (max-width: 768px) {
+  .tmu-movie-card {
+    .tmu-card-overlay .tmu-card-actions {
+      @apply bottom-2 left-2 right-2;
+      
+      button {
+        @apply py-1 px-2 text-xs;
+      }
+    }
+  }
+  
+  .tmu-person-card {
+    .tmu-person-info {
+      @apply p-3;
+      
+      .tmu-person-name {
+        @apply text-xs;
+      }
+    }
+  }
+  
+  .tmu-search-form {
+    .tmu-search-input {
+      @apply text-sm;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .tmu-movie-card {
+    .tmu-card-content {
+      @apply p-3;
+      
+      .tmu-card-title {
+        @apply text-sm;
+      }
+    }
+  }
+  
+  .tmu-modal {
+    @apply p-2;
+    
+    .tmu-modal-content {
+      @apply rounded-md;
+      
+      .tmu-modal-header {
+        @apply p-3;
+      }
+      
+      .tmu-modal-body {
+        @apply p-3;
+      }
+    }
+  }
+}
