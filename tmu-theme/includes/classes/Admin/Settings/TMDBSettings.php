@@ -49,6 +49,8 @@ class TMDBSettings {
         add_action('wp_ajax_tmu_test_tmdb_connection', [$this, 'testTMDBConnection']);
         add_action('wp_ajax_tmu_bulk_sync', [$this, 'bulkSync']);
         add_action('wp_ajax_tmu_configure_webhook', [$this, 'configureWebhook']);
+        add_action('wp_ajax_tmu_get_sync_stats', [$this, 'getSyncStats']);
+        add_action('wp_ajax_tmu_clear_tmdb_cache', [$this, 'clearTMDBCache']);
     }
     
     /**
@@ -229,6 +231,32 @@ class TMDBSettings {
                                 </div>
                                 <p class="text-sm text-gray-600" id="progress-text">0%</p>
                             </div>
+                            
+                            <div class="border-t pt-4 mt-4">
+                                <button 
+                                    type="button" 
+                                    id="load-sync-stats" 
+                                    class="w-full admin-btn-secondary mb-3"
+                                    data-nonce="<?php echo wp_create_nonce('tmu_get_sync_stats'); ?>"
+                                >
+                                    <?php _e('Load Sync Statistics', 'tmu'); ?>
+                                </button>
+                                
+                                <div id="sync-stats-display" class="hidden">
+                                    <div class="bg-gray-50 p-3 rounded text-sm">
+                                        <div id="stats-content"></div>
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                    type="button" 
+                                    id="clear-tmdb-cache" 
+                                    class="w-full admin-btn-secondary"
+                                    data-nonce="<?php echo wp_create_nonce('tmu_clear_tmdb_cache'); ?>"
+                                >
+                                    <?php _e('Clear TMDB Cache', 'tmu'); ?>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -275,7 +303,7 @@ class TMDBSettings {
                                 />
                                 <button 
                                     type="button" 
-                                    onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" 
+                                    onclick="copyWebhookUrl(this)" 
                                     class="admin-btn-secondary mt-2"
                                 >
                                     <?php _e('Copy URL', 'tmu'); ?>
@@ -412,7 +440,295 @@ class TMDBSettings {
         .hover\\:text-blue-800:hover {
             color: #1e40af;
         }
+        
+        .admin-btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.15s ease-in-out;
+        }
+        
+        .admin-btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .admin-btn-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+        
+        .pt-4 {
+            padding-top: 1rem;
+        }
+        
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        .border-t {
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .bg-gray-50 {
+            background-color: #f9fafb;
+        }
+        
+        .p-3 {
+            padding: 0.75rem;
+        }
+        
+        .rounded {
+            border-radius: 0.375rem;
+        }
+        
+        .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+            margin-top: 0.5rem;
+        }
         </style>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            // Test TMDB connection
+            $('#test-tmdb-connection').on('click', function() {
+                const $btn = $(this);
+                const $result = $('#connection-status');
+                const $alert = $result.find('.alert');
+                const apiKey = $('#tmu_tmdb_api_key').val();
+                
+                if (!apiKey) {
+                    $result.removeClass('hidden');
+                    $alert.removeClass('success').addClass('error').text('<?php _e('Please enter an API key', 'tmu'); ?>');
+                    return;
+                }
+                
+                const originalText = $btn.find('.test-button-text').text();
+                $btn.prop('disabled', true);
+                $btn.find('.test-button-text').text('<?php _e('Testing...', 'tmu'); ?>');
+                $btn.find('.loading-spinner').removeClass('hidden');
+                $result.addClass('hidden');
+                
+                $.post(ajaxurl, {
+                    action: 'tmu_test_tmdb_connection',
+                    api_key: apiKey,
+                    nonce: $btn.data('nonce')
+                }, function(response) {
+                    $result.removeClass('hidden');
+                    if (response.success) {
+                        $alert.removeClass('error').addClass('success').text(response.data.message);
+                    } else {
+                        $alert.removeClass('success').addClass('error').text(response.data.message || response.data);
+                    }
+                }).fail(function() {
+                    $result.removeClass('hidden');
+                    $alert.removeClass('success').addClass('error').text('<?php _e('Network error occurred', 'tmu'); ?>');
+                }).always(function() {
+                    $btn.prop('disabled', false);
+                    $btn.find('.test-button-text').text(originalText);
+                    $btn.find('.loading-spinner').addClass('hidden');
+                });
+            });
+            
+            // Bulk sync operations
+            $('.tmdb-sync-button').on('click', function() {
+                const $btn = $(this);
+                const type = $btn.data('type');
+                const $progress = $('#sync-progress');
+                const $progressBar = $('#progress-bar');
+                const $progressText = $('#progress-text');
+                
+                if (!confirm('<?php _e('This will sync content with TMDB. This may take a while. Continue?', 'tmu'); ?>')) {
+                    return;
+                }
+                
+                const originalText = $btn.find('.sync-button-text').text();
+                $btn.prop('disabled', true);
+                $btn.find('.sync-button-text').text('<?php _e('Syncing...', 'tmu'); ?>');
+                $btn.find('.loading-spinner').removeClass('hidden');
+                
+                $progress.removeClass('hidden');
+                $progressBar.css('width', '0%');
+                $progressText.text('<?php _e('Starting sync...', 'tmu'); ?>');
+                
+                let processed = 0;
+                let total = 0;
+                
+                function performBatch() {
+                    $.post(ajaxurl, {
+                        action: 'tmu_bulk_sync',
+                        type: type,
+                        nonce: $btn.data('nonce')
+                    }, function(response) {
+                        if (response.success) {
+                            processed += response.data.synced_count || 0;
+                            
+                            if (response.data.completed) {
+                                $progressBar.css('width', '100%');
+                                $progressText.text('<?php _e('Sync completed successfully!', 'tmu'); ?>');
+                                showNotice('success', response.data.message);
+                            } else if (response.data.has_more) {
+                                // Calculate rough progress
+                                const progress = Math.min(90, (processed / Math.max(processed + 10, 50)) * 100);
+                                $progressBar.css('width', progress + '%');
+                                $progressText.text('<?php _e('Synced', 'tmu'); ?> ' + processed + ' <?php _e('items...', 'tmu'); ?>');
+                                
+                                // Continue with next batch after short delay
+                                setTimeout(performBatch, 1000);
+                                return;
+                            } else {
+                                $progressBar.css('width', '100%');
+                                $progressText.text(response.data.message);
+                                showNotice('success', response.data.message);
+                            }
+                        } else {
+                            $progressText.text('<?php _e('Sync failed', 'tmu'); ?>');
+                            showNotice('error', response.data.message || '<?php _e('Sync failed', 'tmu'); ?>');
+                        }
+                        
+                        $btn.prop('disabled', false);
+                        $btn.find('.sync-button-text').text(originalText);
+                        $btn.find('.loading-spinner').addClass('hidden');
+                    }).fail(function() {
+                        $progressText.text('<?php _e('Network error occurred', 'tmu'); ?>');
+                        showNotice('error', '<?php _e('Network error occurred', 'tmu'); ?>');
+                        
+                        $btn.prop('disabled', false);
+                        $btn.find('.sync-button-text').text(originalText);
+                        $btn.find('.loading-spinner').addClass('hidden');
+                    });
+                }
+                
+                performBatch();
+            });
+            
+            // Configure webhook
+            $('#configure-webhook').on('click', function() {
+                const $btn = $(this);
+                const originalText = $btn.text();
+                
+                $btn.prop('disabled', true).text('<?php _e('Configuring...', 'tmu'); ?>');
+                
+                $.post(ajaxurl, {
+                    action: 'tmu_configure_webhook',
+                    nonce: $btn.data('nonce')
+                }, function(response) {
+                    if (response.success) {
+                        showNotice('success', response.data.message);
+                    } else {
+                        showNotice('error', response.data.message || '<?php _e('Failed to configure webhook', 'tmu'); ?>');
+                    }
+                }).fail(function() {
+                    showNotice('error', '<?php _e('Network error occurred', 'tmu'); ?>');
+                }).always(function() {
+                    $btn.prop('disabled', false).text(originalText);
+                });
+            });
+            
+                         // Load sync statistics
+             $('#load-sync-stats').on('click', function() {
+                 const $btn = $(this);
+                 const $display = $('#sync-stats-display');
+                 const $content = $('#stats-content');
+                 const originalText = $btn.text();
+                 
+                 $btn.prop('disabled', true).text('<?php _e('Loading...', 'tmu'); ?>');
+                 
+                 $.post(ajaxurl, {
+                     action: 'tmu_get_sync_stats',
+                     nonce: $btn.data('nonce')
+                 }, function(response) {
+                     if (response.success) {
+                         const stats = response.data;
+                         let html = '<div class="space-y-2">';
+                         html += '<div><strong><?php _e('Total Synced', 'tmu'); ?>:</strong> ' + stats.total_synced + '</div>';
+                         html += '<div><strong><?php _e('Movies', 'tmu'); ?>:</strong> ' + stats.movies_synced + '</div>';
+                         html += '<div><strong><?php _e('TV Shows', 'tmu'); ?>:</strong> ' + stats.tv_synced + '</div>';
+                         html += '<div><strong><?php _e('People', 'tmu'); ?>:</strong> ' + stats.people_synced + '</div>';
+                         html += '<div><strong><?php _e('Last Sync', 'tmu'); ?>:</strong> ' + stats.last_sync + '</div>';
+                         html += '</div>';
+                         
+                         $content.html(html);
+                         $display.removeClass('hidden');
+                     } else {
+                         showNotice('error', response.data.message || '<?php _e('Failed to load statistics', 'tmu'); ?>');
+                     }
+                 }).fail(function() {
+                     showNotice('error', '<?php _e('Network error occurred', 'tmu'); ?>');
+                 }).always(function() {
+                     $btn.prop('disabled', false).text(originalText);
+                 });
+             });
+             
+             // Clear TMDB cache
+             $('#clear-tmdb-cache').on('click', function() {
+                 if (!confirm('<?php _e('Clear all TMDB API cache? This will force fresh data to be fetched from TMDB.', 'tmu'); ?>')) {
+                     return;
+                 }
+                 
+                 const $btn = $(this);
+                 const originalText = $btn.text();
+                 
+                 $btn.prop('disabled', true).text('<?php _e('Clearing...', 'tmu'); ?>');
+                 
+                 $.post(ajaxurl, {
+                     action: 'tmu_clear_tmdb_cache',
+                     nonce: $btn.data('nonce')
+                 }, function(response) {
+                     if (response.success) {
+                         showNotice('success', response.data.message);
+                     } else {
+                         showNotice('error', response.data.message || '<?php _e('Failed to clear cache', 'tmu'); ?>');
+                     }
+                 }).fail(function() {
+                     showNotice('error', '<?php _e('Network error occurred', 'tmu'); ?>');
+                 }).always(function() {
+                     $btn.prop('disabled', false).text(originalText);
+                 });
+             });
+             
+             // Copy webhook URL functionality
+             window.copyWebhookUrl = function(button) {
+                 const url = button.previousElementSibling.value;
+                 navigator.clipboard.writeText(url).then(function() {
+                     showNotice('success', '<?php _e('Webhook URL copied to clipboard', 'tmu'); ?>');
+                 }, function() {
+                     // Fallback for older browsers
+                     button.previousElementSibling.select();
+                     document.execCommand('copy');
+                     showNotice('success', '<?php _e('Webhook URL copied to clipboard', 'tmu'); ?>');
+                 });
+             };
+            
+            // Show notice function
+            function showNotice(type, message) {
+                const noticeClass = type === 'success' ? 'notice-success' : 'notice-error';
+                const notice = $('<div class="notice ' + noticeClass + ' is-dismissible"><p>' + message + '</p></div>');
+                
+                $('.wrap h1').after(notice);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    notice.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }, 5000);
+                
+                // Manual dismiss
+                notice.on('click', function() {
+                    $(this).fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                });
+            }
+        });
+        </script>
         <?php
     }
     
@@ -562,6 +878,108 @@ class TMDBSettings {
         wp_send_json_success([
             'message' => __('Webhook configured successfully', 'tmu'),
             'webhook_url' => $webhook_url
+        ]);
+    }
+    
+    /**
+     * Get sync statistics via AJAX
+     */
+    public function getSyncStats(): void {
+        check_ajax_referer('tmu_get_sync_stats', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized access', 'tmu')]);
+        }
+        
+        // Get sync statistics
+        $movies_synced = get_posts([
+            'post_type' => 'movie',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => '_tmdb_synced',
+                    'compare' => 'EXISTS'
+                ]
+            ],
+            'fields' => 'ids'
+        ]);
+        
+        $tv_synced = get_posts([
+            'post_type' => 'tv-series',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => '_tmdb_synced',
+                    'compare' => 'EXISTS'
+                ]
+            ],
+            'fields' => 'ids'
+        ]);
+        
+        $people_synced = get_posts([
+            'post_type' => 'people',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => '_tmdb_synced',
+                    'compare' => 'EXISTS'
+                ]
+            ],
+            'fields' => 'ids'
+        ]);
+        
+        // Get last sync time
+        $last_sync = get_option('tmu_last_sync_time', '');
+        
+        $stats = [
+            'total_synced' => count($movies_synced) + count($tv_synced) + count($people_synced),
+            'movies_synced' => count($movies_synced),
+            'tv_synced' => count($tv_synced),
+            'people_synced' => count($people_synced),
+            'last_sync' => $last_sync ? date('Y-m-d H:i:s', strtotime($last_sync)) : __('Never', 'tmu')
+        ];
+        
+        wp_send_json_success($stats);
+    }
+    
+    /**
+     * Clear TMDB cache via AJAX
+     */
+    public function clearTMDBCache(): void {
+        check_ajax_referer('tmu_clear_tmdb_cache', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized access', 'tmu')]);
+        }
+        
+        // Clear TMDB-related transients
+        global $wpdb;
+        
+        $transient_keys = $wpdb->get_col(
+            "SELECT option_name FROM {$wpdb->options} 
+             WHERE option_name LIKE '_transient_tmdb_%' 
+             OR option_name LIKE '_transient_timeout_tmdb_%'"
+        );
+        
+        $cleared_count = 0;
+        foreach ($transient_keys as $key) {
+            if (strpos($key, '_transient_timeout_') === 0) {
+                continue; // Skip timeout keys, they'll be cleaned up automatically
+            }
+            
+            $transient_name = str_replace('_transient_', '', $key);
+            if (delete_transient($transient_name)) {
+                $cleared_count++;
+            }
+        }
+        
+        // Clear object cache if available
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+        
+        wp_send_json_success([
+            'message' => sprintf(__('Cleared %d cache entries', 'tmu'), $cleared_count)
         ]);
     }
 }
