@@ -174,6 +174,9 @@ class ThemeCore {
         // Initialize Step 07 - Gutenberg Blocks
         Blocks\BlockRegistry::getInstance();
         
+        // Initialize API controllers for blocks
+        API\BlockDataController::getInstance();
+        
         // Initialize Step 08 - Admin UI and Meta Boxes
         if (is_admin()) {
             Admin\AdminManager::getInstance();
