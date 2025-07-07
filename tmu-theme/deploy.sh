@@ -1,73 +1,73 @@
 #!/bin/bash
-# deploy.sh - Theme deployment script
+# deploy.sh
 
 set -e
 
-echo "Starting TMU Theme deployment..."
+ENVIRONMENT=${1:-staging}
+VERSION=${2:-latest}
+
+echo "Deploying TMU Theme to $ENVIRONMENT environment..."
 
 # Configuration
-THEME_NAME="tmu-theme"
-BUILD_DIR="build"
-DIST_DIR="dist"
+case $ENVIRONMENT in
+    staging)
+        SERVER="staging.example.com"
+        PATH="/var/www/staging/wp-content/themes/tmu"
+        ;;
+    production)
+        SERVER="production.example.com"
+        PATH="/var/www/production/wp-content/themes/tmu"
+        ;;
+    *)
+        echo "Invalid environment: $ENVIRONMENT"
+        exit 1
+        ;;
+esac
 
-# Clean previous builds
-echo "Cleaning previous builds..."
-rm -rf $BUILD_DIR $DIST_DIR
-mkdir -p $BUILD_DIR $DIST_DIR
-
-# Install dependencies
-echo "Installing dependencies..."
+# Pre-deployment checks
+echo "Running pre-deployment checks..."
+npm run lint
+npm run test
 composer install --no-dev --optimize-autoloader
-npm ci --production
 
 # Build assets
-echo "Building assets..."
-npm run build:production
+echo "Building assets for $ENVIRONMENT..."
+npm run build:$ENVIRONMENT
 
-# Copy theme files
-echo "Copying theme files..."
-cp -r src/ $BUILD_DIR/
-cp -r templates/ $BUILD_DIR/
-cp -r assets/dist/ $BUILD_DIR/assets/
-cp functions.php style.css index.php $BUILD_DIR/
+# Create backup
+echo "Creating backup..."
+ssh user@$SERVER "cp -r $PATH ${PATH}_backup_$(date +%Y%m%d_%H%M%S)"
 
-# Generate version info
-echo "Generating version info..."
-COMMIT_HASH=$(git rev-parse --short HEAD)
-BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# Deploy files
+echo "Deploying files..."
+rsync -avz --delete \
+    --exclude 'node_modules' \
+    --exclude '.git' \
+    --exclude '.github' \
+    --exclude 'tests' \
+    --exclude 'docs' \
+    --exclude '*.md' \
+    --exclude 'package*.json' \
+    --exclude 'webpack.config.js' \
+    ./ user@$SERVER:$PATH/
 
-cat > $BUILD_DIR/version.json << EOF
-{
-    "version": "2.0.0",
-    "commit": "$COMMIT_HASH",
-    "build_date": "$BUILD_DATE",
-    "php_version": "$(php -r 'echo PHP_VERSION;')",
-    "wp_version": "6.0+"
-}
-EOF
+# Run post-deployment tasks
+echo "Running post-deployment tasks..."
+ssh user@$SERVER "cd $PATH && php wp-cli.phar theme activate tmu"
+ssh user@$SERVER "cd $PATH && php wp-cli.phar cache flush"
 
-# Run tests
-echo "Running tests..."
-vendor/bin/phpunit --testsuite=production
-npm run test:browser:ci
+# Health check
+echo "Performing health check..."
+HEALTH_URL="https://$SERVER/wp-json/tmu/v1/health"
+HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL)
 
-# Create distribution package
-echo "Creating distribution package..."
-cd $BUILD_DIR
-zip -r "../$DIST_DIR/$THEME_NAME-$COMMIT_HASH.zip" .
-cd ..
-
-# Deploy to staging (if configured)
-if [ "$DEPLOY_STAGING" = "true" ]; then
-    echo "Deploying to staging..."
-    rsync -avz --delete $BUILD_DIR/ $STAGING_SERVER:$STAGING_PATH/
+if [ $HEALTH_STATUS -eq 200 ]; then
+    echo "✅ Deployment successful! Health check passed."
+else
+    echo "❌ Deployment failed! Health check returned status $HEALTH_STATUS"
+    echo "Rolling back..."
+    ssh user@$SERVER "rm -rf $PATH && mv ${PATH}_backup_* $PATH"
+    exit 1
 fi
 
-# Deploy to production (if configured)
-if [ "$DEPLOY_PRODUCTION" = "true" ]; then
-    echo "Deploying to production..."
-    rsync -avz --delete $BUILD_DIR/ $PRODUCTION_SERVER:$PRODUCTION_PATH/
-fi
-
-echo "Deployment completed successfully!"
-echo "Package created: $DIST_DIR/$THEME_NAME-$COMMIT_HASH.zip"
+echo "🎉 Deployment completed successfully!"
