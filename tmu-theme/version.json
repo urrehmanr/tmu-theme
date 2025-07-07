@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "versioning": {
+    "major": "Breaking changes",
+    "minor": "New features, backward compatible",
+    "patch": "Bug fixes, backward compatible"
+  },
+  "release_notes": {
+    "1.0.0": "Initial release with complete plugin-to-theme migration",
+    "1.1.0": "Added Gutenberg block system",
+    "1.1.1": "Fixed performance issues with large datasets"
+  }
+}
