@@ -12,6 +12,9 @@ namespace TMU\Admin\Settings;
 
 use TMU\API\TMDB\Client;
 use TMU\API\TMDB\SyncService;
+use TMU\API\TMDB\SyncScheduler;
+use TMU\API\TMDB\WebhookHandler;
+use TMU\API\TMDB\Exception as TMDBException;
 
 /**
  * TMDBSettings class
@@ -19,16 +22,26 @@ use TMU\API\TMDB\SyncService;
  * Provides admin interface for TMDB configuration
  */
 class TMDBSettings {
+    private $client;
+    private $sync_service;
+    private $sync_scheduler;
+    private $webhook_handler;
     
     /**
      * Constructor
      */
     public function __construct() {
+        $this->client = new Client();
+        $this->sync_service = new SyncService();
+        $this->sync_scheduler = new SyncScheduler();
+        $this->webhook_handler = new WebhookHandler();
+        
         add_action('admin_menu', [$this, 'addAdminPage']);
         add_action('admin_init', [$this, 'initSettings']);
         add_action('wp_ajax_tmu_test_tmdb_api', [$this, 'handleTestApi']);
         add_action('wp_ajax_tmu_bulk_sync_tmdb', [$this, 'handleBulkSync']);
         add_action('wp_ajax_tmu_get_sync_stats', [$this, 'handleGetSyncStats']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
     
     /**
@@ -84,6 +97,30 @@ class TMDBSettings {
             'sanitize_callback' => 'absint',
             'default' => 1
         ]);
+        
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_webhooks_enabled', [
+            'type' => 'boolean',
+            'sanitize_callback' => 'rest_sanitize_boolean',
+            'default' => false
+        ]);
+        
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_webhook_secret', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => ''
+        ]);
+        
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_delete_behavior', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => 'mark_deleted'
+        ]);
+        
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_cache_duration', [
+            'type' => 'integer',
+            'sanitize_callback' => 'absint',
+            'default' => 3600
+        ]);
     }
     
     /**
@@ -94,12 +131,9 @@ class TMDBSettings {
             $this->saveSettings();
         }
         
-        $api_key = get_option('tmu_tmdb_api_key', '');
-        $auto_sync = get_option('tmu_tmdb_auto_sync', false);
-        $sync_images = get_option('tmu_tmdb_sync_images', true);
-        $sync_videos = get_option('tmu_tmdb_sync_videos', false);
-        $sync_credits = get_option('tmu_tmdb_sync_credits', true);
-        $rate_limit = get_option('tmu_tmdb_rate_limit', 1);
+        $settings = $this->getSettings();
+        $sync_status = $this->sync_scheduler->getSyncStatus();
+        $webhook_config = $this->webhook_handler->getWebhookConfig();
         
         ?>
         <div class="wrap tmu-tmdb-settings">
@@ -115,14 +149,12 @@ class TMDBSettings {
                             
                             <table class="form-table">
                                 <tr>
-                                    <th scope="row">
-                                        <label for="tmdb_api_key"><?php _e('TMDB API Key', 'tmu-theme'); ?></label>
-                                    </th>
+                                    <th scope="row"><?php _e('TMDB API Key', 'tmu-theme'); ?></th>
                                     <td>
                                         <input type="password" 
-                                               name="tmdb_api_key" 
-                                               id="tmdb_api_key"
-                                               value="<?php echo esc_attr($api_key); ?>" 
+                                               name="tmu_tmdb_api_key" 
+                                               id="tmu_tmdb_api_key"
+                                               value="<?php echo esc_attr($settings['api_key']); ?>" 
                                                class="regular-text" 
                                                autocomplete="off" />
                                         <p class="description">
@@ -151,9 +183,9 @@ class TMDBSettings {
                                     <td>
                                         <label>
                                             <input type="checkbox" 
-                                                   name="auto_sync" 
+                                                   name="tmu_tmdb_auto_sync" 
                                                    value="1" 
-                                                   <?php checked($auto_sync, true); ?> />
+                                                   <?php checked($settings['auto_sync'], true); ?> />
                                             <?php _e('Enable automatic daily sync for all content', 'tmu-theme'); ?>
                                         </label>
                                     </td>
@@ -164,9 +196,9 @@ class TMDBSettings {
                                     <td>
                                         <label>
                                             <input type="checkbox" 
-                                                   name="sync_images" 
+                                                   name="tmu_tmdb_sync_images" 
                                                    value="1" 
-                                                   <?php checked($sync_images, true); ?> />
+                                                   <?php checked($settings['sync_images'], true); ?> />
                                             <?php _e('Download and sync posters, backdrops, and profile images', 'tmu-theme'); ?>
                                         </label>
                                     </td>
@@ -177,9 +209,9 @@ class TMDBSettings {
                                     <td>
                                         <label>
                                             <input type="checkbox" 
-                                                   name="sync_videos" 
+                                                   name="tmu_tmdb_sync_videos" 
                                                    value="1" 
-                                                   <?php checked($sync_videos, true); ?> />
+                                                   <?php checked($settings['sync_videos'], true); ?> />
                                             <?php _e('Sync video information (trailers, clips)', 'tmu-theme'); ?>
                                         </label>
                                     </td>
@@ -190,9 +222,9 @@ class TMDBSettings {
                                     <td>
                                         <label>
                                             <input type="checkbox" 
-                                                   name="sync_credits" 
+                                                   name="tmu_tmdb_sync_credits" 
                                                    value="1" 
-                                                   <?php checked($sync_credits, true); ?> />
+                                                   <?php checked($settings['sync_credits'], true); ?> />
                                             <?php _e('Sync cast and crew information', 'tmu-theme'); ?>
                                         </label>
                                     </td>
@@ -200,19 +232,77 @@ class TMDBSettings {
                                 
                                 <tr>
                                     <th scope="row">
-                                        <label for="rate_limit"><?php _e('Rate Limit', 'tmu-theme'); ?></label>
+                                        <label for="tmu_tmdb_rate_limit"><?php _e('Rate Limit', 'tmu-theme'); ?></label>
                                     </th>
                                     <td>
-                                        <input type="number" 
-                                               name="rate_limit" 
-                                               id="rate_limit"
-                                               value="<?php echo esc_attr($rate_limit); ?>" 
-                                               min="1" 
-                                               max="5" 
-                                               class="small-text" />
+                                        <select name="tmu_tmdb_rate_limit">
+                                            <option value="40" <?php selected($settings['rate_limit'], 40); ?>>40 requests/10 seconds</option>
+                                            <option value="30" <?php selected($settings['rate_limit'], 30); ?>>30 requests/10 seconds</option>
+                                            <option value="20" <?php selected($settings['rate_limit'], 20); ?>>20 requests/10 seconds</option>
+                                            <option value="10" <?php selected($settings['rate_limit'], 10); ?>>10 requests/10 seconds</option>
+                                        </select>
                                         <span><?php _e('seconds between requests', 'tmu-theme'); ?></span>
                                         <p class="description">
                                             <?php _e('Delay between TMDB API requests to avoid rate limiting', 'tmu-theme'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="tmu-settings-section">
+                            <h2><?php _e('Webhook Settings', 'tmu-theme'); ?></h2>
+                            
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row"><?php _e('Enable Webhooks', 'tmu-theme'); ?></th>
+                                    <td>
+                                        <label>
+                                            <input type="checkbox" 
+                                                   name="tmu_tmdb_webhooks_enabled" 
+                                                   value="1" 
+                                                   <?php checked($settings['webhooks_enabled'], true); ?> />
+                                            <?php _e('Enable TMDB webhooks for real-time updates', 'tmu-theme'); ?>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php _e('Webhook Secret', 'tmu-theme'); ?></th>
+                                    <td>
+                                        <input type="text" 
+                                               name="tmu_tmdb_webhook_secret" 
+                                               value="<?php echo esc_attr($settings['webhook_secret']); ?>" 
+                                               class="regular-text" />
+                                        <p class="description">
+                                            <?php _e('Secret key for webhook verification.', 'tmu-theme'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php _e('Webhook URL', 'tmu-theme'); ?></th>
+                                    <td>
+                                        <code><?php echo esc_html($webhook_config['url']); ?></code>
+                                        <p class="description">
+                                            <?php _e('Use this URL in your TMDB webhook configuration.', 'tmu-theme'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><?php _e('Delete Behavior', 'tmu-theme'); ?></th>
+                                    <td>
+                                        <select name="tmu_tmdb_delete_behavior">
+                                            <option value="mark_deleted" <?php selected($settings['delete_behavior'], 'mark_deleted'); ?>>
+                                                <?php _e('Mark as deleted', 'tmu-theme'); ?>
+                                            </option>
+                                            <option value="set_draft" <?php selected($settings['delete_behavior'], 'set_draft'); ?>>
+                                                <?php _e('Set to draft', 'tmu-theme'); ?>
+                                            </option>
+                                            <option value="delete_post" <?php selected($settings['delete_behavior'], 'delete_post'); ?>>
+                                                <?php _e('Delete permanently', 'tmu-theme'); ?>
+                                            </option>
+                                        </select>
+                                        <p class="description">
+                                            <?php _e('What to do when content is deleted from TMDB.', 'tmu-theme'); ?>
                                         </p>
                                     </td>
                                 </tr>
@@ -256,9 +346,37 @@ class TMDBSettings {
                 
                 <div class="tmu-settings-sidebar">
                     <div class="tmu-settings-widget">
-                        <h3><?php _e('Sync Statistics', 'tmu-theme'); ?></h3>
-                        <div id="sync-stats-display">
-                            <p><?php _e('Click "View Sync Statistics" to load stats', 'tmu-theme'); ?></p>
+                        <h3><?php _e('Sync Status', 'tmu-theme'); ?></h3>
+                        <div class="tmu-sync-status">
+                            <p><strong><?php _e('Auto Sync:', 'tmu-theme'); ?></strong> 
+                                <?php echo $sync_status['auto_sync_enabled'] ? __('Enabled', 'tmu-theme') : __('Disabled', 'tmu-theme'); ?>
+                            </p>
+                            
+                            <?php if ($sync_status['daily']): ?>
+                                <p><strong><?php _e('Last Daily Sync:', 'tmu-theme'); ?></strong><br>
+                                    <?php echo esc_html($sync_status['daily']['date']); ?><br>
+                                    <small><?php printf(__('Processed: %d, Errors: %d', 'tmu-theme'), 
+                                        $sync_status['daily']['processed'], 
+                                        $sync_status['daily']['errors']
+                                    ); ?></small>
+                                </p>
+                            <?php endif; ?>
+                            
+                            <?php if ($sync_status['weekly']): ?>
+                                <p><strong><?php _e('Last Weekly Sync:', 'tmu-theme'); ?></strong><br>
+                                    <?php echo esc_html($sync_status['weekly']['date']); ?><br>
+                                    <small><?php printf(__('Processed: %d, Errors: %d', 'tmu-theme'), 
+                                        $sync_status['weekly']['processed'], 
+                                        $sync_status['weekly']['errors']
+                                    ); ?></small>
+                                </p>
+                            <?php endif; ?>
+                            
+                            <?php if ($sync_status['next_daily']): ?>
+                                <p><strong><?php _e('Next Daily Sync:', 'tmu-theme'); ?></strong><br>
+                                    <?php echo date('Y-m-d H:i:s', $sync_status['next_daily']); ?>
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
                     
@@ -409,7 +527,7 @@ class TMDBSettings {
             $('#test-api-btn').on('click', function() {
                 const $btn = $(this);
                 const $result = $('#api-test-result');
-                const apiKey = $('#tmdb_api_key').val();
+                const apiKey = $('#tmu_tmdb_api_key').val();
                 
                 if (!apiKey) {
                     $result.removeClass('success').addClass('error').text('<?php _e('Please enter an API key', 'tmu-theme'); ?>');
@@ -526,12 +644,25 @@ class TMDBSettings {
             wp_die(__('Insufficient permissions', 'tmu-theme'));
         }
         
-        update_option('tmu_tmdb_api_key', sanitize_text_field($_POST['tmdb_api_key']));
-        update_option('tmu_tmdb_auto_sync', !empty($_POST['auto_sync']));
-        update_option('tmu_tmdb_sync_images', !empty($_POST['sync_images']));
-        update_option('tmu_tmdb_sync_videos', !empty($_POST['sync_videos']));
-        update_option('tmu_tmdb_sync_credits', !empty($_POST['sync_credits']));
-        update_option('tmu_tmdb_rate_limit', absint($_POST['rate_limit']));
+        update_option('tmu_tmdb_api_key', sanitize_text_field($_POST['tmu_tmdb_api_key']));
+        update_option('tmu_tmdb_auto_sync', !empty($_POST['tmu_tmdb_auto_sync']));
+        update_option('tmu_tmdb_sync_images', !empty($_POST['tmu_tmdb_sync_images']));
+        update_option('tmu_tmdb_sync_videos', !empty($_POST['tmu_tmdb_sync_videos']));
+        update_option('tmu_tmdb_sync_credits', !empty($_POST['tmu_tmdb_sync_credits']));
+        update_option('tmu_tmdb_rate_limit', absint($_POST['tmu_tmdb_rate_limit']));
+        update_option('tmu_tmdb_webhooks_enabled', !empty($_POST['tmu_tmdb_webhooks_enabled']));
+        update_option('tmu_tmdb_webhook_secret', sanitize_text_field($_POST['tmu_tmdb_webhook_secret']));
+        update_option('tmu_tmdb_delete_behavior', sanitize_text_field($_POST['tmu_tmdb_delete_behavior']));
+        update_option('tmu_tmdb_cache_duration', absint($_POST['tmu_tmdb_cache_duration']));
+        
+        // Update webhook configuration
+        $webhook_config = [
+            'enabled' => !empty($_POST['tmu_tmdb_webhooks_enabled']),
+            'secret' => sanitize_text_field($_POST['tmu_tmdb_webhook_secret']),
+            'delete_behavior' => sanitize_text_field($_POST['tmu_tmdb_delete_behavior'])
+        ];
+        
+        $this->webhook_handler->updateWebhookConfig($webhook_config);
         
         echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'tmu-theme') . '</p></div>';
     }
@@ -559,8 +690,7 @@ class TMDBSettings {
             $original_key = get_option('tmu_tmdb_api_key');
             update_option('tmu_tmdb_api_key', $api_key);
             
-            $client = new Client();
-            $result = $client->getMovieDetails(550); // Test with Fight Club
+            $result = $this->client->getMovieDetails(550); // Test with Fight Club
             
             // Restore original key
             update_option('tmu_tmdb_api_key', $original_key);
@@ -596,27 +726,12 @@ class TMDBSettings {
         set_time_limit(300);
         
         try {
-            $sync_service = new SyncService();
-            
-            // Get all posts with TMDB IDs
-            $posts = get_posts([
-                'post_type' => ['movie', 'tv', 'drama', 'people'],
-                'posts_per_page' => 50, // Limit for safety
-                'meta_key' => 'tmdb_id',
-                'meta_value' => '',
-                'meta_compare' => '!='
-            ]);
-            
-            $post_ids = wp_list_pluck($posts, 'ID');
-            
-            $options = [
+            $results = $this->sync_service->bulk_sync([], [
                 'sync_images' => get_option('tmu_tmdb_sync_images', true),
                 'sync_videos' => get_option('tmu_tmdb_sync_videos', false),
                 'sync_credits' => get_option('tmu_tmdb_sync_credits', true),
                 'rate_limit' => get_option('tmu_tmdb_rate_limit', 1)
-            ];
-            
-            $results = $sync_service->bulk_sync($post_ids, $options);
+            ]);
             
             wp_send_json_success($results);
             
@@ -638,13 +753,67 @@ class TMDBSettings {
         }
         
         try {
-            $sync_service = new SyncService();
-            $stats = $sync_service->getSyncStatistics();
+            $stats = $this->sync_service->getSyncStatistics();
             
             wp_send_json_success($stats);
             
         } catch (\Exception $e) {
             wp_send_json_error($e->getMessage());
         }
+    }
+    
+    /**
+     * Get settings
+     */
+    private function getSettings(): array {
+        return [
+            'api_key' => get_option('tmu_tmdb_api_key', ''),
+            'auto_sync' => get_option('tmu_tmdb_auto_sync', false),
+            'sync_images' => get_option('tmu_tmdb_sync_images', true),
+            'sync_videos' => get_option('tmu_tmdb_sync_videos', false),
+            'sync_credits' => get_option('tmu_tmdb_sync_credits', true),
+            'webhooks_enabled' => get_option('tmu_tmdb_webhooks_enabled', false),
+            'webhook_secret' => get_option('tmu_tmdb_webhook_secret', ''),
+            'delete_behavior' => get_option('tmu_tmdb_delete_behavior', 'mark_deleted'),
+            'rate_limit' => get_option('tmu_tmdb_rate_limit', 1),
+            'cache_duration' => get_option('tmu_tmdb_cache_duration', 3600)
+        ];
+    }
+    
+    /**
+     * Enqueue scripts
+     */
+    public function enqueue_scripts($hook): void {
+        if (strpos($hook, 'tmu-tmdb-settings') === false) {
+            return;
+        }
+        
+        wp_enqueue_script(
+            'tmu-tmdb-settings',
+            get_template_directory_uri() . '/assets/js/tmdb-settings.js',
+            ['jquery'],
+            '1.0.0',
+            true
+        );
+        
+        wp_localize_script('tmu-tmdb-settings', 'tmuTmdbSettings', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tmu_tmdb_settings'),
+            'strings' => [
+                'testing' => __('Testing...', 'tmu'),
+                'syncing' => __('Syncing...', 'tmu'),
+                'success' => __('Success!', 'tmu'),
+                'error' => __('Error!', 'tmu'),
+                'confirm_bulk_sync' => __('This will sync all content with TMDB. This may take a while. Continue?', 'tmu'),
+                'confirm_clear_cache' => __('Are you sure you want to clear the TMDB cache?', 'tmu')
+            ]
+        ]);
+        
+        wp_enqueue_style(
+            'tmu-tmdb-settings',
+            get_template_directory_uri() . '/assets/css/tmdb-settings.css',
+            [],
+            '1.0.0'
+        );
     }
 }
