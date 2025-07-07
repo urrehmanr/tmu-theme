@@ -642,6 +642,153 @@ class SchemaManager {
     }
     
     /**
+     * Generate episode schema
+     */
+    public function generate_episode_schema(int $post_id): ?array {
+        $episode_data = function_exists('tmu_get_episode_data') ? tmu_get_episode_data($post_id) : [];
+        $post = get_post($post_id);
+        
+        if (!$post) return null;
+        
+        $schema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'TVEpisode',
+            'name' => get_the_title($post_id),
+            'url' => get_permalink($post_id),
+            'description' => $episode_data['overview'] ?: get_the_excerpt($post_id),
+            'image' => $this->get_images($post_id)
+        ];
+        
+        // Add episode number
+        if (!empty($episode_data['episode_number'])) {
+            $schema['episodeNumber'] = $episode_data['episode_number'];
+        }
+        
+        // Add season number
+        if (!empty($episode_data['season_number'])) {
+            $schema['seasonNumber'] = $episode_data['season_number'];
+        }
+        
+        // Add air date
+        if (!empty($episode_data['air_date'])) {
+            $schema['datePublished'] = $episode_data['air_date'];
+        }
+        
+        // Add runtime
+        if (!empty($episode_data['runtime'])) {
+            $schema['duration'] = $this->format_duration($episode_data['runtime']);
+        }
+        
+        // Add parent series
+        $series_id = get_post_meta($post_id, 'tv_series_id', true) ?: get_post_meta($post_id, 'drama_id', true);
+        if ($series_id) {
+            $schema['partOfSeries'] = [
+                '@type' => 'TVSeries',
+                'name' => get_the_title($series_id),
+                'url' => get_permalink($series_id)
+            ];
+        }
+        
+        // Add parent season
+        $season_id = get_post_meta($post_id, 'season_id', true);
+        if ($season_id) {
+            $season_number = get_post_meta($season_id, 'season_number', true);
+            $schema['partOfSeason'] = [
+                '@type' => 'TVSeason',
+                'name' => get_the_title($season_id),
+                'seasonNumber' => $season_number,
+                'url' => get_permalink($season_id)
+            ];
+        }
+        
+        // Add rating if available
+        if (!empty($episode_data['vote_average']) && !empty($episode_data['vote_count'])) {
+            $schema['aggregateRating'] = [
+                '@type' => 'AggregateRating',
+                'ratingValue' => $episode_data['vote_average'],
+                'ratingCount' => $episode_data['vote_count'],
+                'bestRating' => 10,
+                'worstRating' => 1
+            ];
+        }
+        
+        return $schema;
+    }
+    
+    /**
+     * Generate season schema
+     */
+    public function generate_season_schema(int $post_id): ?array {
+        $season_data = function_exists('tmu_get_season_data') ? tmu_get_season_data($post_id) : [];
+        $post = get_post($post_id);
+        
+        if (!$post) return null;
+        
+        $schema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'TVSeason',
+            'name' => get_the_title($post_id),
+            'url' => get_permalink($post_id),
+            'description' => $season_data['overview'] ?: get_the_excerpt($post_id),
+            'image' => $this->get_images($post_id)
+        ];
+        
+        // Add season number
+        $season_number = get_post_meta($post_id, 'season_number', true);
+        if ($season_number) {
+            $schema['seasonNumber'] = $season_number;
+        }
+        
+        // Add air date
+        if (!empty($season_data['air_date'])) {
+            $schema['startDate'] = $season_data['air_date'];
+        }
+        
+        // Add episode count
+        $episode_count = get_post_meta($post_id, 'episode_count', true);
+        if ($episode_count) {
+            $schema['numberOfEpisodes'] = $episode_count;
+        }
+        
+        // Add parent series
+        $series_id = get_post_meta($post_id, 'tv_series_id', true) ?: get_post_meta($post_id, 'drama_id', true);
+        if ($series_id) {
+            $schema['partOfSeries'] = [
+                '@type' => 'TVSeries',
+                'name' => get_the_title($series_id),
+                'url' => get_permalink($series_id)
+            ];
+        }
+        
+        // Add episodes
+        $episodes = get_posts([
+            'post_type' => ['episode', 'drama-episode'],
+            'meta_key' => 'season_id',
+            'meta_value' => $post_id,
+            'posts_per_page' => -1,
+            'orderby' => 'meta_value_num',
+            'meta_key' => 'episode_number',
+            'order' => 'ASC'
+        ]);
+        
+        if ($episodes) {
+            $episode_schemas = [];
+            foreach ($episodes as $episode) {
+                $episode_number = get_post_meta($episode->ID, 'episode_number', true);
+                $episode_schemas[] = [
+                    '@type' => 'TVEpisode',
+                    'name' => $episode->post_title,
+                    'episodeNumber' => $episode_number,
+                    'url' => get_permalink($episode->ID)
+                ];
+            }
+            $schema['episode'] = $episode_schemas;
+        }
+        
+        return $schema;
+    }
+    
+    /**
      * Add JSON-LD script type
      */
     public function add_json_ld_script($tag): string {
