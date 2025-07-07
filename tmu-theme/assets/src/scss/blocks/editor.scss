@@ -8,15 +8,15 @@
  * @since 1.0.0
  */
 
-// Import individual block styles
-@import 'movie-metadata';
-@import 'tv-series-metadata';
-@import 'drama-metadata';
-@import 'people-metadata';
-@import 'episode-metadata';
-@import 'taxonomy-blocks';
-@import 'content-blocks';
-@import 'tmdb-sync';
+// Use individual block styles with modern @use syntax
+@use 'movie-metadata';
+@use 'tv-series-metadata';
+@use 'drama-metadata';
+@use 'people-metadata';
+@use 'episode-metadata';
+@use 'taxonomy-blocks';
+@use 'content-blocks';
+@use 'tmdb-sync';
 
 // Global block editor variables
 :root {
