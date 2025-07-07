@@ -104,6 +104,11 @@ class AccessibilityManager {
             $this->accessibility_components['screen_reader'] = new ScreenReader();
         }
         
+        // Always initialize accessibility checker for admin users
+        if (current_user_can('manage_options')) {
+            $this->accessibility_components['accessibility_checker'] = new AccessibilityChecker();
+        }
+        
         if ($this->accessibility_settings['enable_accessibility_checker']) {
             $this->accessibility_components['accessibility_checker'] = new AccessibilityChecker();
         }
