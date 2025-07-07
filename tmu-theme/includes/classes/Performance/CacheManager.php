@@ -675,6 +675,30 @@ class FragmentCache {
     }
     
     /**
+     * Cache movie card
+     */
+    public function cache_movie_card($movie_id): string {
+        return $this->cache_fragment(
+            "movie_card_{$movie_id}",
+            function() use ($movie_id) {
+                get_template_part('template-parts/movie-card', null, ['movie_id' => $movie_id]);
+            }
+        );
+    }
+    
+    /**
+     * Cache TV series card
+     */
+    public function cache_tv_series_card($tv_id): string {
+        return $this->cache_fragment(
+            "tv_series_card_{$tv_id}",
+            function() use ($tv_id) {
+                get_template_part('template-parts/tv-series-card', null, ['tv_id' => $tv_id]);
+            }
+        );
+    }
+    
+    /**
      * Invalidate post fragments
      */
     public function invalidate_post_fragments($post_id): void {
