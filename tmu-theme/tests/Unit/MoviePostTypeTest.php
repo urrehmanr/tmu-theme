@@ -29,24 +29,30 @@ class MoviePostTypeTest extends DatabaseTestCase {
     /**
      * Set up test environment
      */
-    public function setUp(): void {
-        parent::setUp();
-        
-        // Initialize movie post type if class exists
-        if (class_exists('TMU\\PostTypes\\MoviePostType')) {
-            $this->movie_post_type = new MoviePostType();
-            $this->movie_post_type->register();
-        } else {
-            // Fallback to manual registration for testing
-            $this->register_test_post_types();
-        }
+    protected function setUp(): void {
+        $this->movie_post_type = new MoviePostType();
     }
     
-    /**
-     * Test movie post type is registered
-     */
-    public function test_movie_post_type_is_registered(): void {
-        $this->assertTrue(post_type_exists('movie'), 'Movie post type should be registered');
+    public function test_post_type_registration(): void {
+        // Enable movies feature
+        update_option('tmu_movies', 'on');
+        
+        // Register post type
+        $this->movie_post_type->register();
+        
+        // Assert post type exists
+        $this->assertTrue(post_type_exists('movie'));
+    }
+    
+    public function test_post_type_disabled_when_feature_off(): void {
+        // Disable movies feature
+        update_option('tmu_movies', 'off');
+        
+        // Register post type
+        $this->movie_post_type->register();
+        
+        // Assert post type doesn't exist
+        $this->assertFalse(post_type_exists('movie'));
     }
     
     /**

@@ -193,6 +193,21 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Maintenance/PerformanceOptimizer.php';
         require_once TMU_INCLUDES_DIR . '/classes/Maintenance/SuccessMetrics.php';
         
+        // Load Step 19 - Final Implementation specific classes
+        require_once TMU_INCLUDES_DIR . '/classes/Database/MovieQuery.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Database/DatabaseConnectivityChecker.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDBRateLimiter.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Utils/MemoryOptimizer.php';
+        
+        // Load Migration classes
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationExecutor.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/DataMigrator.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/SettingsMigrator.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationValidator.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/PerformanceBenchmark.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/TestValidator.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/Step19Validator.php';
+        
         // Load placeholder classes - will be created in future steps
         // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
         // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
