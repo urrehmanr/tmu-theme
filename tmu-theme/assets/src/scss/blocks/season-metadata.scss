@@ -1,0 +1,174 @@
+/**
+ * Season Metadata Block Styles
+ */
+
+.tmu-season-metadata-block {
+  .tmu-season-preview {
+    @apply bg-white border border-gray-200 rounded-lg p-6 shadow-sm;
+    
+    .season-header {
+      @apply mb-4;
+      
+      .season-badge {
+        @apply bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded;
+      }
+      
+      .status-badge {
+        @apply text-xs font-medium px-2.5 py-0.5 rounded;
+        
+        &.aired { @apply bg-green-100 text-green-800; }
+        &.in-production { @apply bg-yellow-100 text-yellow-800; }
+        &.cancelled { @apply bg-red-100 text-red-800; }
+        &.announced { @apply bg-gray-100 text-gray-800; }
+      }
+      
+      .season-title {
+        @apply text-xl font-bold text-gray-900 mb-2;
+      }
+    }
+    
+    .season-content {
+      @apply flex gap-4;
+      
+      .season-poster {
+        @apply flex-shrink-0;
+        
+        img {
+          @apply w-24 h-36 object-cover rounded-lg shadow-md;
+        }
+      }
+      
+      .season-details {
+        @apply flex-1;
+        
+        .season-meta {
+          @apply grid grid-cols-2 gap-4 mb-4 text-sm;
+          
+          .meta-item {
+            .meta-label {
+              @apply font-medium text-gray-600 block;
+            }
+            
+            .meta-value {
+              @apply text-gray-900;
+            }
+          }
+        }
+        
+        .season-overview {
+          h4 {
+            @apply font-medium text-gray-700 mb-2;
+          }
+          
+          p {
+            @apply text-gray-600 text-sm leading-relaxed;
+          }
+        }
+      }
+    }
+  }
+  
+  .validation-errors {
+    @apply mt-4 p-3 bg-red-50 border border-red-200 rounded;
+    
+    .text-red-700 {
+      @apply text-sm font-medium mb-1;
+    }
+    
+    ul {
+      @apply text-red-600 text-xs list-disc list-inside;
+    }
+  }
+}
+
+/* Frontend styles */
+.tmu-season-metadata {
+  .season-info {
+    @apply grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6;
+    
+    .season-poster {
+      img {
+        @apply w-full h-auto rounded-lg shadow-lg;
+      }
+    }
+    
+    .season-details {
+      @apply lg:col-span-3;
+      
+      .season-title {
+        @apply text-3xl font-bold text-gray-900 mb-3;
+      }
+      
+      .season-meta {
+        @apply flex flex-wrap gap-4 mb-4;
+        
+        .meta-badge {
+          @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+          
+          &.episode-count { @apply bg-blue-100 text-blue-800; }
+          &.air-date { @apply bg-green-100 text-green-800; }
+          &.status { @apply bg-purple-100 text-purple-800; }
+          &.rating { @apply bg-yellow-100 text-yellow-800; }
+        }
+      }
+      
+      .season-overview {
+        @apply text-gray-600 leading-relaxed mb-6;
+      }
+      
+      .season-synopsis {
+        @apply text-gray-700 leading-relaxed;
+      }
+    }
+  }
+  
+  .season-episodes {
+    @apply mt-8;
+    
+    h3 {
+      @apply text-xl font-semibold text-gray-900 mb-4;
+    }
+    
+    .episodes-grid {
+      @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6;
+      
+      .episode-card {
+        @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow;
+        
+        .episode-still {
+          img {
+            @apply w-full h-32 object-cover rounded mb-3;
+          }
+        }
+        
+        .episode-title {
+          @apply font-semibold text-gray-900 mb-1;
+        }
+        
+        .episode-number {
+          @apply text-sm text-gray-600 mb-2;
+        }
+        
+        .episode-overview {
+          @apply text-sm text-gray-600 leading-relaxed;
+        }
+      }
+    }
+  }
+  
+  .season-stats {
+    @apply mt-6 grid grid-cols-2 md:grid-cols-4 gap-4;
+    
+    .stat-card {
+      @apply bg-gray-50 rounded-lg p-4 text-center;
+      
+      .stat-number {
+        @apply text-2xl font-bold text-gray-900;
+      }
+      
+      .stat-label {
+        @apply text-sm text-gray-600;
+      }
+    }
+  }
+}

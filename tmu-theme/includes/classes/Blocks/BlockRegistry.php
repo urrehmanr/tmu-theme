@@ -19,6 +19,12 @@ namespace TMU\Blocks;
 class BlockRegistry {
     
     /**
+     * Class instance
+     * @var BlockRegistry|null
+     */
+    private static $instance = null;
+    
+    /**
      * Registered blocks
      * @var array
      */
@@ -37,9 +43,21 @@ class BlockRegistry {
     private $version = '1.0.0';
     
     /**
-     * Constructor
+     * Get singleton instance
+     * 
+     * @return BlockRegistry
      */
-    public function __construct() {
+    public static function getInstance(): BlockRegistry {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Private constructor to prevent direct instantiation
+     */
+    private function __construct() {
         $this->init_hooks();
         $this->register_block_classes();
     }

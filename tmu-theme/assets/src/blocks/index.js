@@ -17,6 +17,14 @@ import TvSeriesMetadataBlock from './components/TvSeriesMetadataBlock.jsx';
 import DramaMetadataBlock from './components/DramaMetadataBlock.jsx';
 import PeopleMetadataBlock from './components/PeopleMetadataBlock.jsx';
 import TvEpisodeMetadataBlock from './components/TvEpisodeMetadataBlock.jsx';
+import DramaEpisodeMetadataBlock from './components/DramaEpisodeMetadataBlock.jsx';
+import SeasonMetadataBlock from './components/SeasonMetadataBlock.jsx';
+import VideoMetadataBlock from './components/VideoMetadataBlock.jsx';
+import TaxonomyImageBlock from './components/TaxonomyImageBlock.jsx';
+import TaxonomyFaqsBlock from './components/TaxonomyFaqsBlock.jsx';
+import BlogPostsListBlock from './components/BlogPostsListBlock.jsx';
+import TrendingContentBlock from './components/TrendingContentBlock.jsx';
+import TmdbSyncBlock from './components/TmdbSyncBlock.jsx';
 
 // Block configurations
 const blocks = [
@@ -39,6 +47,38 @@ const blocks = [
     {
         name: 'tmu/tv-episode-metadata',
         settings: TvEpisodeMetadataBlock
+    },
+    {
+        name: 'tmu/drama-episode-metadata',
+        settings: DramaEpisodeMetadataBlock
+    },
+    {
+        name: 'tmu/season-metadata',
+        settings: SeasonMetadataBlock
+    },
+    {
+        name: 'tmu/video-metadata',
+        settings: VideoMetadataBlock
+    },
+    {
+        name: 'tmu/taxonomy-image',
+        settings: TaxonomyImageBlock
+    },
+    {
+        name: 'tmu/taxonomy-faqs',
+        settings: TaxonomyFaqsBlock
+    },
+    {
+        name: 'tmu/blog-posts-list',
+        settings: BlogPostsListBlock
+    },
+    {
+        name: 'tmu/trending-content',
+        settings: TrendingContentBlock
+    },
+    {
+        name: 'tmu/tmdb-sync',
+        settings: TmdbSyncBlock
     }
 ];
 
