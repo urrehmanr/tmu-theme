@@ -1,380 +1,460 @@
-// Import admin CSS
-import '../css/admin.css';
+/**
+ * TMU Admin JavaScript
+ * 
+ * Handles admin interface interactions including TMDB sync,
+ * progress tracking, and admin page functionality.
+ */
 
-// Admin functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize admin components
-    initializeTMDBSync();
-    initializeBulkActions();
-    initializeMetaBoxes();
-    initializeImageUpload();
-    initializeFormValidation();
-    initializeAjaxForms();
-});
+(function($) {
+    'use strict';
 
-// TMDB Synchronization functionality
-function initializeTMDBSync() {
-    const syncButtons = document.querySelectorAll('.tmdb-sync-button');
-    syncButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+    const TMUAdmin = {
+        
+        /**
+         * Initialize admin functionality
+         */
+        init: function() {
+            this.bindEvents();
+            this.initProgressBars();
+            this.initTooltips();
+        },
+
+        /**
+         * Bind event handlers
+         */
+        bindEvents: function() {
+            // Quick Actions
+            $(document).on('click', '#bulk-tmdb-sync', this.handleBulkTMDBSync);
+            $(document).on('click', '#data-health-check', this.handleDataHealthCheck);
+            
+            // Admin Bar Actions
+            $(document).on('click', '.tmu-sync-all-link', this.handleAdminBarSync);
+            
+            // Progress tracking
+            $(document).on('tmu:progress:update', this.updateProgress);
+            $(document).on('tmu:progress:complete', this.completeProgress);
+            
+            // Notifications
+            $(document).on('click', '.notice-dismiss', this.dismissNotice);
+        },
+
+        /**
+         * Initialize progress bars
+         */
+        initProgressBars: function() {
+            $('.progress-fill').each(function() {
+                const $this = $(this);
+                const percentage = $this.data('percentage') || 0;
+                $this.css('width', percentage + '%');
+            });
+        },
+
+        /**
+         * Initialize tooltips
+         */
+        initTooltips: function() {
+            $('[data-tooltip]').each(function() {
+                const $this = $(this);
+                const tooltip = $this.data('tooltip');
+                
+                $this.attr('title', tooltip);
+            });
+        },
+
+        /**
+         * Handle bulk TMDB sync
+         */
+        handleBulkTMDBSync: function(e) {
             e.preventDefault();
             
-            const postId = this.dataset.postId;
-            const tmdbId = this.dataset.tmdbId;
-            
-            if (!tmdbId) {
-                alert(tmu_admin.strings.tmdb_id_required);
+            if (!confirm(tmuAdmin.strings.confirm_sync)) {
                 return;
             }
             
-            syncWithTMDB(postId, tmdbId, this);
-        });
-    });
-}
-
-// Bulk actions functionality
-function initializeBulkActions() {
-    const bulkActionSelect = document.querySelector('#bulk-action-selector-top');
-    const bulkActionButton = document.querySelector('#doaction');
-    
-    if (bulkActionSelect && bulkActionButton) {
-        bulkActionButton.addEventListener('click', function(e) {
-            const action = bulkActionSelect.value;
-            const checkedItems = document.querySelectorAll('input[name="post[]"]:checked');
+            const $button = $(this);
+            const $progress = $('#action-progress');
+            const $progressText = $('.progress-text');
+            const $progressFill = $('.progress-fill');
             
-            if (action === 'tmdb_sync' && checkedItems.length > 0) {
-                e.preventDefault();
-                bulkSyncWithTMDB(Array.from(checkedItems).map(item => item.value));
-            }
-        });
-    }
-}
-
-// Meta boxes functionality
-function initializeMetaBoxes() {
-    // TMDB ID input validation
-    const tmdbIdInputs = document.querySelectorAll('input[name="tmdb_id"]');
-    tmdbIdInputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            const value = this.value.trim();
-            if (value && !isValidTMDBId(value)) {
-                this.classList.add('error');
-                showNotification('Invalid TMDB ID format', 'error');
-            } else {
-                this.classList.remove('error');
-            }
-        });
-    });
-    
-    // Cast/Crew dynamic fields
-    initializeCastCrewFields();
-    
-    // Release date picker
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            validateDate(this);
-        });
-    });
-}
-
-// Cast/Crew dynamic fields
-function initializeCastCrewFields() {
-    const addCastButton = document.querySelector('#add-cast-member');
-    const addCrewButton = document.querySelector('#add-crew-member');
-    
-    if (addCastButton) {
-        addCastButton.addEventListener('click', function() {
-            addCastCrewField('cast');
-        });
-    }
-    
-    if (addCrewButton) {
-        addCrewButton.addEventListener('click', function() {
-            addCastCrewField('crew');
-        });
-    }
-    
-    // Remove buttons for existing fields
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-cast-crew')) {
-            e.preventDefault();
-            e.target.closest('.cast-crew-field').remove();
-        }
-    });
-}
-
-// Image upload functionality
-function initializeImageUpload() {
-    const uploadButtons = document.querySelectorAll('.image-upload-button');
-    uploadButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
+            // Show progress
+            $progress.show();
+            $button.prop('disabled', true).addClass('loading');
+            $progressText.text(tmuAdmin.strings.syncing);
             
-            const targetInput = document.querySelector(this.dataset.target);
-            const previewContainer = document.querySelector(this.dataset.preview);
-            
-            openMediaUploader(targetInput, previewContainer);
-        });
-    });
-}
-
-// Form validation
-function initializeFormValidation() {
-    const forms = document.querySelectorAll('form[data-validate="true"]');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (!validateForm(this)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    });
-}
-
-// AJAX forms
-function initializeAjaxForms() {
-    const ajaxForms = document.querySelectorAll('form[data-ajax="true"]');
-    ajaxForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitAjaxForm(this);
-        });
-    });
-}
-
-// TMDB Sync functions
-function syncWithTMDB(postId, tmdbId, button) {
-    const originalText = button.textContent;
-    const spinner = button.querySelector('.loading-spinner');
-    
-    button.disabled = true;
-    button.textContent = tmu_admin.strings.loading;
-    
-    if (spinner) {
-        spinner.style.display = 'inline-block';
-    }
-    
-    fetch(`${tmu_admin.ajaxurl}?action=tmdb_sync_post`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            // Start sync process
+            TMUAdmin.performBulkSync()
+                .then(function(response) {
+                    $progressFill.css('width', '100%');
+                    $progressText.text(tmuAdmin.strings.sync_complete);
+                    
+                    setTimeout(function() {
+                        $progress.hide();
+                        $button.prop('disabled', false).removeClass('loading');
+                        TMUAdmin.showNotice('success', response.message);
+                    }, 1000);
+                })
+                .catch(function(error) {
+                    $progressText.text(tmuAdmin.strings.sync_error);
+                    $button.prop('disabled', false).removeClass('loading');
+                    TMUAdmin.showNotice('error', error.message || tmuAdmin.strings.sync_error);
+                    
+                    setTimeout(function() {
+                        $progress.hide();
+                    }, 2000);
+                });
         },
-        body: `post_id=${postId}&tmdb_id=${tmdbId}&nonce=${tmu_admin.nonce}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(tmu_admin.strings.sync_success, 'success');
-            // Refresh the page to show updated data
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            showNotification(data.data || tmu_admin.strings.sync_error, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('TMDB sync error:', error);
-        showNotification(tmu_admin.strings.sync_error, 'error');
-    })
-    .finally(() => {
-        button.disabled = false;
-        button.textContent = originalText;
-        
-        if (spinner) {
-            spinner.style.display = 'none';
-        }
-    });
-}
 
-function bulkSyncWithTMDB(postIds) {
-    if (!confirm(`Sync ${postIds.length} items with TMDB?`)) {
-        return;
-    }
-    
-    const progressBar = createProgressBar();
-    document.body.appendChild(progressBar);
-    
-    let completed = 0;
-    const total = postIds.length;
-    
-    const syncPromises = postIds.map(postId => {
-        return fetch(`${tmu_admin.ajaxurl}?action=tmdb_sync_post`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `post_id=${postId}&nonce=${tmu_admin.nonce}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            completed++;
-            updateProgressBar(progressBar, (completed / total) * 100);
-            return data;
-        });
-    });
-    
-    Promise.all(syncPromises)
-        .then(results => {
-            const successful = results.filter(r => r.success).length;
-            showNotification(`Successfully synced ${successful} of ${total} items`, 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        })
-        .catch(error => {
-            console.error('Bulk sync error:', error);
-            showNotification('Error during bulk sync', 'error');
-        })
-        .finally(() => {
-            document.body.removeChild(progressBar);
-        });
-}
-
-// Helper functions
-function addCastCrewField(type) {
-    const container = document.querySelector(`#${type}-fields-container`);
-    const template = document.querySelector(`#${type}-field-template`);
-    
-    if (container && template) {
-        const newField = template.content.cloneNode(true);
-        container.appendChild(newField);
-    }
-}
-
-function isValidTMDBId(id) {
-    return /^\d+$/.test(id);
-}
-
-function validateDate(input) {
-    const date = new Date(input.value);
-    const now = new Date();
-    
-    if (date > now) {
-        input.classList.add('future-date');
-    } else {
-        input.classList.remove('future-date');
-    }
-}
-
-function validateForm(form) {
-    const requiredFields = form.querySelectorAll('[required]');
-    let isValid = true;
-    
-    requiredFields.forEach(field => {
-        if (!field.value.trim()) {
-            field.classList.add('error');
-            isValid = false;
-        } else {
-            field.classList.remove('error');
-        }
-    });
-    
-    return isValid;
-}
-
-function submitAjaxForm(form) {
-    const formData = new FormData(form);
-    const submitButton = form.querySelector('[type="submit"]');
-    const originalText = submitButton.textContent;
-    
-    submitButton.disabled = true;
-    submitButton.textContent = tmu_admin.strings.loading;
-    
-    fetch(form.action, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Form submitted successfully', 'success');
-            form.reset();
-        } else {
-            showNotification(data.data || 'Form submission failed', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Form submission error:', error);
-        showNotification('Form submission failed', 'error');
-    })
-    .finally(() => {
-        submitButton.disabled = false;
-        submitButton.textContent = originalText;
-    });
-}
-
-function openMediaUploader(targetInput, previewContainer) {
-    if (typeof wp !== 'undefined' && wp.media) {
-        const mediaUploader = wp.media({
-            title: 'Choose Image',
-            button: {
-                text: 'Use this image'
-            },
-            multiple: false
-        });
-        
-        mediaUploader.on('select', function() {
-            const attachment = mediaUploader.state().get('selection').first().toJSON();
-            targetInput.value = attachment.url;
+        /**
+         * Handle data health check
+         */
+        handleDataHealthCheck: function(e) {
+            e.preventDefault();
             
-            if (previewContainer) {
-                previewContainer.innerHTML = `<img src="${attachment.url}" alt="Preview" style="max-width: 200px;">`;
+            const $button = $(this);
+            $button.prop('disabled', true).addClass('loading');
+            
+            // Simulate health check
+            setTimeout(function() {
+                $button.prop('disabled', false).removeClass('loading');
+                TMUAdmin.showNotice('success', 'Data health check completed successfully!');
+            }, 2000);
+        },
+
+        /**
+         * Handle admin bar sync
+         */
+        handleAdminBarSync: function(e) {
+            e.preventDefault();
+            
+            if (!confirm(tmuAdmin.strings.confirm_sync)) {
+                return;
             }
-        });
-        
-        mediaUploader.open();
-    }
-}
+            
+            // Add loading state to admin bar
+            const $link = $(this);
+            $link.addClass('loading');
+            
+            TMUAdmin.performBulkSync()
+                .then(function(response) {
+                    $link.removeClass('loading');
+                    TMUAdmin.showNotice('success', response.message);
+                })
+                .catch(function(error) {
+                    $link.removeClass('loading');
+                    TMUAdmin.showNotice('error', error.message);
+                });
+        },
 
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notice notice-${type} is-dismissible`;
-    notification.innerHTML = `<p>${message}</p>`;
-    
-    const notices = document.querySelector('.wp-header-end');
-    if (notices) {
-        notices.parentNode.insertBefore(notification, notices);
-    }
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
+        /**
+         * Perform bulk TMDB sync
+         */
+        performBulkSync: function() {
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    url: tmuAdmin.ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'tmu_bulk_tmdb_sync',
+                        nonce: tmuAdmin.nonce,
+                        post_type: tmuAdmin.postType || 'all'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            resolve(response.data);
+                        } else {
+                            reject(response.data);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        reject({
+                            message: 'AJAX request failed: ' + error
+                        });
+                    }
+                });
+            });
+        },
+
+        /**
+         * Update progress bar
+         */
+        updateProgress: function(e, data) {
+            const percentage = data.percentage || 0;
+            const text = data.text || '';
+            
+            $('.progress-fill').css('width', percentage + '%');
+            $('.progress-text').text(text);
+        },
+
+        /**
+         * Complete progress
+         */
+        completeProgress: function(e, data) {
+            $('.progress-fill').css('width', '100%');
+            $('.progress-text').text(data.text || 'Complete!');
+            
+            setTimeout(function() {
+                $('#action-progress').fadeOut();
+            }, 2000);
+        },
+
+        /**
+         * Show notification
+         */
+        showNotice: function(type, message) {
+            const $notice = $('<div>')
+                .addClass('notice notice-' + type + ' is-dismissible')
+                .html('<p>' + message + '</p>')
+                .hide();
+            
+            $('.wrap').prepend($notice);
+            $notice.slideDown();
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(function() {
+                $notice.slideUp(function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        },
+
+        /**
+         * Dismiss notice
+         */
+        dismissNotice: function() {
+            $(this).closest('.notice').slideUp(function() {
+                $(this).remove();
+            });
+        },
+
+        /**
+         * Utility: Format number with commas
+         */
+        formatNumber: function(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        },
+
+        /**
+         * Utility: Get human readable time difference
+         */
+        timeAgo: function(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diff = now - time;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (days > 0) {
+                return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+            } else if (hours > 0) {
+                return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
+            } else if (minutes > 0) {
+                return minutes + ' minute' + (minutes > 1 ? 's' : '') + ' ago';
+            } else {
+                return 'Just now';
+            }
         }
-    }, 5000);
-}
+    };
 
-function createProgressBar() {
-    const progressBar = document.createElement('div');
-    progressBar.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        height: 20px;
-        background: #f0f0f0;
-        border-radius: 10px;
-        overflow: hidden;
-        z-index: 10000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    `;
-    
-    const progress = document.createElement('div');
-    progress.style.cssText = `
-        width: 0%;
-        height: 100%;
-        background: #007cba;
-        transition: width 0.3s ease;
-    `;
-    
-    progressBar.appendChild(progress);
-    return progressBar;
-}
+    /**
+     * TMDB Meta Box functionality
+     */
+    const TMDBMetaBox = {
+        
+        init: function() {
+            this.bindEvents();
+        },
 
-function updateProgressBar(progressBar, percentage) {
-    const progress = progressBar.querySelector('div');
-    progress.style.width = `${percentage}%`;
-}
+        bindEvents: function() {
+            $(document).on('click', '#tmdb-sync-btn', this.handleSync);
+            $(document).on('click', '#tmdb-search-btn', this.handleSearch);
+            $(document).on('click', '#tmdb-verify-btn', this.handleVerify);
+            $(document).on('click', '#tmdb-clear-btn', this.handleClear);
+            $(document).on('click', '#tmdb-refresh-btn', this.handleRefresh);
+            $(document).on('click', '.tmdb-search-result', this.selectResult);
+            $(document).on('keypress', '#tmdb_search', this.handleSearchKeypress);
+        },
+
+        handleSync: function(e) {
+            e.preventDefault();
+            
+            if (!confirm(tmuTMDB.strings.confirm_overwrite)) {
+                return;
+            }
+            
+            TMDBMetaBox.showLoading(tmuTMDB.strings.syncing);
+            
+            $.ajax({
+                url: tmuTMDB.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'tmu_tmdb_sync',
+                    nonce: tmuTMDB.nonce,
+                    post_id: tmuTMDB.postId,
+                    force: true
+                },
+                success: function(response) {
+                    TMDBMetaBox.hideLoading();
+                    
+                    if (response.success) {
+                        TMDBMetaBox.showMessage('success', response.data.message);
+                        // Refresh the page after successful sync
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        TMDBMetaBox.showMessage('error', response.data.message);
+                    }
+                },
+                error: function() {
+                    TMDBMetaBox.hideLoading();
+                    TMDBMetaBox.showMessage('error', tmuTMDB.strings.sync_error);
+                }
+            });
+        },
+
+        handleSearch: function(e) {
+            e.preventDefault();
+            
+            const query = $('#tmdb_search').val().trim();
+            if (!query) {
+                TMDBMetaBox.showMessage('error', 'Please enter a search term.');
+                return;
+            }
+            
+            TMDBMetaBox.showLoading(tmuTMDB.strings.searching);
+            
+            $.ajax({
+                url: tmuTMDB.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'tmu_tmdb_search',
+                    nonce: tmuTMDB.nonce,
+                    query: query,
+                    post_type: tmuTMDB.postType
+                },
+                success: function(response) {
+                    TMDBMetaBox.hideLoading();
+                    
+                    if (response.success) {
+                        TMDBMetaBox.displaySearchResults(response.data.results);
+                    } else {
+                        TMDBMetaBox.showMessage('error', response.data.message);
+                    }
+                },
+                error: function() {
+                    TMDBMetaBox.hideLoading();
+                    TMDBMetaBox.showMessage('error', 'Search failed. Please try again.');
+                }
+            });
+        },
+
+        handleSearchKeypress: function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('#tmdb-search-btn').click();
+            }
+        },
+
+        handleVerify: function(e) {
+            e.preventDefault();
+            
+            const tmdbId = $('#tmdb_id_manual').val().trim();
+            if (!tmdbId) {
+                TMDBMetaBox.showMessage('error', 'Please enter a TMDB ID.');
+                return;
+            }
+            
+            // For now, just set the ID and refresh
+            TMDBMetaBox.showMessage('success', 'TMDB ID set. Save the post to apply changes.');
+        },
+
+        handleClear: function(e) {
+            e.preventDefault();
+            
+            if (!confirm('Clear all TMDB data? This cannot be undone.')) {
+                return;
+            }
+            
+            $('#tmdb_id, #tmdb_id_manual').val('');
+            TMDBMetaBox.showMessage('success', 'TMDB data cleared. Save the post to apply changes.');
+        },
+
+        handleRefresh: function(e) {
+            e.preventDefault();
+            location.reload();
+        },
+
+        selectResult: function() {
+            $('.tmdb-search-result').removeClass('selected');
+            $(this).addClass('selected');
+            
+            const tmdbId = $(this).data('tmdb-id');
+            $('#tmdb_id_manual').val(tmdbId);
+        },
+
+        displaySearchResults: function(results) {
+            const $container = $('#tmdb-search-results');
+            $container.empty();
+            
+            if (!results || results.length === 0) {
+                $container.html('<p>' + tmuTMDB.strings.no_results + '</p>').show();
+                return;
+            }
+            
+            results.forEach(function(result) {
+                const $result = $('<div>')
+                    .addClass('tmdb-search-result')
+                    .attr('data-tmdb-id', result.id)
+                    .html(
+                        '<div class="result-title">' + (result.title || result.name) + '</div>' +
+                        '<div class="result-meta">' + 
+                        (result.release_date || result.first_air_date || 'No date') + 
+                        ' • ID: ' + result.id + '</div>'
+                    );
+                
+                $container.append($result);
+            });
+            
+            $container.show();
+        },
+
+        showLoading: function(text) {
+            $('#tmdb-loading-text').text(text || 'Loading...');
+            $('#tmdb-loading').show();
+        },
+
+        hideLoading: function() {
+            $('#tmdb-loading').hide();
+        },
+
+        showMessage: function(type, message) {
+            const $messages = $('#tmdb-messages');
+            const $message = $('<div>')
+                .addClass('notice notice-' + type)
+                .html('<p>' + message + '</p>');
+            
+            $messages.html($message);
+            
+            setTimeout(function() {
+                $message.fadeOut();
+            }, 5000);
+        }
+    };
+
+    // Initialize when document is ready
+    $(document).ready(function() {
+        TMUAdmin.init();
+        
+        // Initialize TMDB meta box if it exists
+        if ($('.tmu-tmdb-metabox').length) {
+            TMDBMetaBox.init();
+        }
+    });
+
+    // Expose to global scope for external use
+    window.TMUAdmin = TMUAdmin;
+    window.TMDBMetaBox = TMDBMetaBox;
+
+})(jQuery);

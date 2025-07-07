@@ -477,63 +477,53 @@ class TvSeriesMetadataBlock extends BaseBlock {
         $table_name = $wpdb->prefix . 'tmu_tv_series';
         $attributes = self::validate_attributes($attributes);
         
+        // Convert dates to timestamps
+        $release_timestamp = null;
+        if (!empty($attributes['first_air_date'])) {
+            $release_timestamp = strtotime($attributes['first_air_date']);
+        }
+        
         $data = [
-            'post_id' => $post_id,
+            'ID' => $post_id,
             'tmdb_id' => $attributes['tmdb_id'],
-            'imdb_id' => $attributes['imdb_id'],
-            'name' => $attributes['name'],
-            'original_name' => $attributes['original_name'],
+            'release_date' => $attributes['first_air_date'],
+            'release_timestamp' => $release_timestamp,
+            'original_title' => $attributes['original_name'],
+            'finished' => $attributes['status'] === 'Ended' ? 'Yes' : 'No',
             'tagline' => $attributes['tagline'],
-            'overview' => $attributes['overview'],
-            'first_air_date' => $attributes['first_air_date'],
-            'last_air_date' => $attributes['last_air_date'],
-            'next_episode_to_air' => !empty($attributes['next_episode_to_air']) ? json_encode($attributes['next_episode_to_air']) : null,
-            'last_episode_to_air' => !empty($attributes['last_episode_to_air']) ? json_encode($attributes['last_episode_to_air']) : null,
-            'status' => $attributes['status'],
-            'type' => $attributes['type'],
-            'in_production' => $attributes['in_production'] ? 1 : 0,
-            'number_of_episodes' => $attributes['number_of_episodes'],
-            'number_of_seasons' => $attributes['number_of_seasons'],
-            'episode_run_time' => !empty($attributes['episode_run_time']) ? json_encode($attributes['episode_run_time']) : null,
-            'languages' => !empty($attributes['languages']) ? json_encode($attributes['languages']) : null,
-            'origin_country' => !empty($attributes['origin_country']) ? json_encode($attributes['origin_country']) : null,
-            'original_language' => $attributes['original_language'],
-            'homepage' => $attributes['homepage'],
-            'poster_path' => $attributes['poster_path'],
-            'backdrop_path' => $attributes['backdrop_path'],
-            'tmdb_vote_average' => $attributes['tmdb_vote_average'],
-            'tmdb_vote_count' => $attributes['tmdb_vote_count'],
-            'tmdb_popularity' => $attributes['tmdb_popularity'],
-            'adult' => $attributes['adult'] ? 1 : 0,
-            'created_by' => !empty($attributes['created_by']) ? json_encode($attributes['created_by']) : null,
-            'genres' => !empty($attributes['genres']) ? json_encode($attributes['genres']) : null,
-            'networks' => !empty($attributes['networks']) ? json_encode($attributes['networks']) : null,
-            'production_companies' => !empty($attributes['production_companies']) ? json_encode($attributes['production_companies']) : null,
-            'production_countries' => !empty($attributes['production_countries']) ? json_encode($attributes['production_countries']) : null,
-            'seasons' => !empty($attributes['seasons']) ? json_encode($attributes['seasons']) : null,
-            'spoken_languages' => !empty($attributes['spoken_languages']) ? json_encode($attributes['spoken_languages']) : null,
+            'production_house' => !empty($attributes['production_companies']) ? json_encode($attributes['production_companies']) : null,
+            'streaming_platforms' => $attributes['streaming_platforms'] ?? null,
+            'schedule_time' => $attributes['schedule_time'] ?? null,
+            'runtime' => !empty($attributes['episode_run_time']) ? $attributes['episode_run_time'][0] : null,
+            'certification' => $attributes['certification'] ?? null,
+            'revenue' => $attributes['revenue'] ?? null,
+            'budget' => $attributes['budget'] ?? null,
+            'star_cast' => $attributes['star_cast'] ?? null,
             'credits' => !empty($attributes['credits']) ? json_encode($attributes['credits']) : null,
-            'external_ids' => !empty($attributes['external_ids']) ? json_encode($attributes['external_ids']) : null,
-            'images' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
+            'credits_temp' => null,
             'videos' => !empty($attributes['videos']) ? json_encode($attributes['videos']) : null,
-            'similar' => !empty($attributes['similar']) ? json_encode($attributes['similar']) : null,
-            'recommendations' => !empty($attributes['recommendations']) ? json_encode($attributes['recommendations']) : null,
-            'local_rating' => $attributes['local_rating'],
-            'local_rating_count' => $attributes['local_rating_count'],
-            'watch_count' => $attributes['watch_count'],
-            'last_tmdb_sync' => $attributes['last_tmdb_sync'],
-            'featured' => $attributes['featured'] ? 1 : 0,
-            'trending' => $attributes['trending'] ? 1 : 0,
+            'images' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
+            'seasons' => !empty($attributes['seasons']) ? json_encode($attributes['seasons']) : null,
+            'last_season' => $attributes['number_of_seasons'] ?? null,
+            'last_episode' => $attributes['number_of_episodes'] ?? null,
+            'average_rating' => $attributes['tmdb_vote_average'] ?? 0,
+            'vote_count' => $attributes['tmdb_vote_count'] ?? 0,
+            'popularity' => $attributes['tmdb_popularity'] ?? 0,
+            'where_to_watch' => $attributes['where_to_watch'] ?? null,
+            'total_average_rating' => $attributes['local_rating'] ?? 0,
+            'total_vote_count' => $attributes['local_rating_count'] ?? 0,
             'updated_at' => current_time('mysql'),
         ];
         
         $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$table_name} WHERE post_id = %d",
+            "SELECT ID FROM {$table_name} WHERE ID = %d",
             $post_id
         ));
         
         if ($existing) {
-            return $wpdb->update($table_name, $data, ['post_id' => $post_id]) !== false;
+            $update_data = $data;
+            unset($update_data['ID']);
+            return $wpdb->update($table_name, $update_data, ['ID' => $post_id]) !== false;
         } else {
             $data['created_at'] = current_time('mysql');
             return $wpdb->insert($table_name, $data) !== false;
@@ -551,7 +541,7 @@ class TvSeriesMetadataBlock extends BaseBlock {
         
         $table_name = $wpdb->prefix . 'tmu_tv_series';
         $data = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$table_name} WHERE post_id = %d",
+            "SELECT * FROM {$table_name} WHERE ID = %d",
             $post_id
         ), ARRAY_A);
         
@@ -559,26 +549,35 @@ class TvSeriesMetadataBlock extends BaseBlock {
             return self::get_default_attributes();
         }
         
-        // Decode JSON fields
-        $json_fields = ['next_episode_to_air', 'last_episode_to_air', 'episode_run_time', 'languages', 
-                       'origin_country', 'created_by', 'genres', 'networks', 'production_companies', 
-                       'production_countries', 'seasons', 'spoken_languages', 'credits', 'external_ids', 
-                       'images', 'videos', 'similar', 'recommendations'];
+        // Map database fields to block attributes
+        $mapped_data = [
+            'tmdb_id' => $data['tmdb_id'],
+            'first_air_date' => $data['release_date'],
+            'original_name' => $data['original_title'],
+            'status' => $data['finished'] === 'Yes' ? 'Ended' : 'Returning Series',
+            'tagline' => $data['tagline'],
+            'production_companies' => !empty($data['production_house']) ? json_decode($data['production_house'], true) : [],
+            'streaming_platforms' => $data['streaming_platforms'],
+            'schedule_time' => $data['schedule_time'],
+            'episode_run_time' => [$data['runtime']],
+            'certification' => $data['certification'],
+            'revenue' => $data['revenue'],
+            'budget' => $data['budget'],
+            'star_cast' => $data['star_cast'],
+            'credits' => !empty($data['credits']) ? json_decode($data['credits'], true) : null,
+            'videos' => !empty($data['videos']) ? json_decode($data['videos'], true) : null,
+            'images' => !empty($data['images']) ? json_decode($data['images'], true) : null,
+            'seasons' => !empty($data['seasons']) ? json_decode($data['seasons'], true) : [],
+            'number_of_seasons' => $data['last_season'],
+            'number_of_episodes' => $data['last_episode'],
+            'tmdb_vote_average' => $data['average_rating'],
+            'tmdb_vote_count' => $data['vote_count'],
+            'tmdb_popularity' => $data['popularity'],
+            'where_to_watch' => $data['where_to_watch'],
+            'local_rating' => $data['total_average_rating'],
+            'local_rating_count' => $data['total_vote_count'],
+        ];
         
-        foreach ($json_fields as $field) {
-            if (isset($data[$field]) && !empty($data[$field])) {
-                $data[$field] = json_decode($data[$field], true);
-            }
-        }
-        
-        // Convert boolean fields
-        $boolean_fields = ['in_production', 'adult', 'featured', 'trending'];
-        foreach ($boolean_fields as $field) {
-            if (isset($data[$field])) {
-                $data[$field] = (bool) $data[$field];
-            }
-        }
-        
-        return $data;
+        return array_merge(self::get_default_attributes(), $mapped_data);
     }
 }

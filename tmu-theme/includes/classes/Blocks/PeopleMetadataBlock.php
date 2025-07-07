@@ -151,6 +151,32 @@ class PeopleMetadataBlock extends BaseBlock {
                 'default' => null,
             ],
             
+            // Additional Database Fields  
+            'marital_status' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'net_worth' => [
+                'type' => 'number',
+                'default' => null,
+            ],
+            'no_movies' => [
+                'type' => 'number',
+                'default' => 0,
+            ],
+            'no_tv_series' => [
+                'type' => 'number',
+                'default' => 0,
+            ],
+            'no_dramas' => [
+                'type' => 'number',
+                'default' => 0,
+            ],
+            'videos' => [
+                'type' => 'object',
+                'default' => null,
+            ],
+            
             // Local Data
             'featured' => [
                 'type' => 'boolean',
@@ -323,44 +349,86 @@ class PeopleMetadataBlock extends BaseBlock {
         $attributes = self::validate_attributes($attributes);
         
         $data = [
-            'post_id' => $post_id,
-            'tmdb_id' => $attributes['tmdb_id'],
-            'imdb_id' => $attributes['imdb_id'],
+            'ID' => $post_id,
             'name' => $attributes['name'],
-            'original_name' => $attributes['original_name'],
-            'biography' => $attributes['biography'],
-            'birthday' => $attributes['birthday'],
-            'deathday' => $attributes['deathday'],
-            'place_of_birth' => $attributes['place_of_birth'],
+            'date_of_birth' => $attributes['birthday'],
             'gender' => $attributes['gender'],
-            'known_for_department' => $attributes['known_for_department'],
-            'also_known_as' => !empty($attributes['also_known_as']) ? json_encode($attributes['also_known_as']) : null,
+            'nick_name' => !empty($attributes['also_known_as']) ? implode(', ', $attributes['also_known_as']) : null,
+            'marital_status' => $attributes['marital_status'] ?? null,
+            'basic' => $attributes['biography'],
+            'videos' => !empty($attributes['videos']) ? json_encode($attributes['videos']) : null,
+            'photos' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
             'profession' => !empty($attributes['profession']) ? json_encode($attributes['profession']) : null,
-            'active_years' => $attributes['active_years'],
-            'profile_path' => $attributes['profile_path'],
-            'homepage' => $attributes['homepage'],
-            'tmdb_popularity' => $attributes['tmdb_popularity'],
-            'adult' => $attributes['adult'] ? 1 : 0,
-            'external_ids' => !empty($attributes['external_ids']) ? json_encode($attributes['external_ids']) : null,
-            'images' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
-            'movie_credits' => !empty($attributes['movie_credits']) ? json_encode($attributes['movie_credits']) : null,
-            'tv_credits' => !empty($attributes['tv_credits']) ? json_encode($attributes['tv_credits']) : null,
-            'combined_credits' => !empty($attributes['combined_credits']) ? json_encode($attributes['combined_credits']) : null,
-            'featured' => $attributes['featured'] ? 1 : 0,
-            'last_tmdb_sync' => $attributes['last_tmdb_sync'],
+            'net_worth' => $attributes['net_worth'] ?? null,
+            'tmdb_id' => $attributes['tmdb_id'],
+            'birthplace' => $attributes['place_of_birth'],
+            'dead_on' => $attributes['deathday'],
+            'social_media_account' => !empty($attributes['external_ids']) ? json_encode($attributes['external_ids']) : null,
+            'no_movies' => $attributes['no_movies'] ?? 0,
+            'no_tv_series' => $attributes['no_tv_series'] ?? 0,
+            'no_dramas' => $attributes['no_dramas'] ?? 0,
+            'known_for' => $attributes['known_for_department'],
+            'popularity' => $attributes['tmdb_popularity'] ?? 0,
             'updated_at' => current_time('mysql'),
         ];
         
         $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$table_name} WHERE post_id = %d",
+            "SELECT ID FROM {$table_name} WHERE ID = %d",
             $post_id
         ));
         
         if ($existing) {
-            return $wpdb->update($table_name, $data, ['post_id' => $post_id]) !== false;
+            $update_data = $data;
+            unset($update_data['ID']);
+            return $wpdb->update($table_name, $update_data, ['ID' => $post_id]) !== false;
         } else {
             $data['created_at'] = current_time('mysql');
             return $wpdb->insert($table_name, $data) !== false;
         }
+    }
+    
+    /**
+     * Load block data from database
+     * 
+     * @param int $post_id Post ID
+     * @return array Block attributes
+     */
+    public static function load_from_database($post_id): array {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'tmu_people';
+        $data = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE ID = %d",
+            $post_id
+        ), ARRAY_A);
+        
+        if (!$data) {
+            return self::get_default_attributes();
+        }
+        
+        // Map database fields to block attributes
+        $mapped_data = [
+            'name' => $data['name'],
+            'birthday' => $data['date_of_birth'],
+            'gender' => $data['gender'],
+            'also_known_as' => !empty($data['nick_name']) ? explode(', ', $data['nick_name']) : [],
+            'marital_status' => $data['marital_status'],
+            'biography' => $data['basic'],
+            'videos' => !empty($data['videos']) ? json_decode($data['videos'], true) : null,
+            'images' => !empty($data['photos']) ? json_decode($data['photos'], true) : null,
+            'profession' => !empty($data['profession']) ? json_decode($data['profession'], true) : [],
+            'net_worth' => $data['net_worth'],
+            'tmdb_id' => $data['tmdb_id'],
+            'place_of_birth' => $data['birthplace'],
+            'deathday' => $data['dead_on'],
+            'external_ids' => !empty($data['social_media_account']) ? json_decode($data['social_media_account'], true) : null,
+            'no_movies' => $data['no_movies'],
+            'no_tv_series' => $data['no_tv_series'],
+            'no_dramas' => $data['no_dramas'],
+            'known_for_department' => $data['known_for'],
+            'tmdb_popularity' => $data['popularity'],
+        ];
+        
+        return array_merge(self::get_default_attributes(), $mapped_data);
     }
 }

@@ -98,6 +98,20 @@ class MovieMetadataBlock extends BaseBlock {
                 'default' => null,
             ],
             
+            // Certification & Production
+            'certification' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'streaming_platforms' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'star_cast' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            
             // Media & Links
             'homepage' => [
                 'type' => 'string',
@@ -384,54 +398,48 @@ class MovieMetadataBlock extends BaseBlock {
         $table_name = $wpdb->prefix . 'tmu_movies';
         $attributes = self::validate_attributes($attributes);
         
+        // Convert release_date to timestamp
+        $release_timestamp = null;
+        if (!empty($attributes['release_date'])) {
+            $release_timestamp = strtotime($attributes['release_date']);
+        }
+        
         $data = [
-            'post_id' => $post_id,
+            'ID' => $post_id, // Use ID as primary key (matches schema)
             'tmdb_id' => $attributes['tmdb_id'],
-            'imdb_id' => $attributes['imdb_id'],
-            'title' => $attributes['title'],
+            'release_date' => $attributes['release_date'],
+            'release_timestamp' => $release_timestamp,
             'original_title' => $attributes['original_title'],
             'tagline' => $attributes['tagline'],
-            'overview' => $attributes['overview'],
+            'production_house' => !empty($attributes['production_companies']) ? json_encode($attributes['production_companies']) : null,
+            'streaming_platforms' => $attributes['streaming_platforms'] ?? null,
             'runtime' => $attributes['runtime'],
-            'release_date' => $attributes['release_date'],
-            'status' => $attributes['status'],
-            'budget' => $attributes['budget'],
+            'certification' => $attributes['certification'] ?? null,
             'revenue' => $attributes['revenue'],
-            'homepage' => $attributes['homepage'],
-            'poster_path' => $attributes['poster_path'],
-            'backdrop_path' => $attributes['backdrop_path'],
-            'tmdb_vote_average' => $attributes['tmdb_vote_average'],
-            'tmdb_vote_count' => $attributes['tmdb_vote_count'],
-            'tmdb_popularity' => $attributes['tmdb_popularity'],
-            'adult' => $attributes['adult'] ? 1 : 0,
-            'video' => $attributes['video'] ? 1 : 0,
-            'belongs_to_collection' => !empty($attributes['belongs_to_collection']) ? json_encode($attributes['belongs_to_collection']) : null,
-            'production_companies' => !empty($attributes['production_companies']) ? json_encode($attributes['production_companies']) : null,
-            'production_countries' => !empty($attributes['production_countries']) ? json_encode($attributes['production_countries']) : null,
-            'spoken_languages' => !empty($attributes['spoken_languages']) ? json_encode($attributes['spoken_languages']) : null,
+            'budget' => $attributes['budget'],
+            'star_cast' => $attributes['star_cast'] ?? null,
             'credits' => !empty($attributes['credits']) ? json_encode($attributes['credits']) : null,
-            'external_ids' => !empty($attributes['external_ids']) ? json_encode($attributes['external_ids']) : null,
-            'images' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
+            'credits_temp' => null, // For temporary storage during TMDB sync
             'videos' => !empty($attributes['videos']) ? json_encode($attributes['videos']) : null,
-            'reviews' => !empty($attributes['reviews']) ? json_encode($attributes['reviews']) : null,
-            'similar' => !empty($attributes['similar']) ? json_encode($attributes['similar']) : null,
-            'recommendations' => !empty($attributes['recommendations']) ? json_encode($attributes['recommendations']) : null,
-            'local_rating' => $attributes['local_rating'],
-            'local_rating_count' => $attributes['local_rating_count'],
-            'watch_count' => $attributes['watch_count'],
-            'last_tmdb_sync' => $attributes['last_tmdb_sync'],
-            'featured' => $attributes['featured'] ? 1 : 0,
-            'trending' => $attributes['trending'] ? 1 : 0,
+            'images' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
+            'average_rating' => $attributes['tmdb_vote_average'] ?? 0,
+            'vote_count' => $attributes['tmdb_vote_count'] ?? 0,
+            'popularity' => $attributes['tmdb_popularity'] ?? 0,
+            'total_average_rating' => $attributes['local_rating'] ?? 0,
+            'total_vote_count' => $attributes['local_rating_count'] ?? 0,
             'updated_at' => current_time('mysql'),
         ];
         
         $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$table_name} WHERE post_id = %d",
+            "SELECT ID FROM {$table_name} WHERE ID = %d",
             $post_id
         ));
         
         if ($existing) {
-            return $wpdb->update($table_name, $data, ['post_id' => $post_id]) !== false;
+            // Update existing record (exclude ID from update data)
+            $update_data = $data;
+            unset($update_data['ID']);
+            return $wpdb->update($table_name, $update_data, ['ID' => $post_id]) !== false;
         } else {
             $data['created_at'] = current_time('mysql');
             return $wpdb->insert($table_name, $data) !== false;
@@ -449,7 +457,7 @@ class MovieMetadataBlock extends BaseBlock {
         
         $table_name = $wpdb->prefix . 'tmu_movies';
         $data = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$table_name} WHERE post_id = %d",
+            "SELECT * FROM {$table_name} WHERE ID = %d",
             $post_id
         ), ARRAY_A);
         
@@ -457,25 +465,29 @@ class MovieMetadataBlock extends BaseBlock {
             return self::get_default_attributes();
         }
         
-        // Decode JSON fields
-        $json_fields = ['belongs_to_collection', 'production_companies', 'production_countries', 
-                       'spoken_languages', 'credits', 'external_ids', 'images', 'videos', 
-                       'reviews', 'similar', 'recommendations'];
+        // Map database fields to block attributes
+        $mapped_data = [
+            'tmdb_id' => $data['tmdb_id'],
+            'release_date' => $data['release_date'],
+            'original_title' => $data['original_title'],
+            'tagline' => $data['tagline'],
+            'production_companies' => !empty($data['production_house']) ? json_decode($data['production_house'], true) : [],
+            'streaming_platforms' => $data['streaming_platforms'],
+            'runtime' => $data['runtime'],
+            'certification' => $data['certification'],
+            'revenue' => $data['revenue'],
+            'budget' => $data['budget'],
+            'star_cast' => $data['star_cast'],
+            'credits' => !empty($data['credits']) ? json_decode($data['credits'], true) : null,
+            'videos' => !empty($data['videos']) ? json_decode($data['videos'], true) : null,
+            'images' => !empty($data['images']) ? json_decode($data['images'], true) : null,
+            'tmdb_vote_average' => $data['average_rating'],
+            'tmdb_vote_count' => $data['vote_count'],
+            'tmdb_popularity' => $data['popularity'],
+            'local_rating' => $data['total_average_rating'],
+            'local_rating_count' => $data['total_vote_count'],
+        ];
         
-        foreach ($json_fields as $field) {
-            if (isset($data[$field]) && !empty($data[$field])) {
-                $data[$field] = json_decode($data[$field], true);
-            }
-        }
-        
-        // Convert boolean fields
-        $boolean_fields = ['adult', 'video', 'featured', 'trending'];
-        foreach ($boolean_fields as $field) {
-            if (isset($data[$field])) {
-                $data[$field] = (bool) $data[$field];
-            }
-        }
-        
-        return $data;
+        return array_merge(self::get_default_attributes(), $mapped_data);
     }
 }

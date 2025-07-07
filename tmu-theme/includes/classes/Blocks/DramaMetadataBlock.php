@@ -146,6 +146,52 @@ class DramaMetadataBlock extends BaseBlock {
                 'default' => '',
             ],
             
+            // Additional Database Fields
+            'tmdb_id' => [
+                'type' => 'number',
+                'default' => null,
+            ],
+            'schedule_day' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'schedule_time' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'certification' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'streaming_platforms' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'seo_genre' => [
+                'type' => 'number',
+                'default' => null,
+            ],
+            'popularity' => [
+                'type' => 'number',
+                'default' => 0,
+            ],
+            'where_to_watch' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'credits' => [
+                'type' => 'object',
+                'default' => null,
+            ],
+            'videos' => [
+                'type' => 'object',
+                'default' => null,
+            ],
+            'images' => [
+                'type' => 'object',
+                'default' => null,
+            ],
+            
             // SEO & Display Options
             'featured' => [
                 'type' => 'boolean',
@@ -314,44 +360,105 @@ class DramaMetadataBlock extends BaseBlock {
         $table_name = $wpdb->prefix . 'tmu_dramas';
         $attributes = self::validate_attributes($attributes);
         
+        // Convert dates to timestamps
+        $release_timestamp = null;
+        if (!empty($attributes['first_air_date'])) {
+            $release_timestamp = strtotime($attributes['first_air_date']);
+        }
+        
+        $schedule_timestamp = null;
+        if (!empty($attributes['schedule_day']) && !empty($attributes['schedule_time'])) {
+            $schedule_timestamp = strtotime($attributes['schedule_day'] . ' ' . $attributes['schedule_time']);
+        }
+        
         $data = [
-            'post_id' => $post_id,
-            'title' => $attributes['title'],
+            'ID' => $post_id,
+            'tmdb_id' => $attributes['tmdb_id'] ?? null,
+            'release_date' => $attributes['first_air_date'],
+            'release_timestamp' => $release_timestamp,
             'original_title' => $attributes['original_title'],
+            'finished' => $attributes['status'] === 'Completed' ? 'Yes' : 'No',
             'tagline' => $attributes['tagline'],
-            'overview' => $attributes['overview'],
-            'first_air_date' => $attributes['first_air_date'],
-            'last_air_date' => $attributes['last_air_date'],
-            'status' => $attributes['status'],
-            'total_episodes' => $attributes['total_episodes'],
-            'episode_duration' => $attributes['episode_duration'],
-            'channel' => $attributes['channel'],
-            'original_network' => $attributes['original_network'],
-            'country' => $attributes['country'],
-            'original_language' => $attributes['original_language'],
-            'poster_path' => $attributes['poster_path'],
-            'backdrop_path' => $attributes['backdrop_path'],
-            'local_rating' => $attributes['local_rating'],
-            'local_rating_count' => $attributes['local_rating_count'],
-            'watch_count' => $attributes['watch_count'],
-            'main_cast' => !empty($attributes['main_cast']) ? json_encode($attributes['main_cast']) : null,
-            'director' => $attributes['director'],
-            'writer' => $attributes['writer'],
-            'featured' => $attributes['featured'] ? 1 : 0,
-            'trending' => $attributes['trending'] ? 1 : 0,
+            'seo_genre' => $attributes['seo_genre'] ?? null,
+            'production_house' => $attributes['original_network'],
+            'streaming_platforms' => $attributes['streaming_platforms'] ?? null,
+            'schedule_day' => $attributes['schedule_day'] ?? null,
+            'schedule_time' => $attributes['schedule_time'] ?? null,
+            'schedule_timestamp' => $schedule_timestamp,
+            'runtime' => $attributes['episode_duration'],
+            'certification' => $attributes['certification'] ?? null,
+            'star_cast' => !empty($attributes['main_cast']) ? json_encode($attributes['main_cast']) : null,
+            'credits' => !empty($attributes['credits']) ? json_encode($attributes['credits']) : null,
+            'credits_temp' => null,
+            'videos' => !empty($attributes['videos']) ? json_encode($attributes['videos']) : null,
+            'images' => !empty($attributes['images']) ? json_encode($attributes['images']) : null,
+            'average_rating' => $attributes['local_rating'] ?? 0,
+            'vote_count' => $attributes['local_rating_count'] ?? 0,
+            'popularity' => $attributes['popularity'] ?? 0,
+            'where_to_watch' => $attributes['where_to_watch'] ?? null,
+            'total_average_rating' => $attributes['local_rating'] ?? 0,
+            'total_vote_count' => $attributes['local_rating_count'] ?? 0,
             'updated_at' => current_time('mysql'),
         ];
         
         $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$table_name} WHERE post_id = %d",
+            "SELECT ID FROM {$table_name} WHERE ID = %d",
             $post_id
         ));
         
         if ($existing) {
-            return $wpdb->update($table_name, $data, ['post_id' => $post_id]) !== false;
+            $update_data = $data;
+            unset($update_data['ID']);
+            return $wpdb->update($table_name, $update_data, ['ID' => $post_id]) !== false;
         } else {
             $data['created_at'] = current_time('mysql');
             return $wpdb->insert($table_name, $data) !== false;
         }
+    }
+    
+    /**
+     * Load block data from database
+     * 
+     * @param int $post_id Post ID
+     * @return array Block attributes
+     */
+    public static function load_from_database($post_id): array {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'tmu_dramas';
+        $data = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE ID = %d",
+            $post_id
+        ), ARRAY_A);
+        
+        if (!$data) {
+            return self::get_default_attributes();
+        }
+        
+        // Map database fields to block attributes
+        $mapped_data = [
+            'tmdb_id' => $data['tmdb_id'],
+            'first_air_date' => $data['release_date'],
+            'original_title' => $data['original_title'],
+            'status' => $data['finished'] === 'Yes' ? 'Completed' : 'Airing',
+            'tagline' => $data['tagline'],
+            'seo_genre' => $data['seo_genre'],
+            'original_network' => $data['production_house'],
+            'streaming_platforms' => $data['streaming_platforms'],
+            'schedule_day' => $data['schedule_day'],
+            'schedule_time' => $data['schedule_time'],
+            'episode_duration' => $data['runtime'],
+            'certification' => $data['certification'],
+            'main_cast' => !empty($data['star_cast']) ? json_decode($data['star_cast'], true) : [],
+            'credits' => !empty($data['credits']) ? json_decode($data['credits'], true) : null,
+            'videos' => !empty($data['videos']) ? json_decode($data['videos'], true) : null,
+            'images' => !empty($data['images']) ? json_decode($data['images'], true) : null,
+            'local_rating' => $data['average_rating'],
+            'local_rating_count' => $data['vote_count'],
+            'popularity' => $data['popularity'],
+            'where_to_watch' => $data['where_to_watch'],
+        ];
+        
+        return array_merge(self::get_default_attributes(), $mapped_data);
     }
 }
