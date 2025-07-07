@@ -42,12 +42,12 @@ class BulkEdit {
      * @return array Modified bulk actions
      */
     public function addBulkActions(array $actions): array {
-        $actions['tmu_featured'] = __('Mark as Featured', 'tmu-theme');
-        $actions['tmu_unfeatured'] = __('Remove Featured', 'tmu-theme');
-        $actions['tmu_sync_tmdb'] = __('Sync with TMDB', 'tmu-theme');
-        $actions['tmu_assign_genre'] = __('Assign Genre', 'tmu-theme');
-        $actions['tmu_assign_country'] = __('Assign Country', 'tmu-theme');
-        $actions['tmu_update_status'] = __('Update Status', 'tmu-theme');
+        $actions['tmu_featured'] = __('Mark as Featured', 'tmu');
+        $actions['tmu_unfeatured'] = __('Remove Featured', 'tmu');
+        $actions['tmu_sync_tmdb'] = __('Sync with TMDB', 'tmu');
+        $actions['tmu_assign_genre'] = __('Assign Genre', 'tmu');
+        $actions['tmu_assign_country'] = __('Assign Country', 'tmu');
+        $actions['tmu_update_status'] = __('Update Status', 'tmu');
         
         return $actions;
     }
@@ -109,7 +109,7 @@ class BulkEdit {
         <div id="tmu-bulk-edit-modal" class="tmu-modal" style="display: none;">
             <div class="tmu-modal-content">
                 <div class="tmu-modal-header">
-                    <h3><?php _e('Bulk Edit TMU Content', 'tmu-theme'); ?></h3>
+                    <h3><?php _e('Bulk Edit TMU Content', 'tmu'); ?></h3>
                     <button type="button" class="tmu-modal-close">&times;</button>
                 </div>
                 
@@ -118,14 +118,14 @@ class BulkEdit {
                         <div class="bulk-edit-field">
                             <label for="bulk-featured">
                                 <input type="checkbox" id="bulk-featured" name="featured" value="1">
-                                <?php _e('Mark as Featured', 'tmu-theme'); ?>
+                                <?php _e('Mark as Featured', 'tmu'); ?>
                             </label>
                         </div>
                         
                         <div class="bulk-edit-field">
-                            <label for="bulk-genre"><?php _e('Genre:', 'tmu-theme'); ?></label>
+                            <label for="bulk-genre"><?php _e('Genre:', 'tmu'); ?></label>
                             <select id="bulk-genre" name="genre" class="widefat">
-                                <option value=""><?php _e('— No Change —', 'tmu-theme'); ?></option>
+                                <option value=""><?php _e('— No Change —', 'tmu'); ?></option>
                                 <?php
                                 $genres = get_terms(['taxonomy' => 'genre', 'hide_empty' => false]);
                                 foreach ($genres as $genre) {
@@ -136,9 +136,9 @@ class BulkEdit {
                         </div>
                         
                         <div class="bulk-edit-field">
-                            <label for="bulk-country"><?php _e('Country:', 'tmu-theme'); ?></label>
+                            <label for="bulk-country"><?php _e('Country:', 'tmu'); ?></label>
                             <select id="bulk-country" name="country" class="widefat">
-                                <option value=""><?php _e('— No Change —', 'tmu-theme'); ?></option>
+                                <option value=""><?php _e('— No Change —', 'tmu'); ?></option>
                                 <?php
                                 $countries = get_terms(['taxonomy' => 'country', 'hide_empty' => false]);
                                 foreach ($countries as $country) {
@@ -150,13 +150,13 @@ class BulkEdit {
                         
                         <?php if (in_array($post_type, ['tv', 'drama'])): ?>
                         <div class="bulk-edit-field">
-                            <label for="bulk-status"><?php _e('Series Status:', 'tmu-theme'); ?></label>
+                            <label for="bulk-status"><?php _e('Series Status:', 'tmu'); ?></label>
                             <select id="bulk-status" name="series_status" class="widefat">
-                                <option value=""><?php _e('— No Change —', 'tmu-theme'); ?></option>
-                                <option value="Returning Series"><?php _e('Returning Series', 'tmu-theme'); ?></option>
-                                <option value="Ended"><?php _e('Ended', 'tmu-theme'); ?></option>
-                                <option value="Canceled"><?php _e('Canceled', 'tmu-theme'); ?></option>
-                                <option value="In Production"><?php _e('In Production', 'tmu-theme'); ?></option>
+                                <option value=""><?php _e('— No Change —', 'tmu'); ?></option>
+                                <option value="Returning Series"><?php _e('Returning Series', 'tmu'); ?></option>
+                                <option value="Ended"><?php _e('Ended', 'tmu'); ?></option>
+                                <option value="Canceled"><?php _e('Canceled', 'tmu'); ?></option>
+                                <option value="In Production"><?php _e('In Production', 'tmu'); ?></option>
                             </select>
                         </div>
                         <?php endif; ?>
@@ -164,7 +164,7 @@ class BulkEdit {
                         <div class="bulk-edit-field">
                             <label>
                                 <input type="checkbox" id="bulk-sync-tmdb" name="sync_tmdb" value="1">
-                                <?php _e('Sync with TMDB', 'tmu-theme'); ?>
+                                <?php _e('Sync with TMDB', 'tmu'); ?>
                             </label>
                         </div>
                         
@@ -176,10 +176,10 @@ class BulkEdit {
                 
                 <div class="tmu-modal-footer">
                     <button type="button" class="button button-secondary tmu-modal-close">
-                        <?php _e('Cancel', 'tmu-theme'); ?>
+                        <?php _e('Cancel', 'tmu'); ?>
                     </button>
                     <button type="button" class="button button-primary" id="tmu-bulk-edit-submit">
-                        <?php _e('Apply Changes', 'tmu-theme'); ?>
+                        <?php _e('Apply Changes', 'tmu'); ?>
                     </button>
                 </div>
             </div>
@@ -188,7 +188,7 @@ class BulkEdit {
         <script>
         jQuery(document).ready(function($) {
             // Add bulk edit button
-            $('.bulkactions').append('<input type="button" class="button" id="tmu-bulk-edit-btn" value="<?php _e('TMU Bulk Edit', 'tmu-theme'); ?>">');
+            $('.bulkactions').append('<input type="button" class="button" id="tmu-bulk-edit-btn" value="<?php _e('TMU Bulk Edit', 'tmu'); ?>">');
             
             // Open bulk edit modal
             $('#tmu-bulk-edit-btn').on('click', function() {
@@ -198,7 +198,7 @@ class BulkEdit {
                 });
                 
                 if (selectedPosts.length === 0) {
-                    alert('<?php _e('Please select items to edit.', 'tmu-theme'); ?>');
+                    alert('<?php _e('Please select items to edit.', 'tmu'); ?>');
                     return;
                 }
                 
@@ -216,18 +216,18 @@ class BulkEdit {
                 var button = $(this);
                 var form = $('#tmu-bulk-edit-form');
                 
-                button.text('<?php _e('Processing...', 'tmu-theme'); ?>').prop('disabled', true);
+                button.text('<?php _e('Processing...', 'tmu'); ?>').prop('disabled', true);
                 
                 $.post(ajaxurl, form.serialize(), function(response) {
                     if (response.success) {
                         location.reload();
                     } else {
-                        alert(response.data.message || '<?php _e('An error occurred.', 'tmu-theme'); ?>');
-                        button.text('<?php _e('Apply Changes', 'tmu-theme'); ?>').prop('disabled', false);
+                        alert(response.data.message || '<?php _e('An error occurred.', 'tmu'); ?>');
+                        button.text('<?php _e('Apply Changes', 'tmu'); ?>').prop('disabled', false);
                     }
                 }).fail(function() {
-                    alert('<?php _e('An error occurred.', 'tmu-theme'); ?>');
-                    button.text('<?php _e('Apply Changes', 'tmu-theme'); ?>').prop('disabled', false);
+                    alert('<?php _e('An error occurred.', 'tmu'); ?>');
+                    button.text('<?php _e('Apply Changes', 'tmu'); ?>').prop('disabled', false);
                 });
             });
             
@@ -315,7 +315,7 @@ class BulkEdit {
         check_ajax_referer('tmu_bulk_edit', 'nonce');
         
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error(['message' => __('Unauthorized', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Unauthorized', 'tmu')]);
         }
         
         $post_ids = array_map('intval', explode(',', $_POST['post_ids']));
@@ -365,7 +365,7 @@ class BulkEdit {
         
         wp_send_json_success([
             'message' => sprintf(
-                __('Processed %d items successfully. %d errors.', 'tmu-theme'),
+                __('Processed %d items successfully. %d errors.', 'tmu'),
                 $processed,
                 $errors
             ),
@@ -504,7 +504,7 @@ class BulkEdit {
                         '%d item marked as featured.',
                         '%d items marked as featured.',
                         $processed,
-                        'tmu-theme'
+                        'tmu'
                     ),
                     $processed
                 );
@@ -516,7 +516,7 @@ class BulkEdit {
                         '%d item unmarked as featured.',
                         '%d items unmarked as featured.',
                         $processed,
-                        'tmu-theme'
+                        'tmu'
                     ),
                     $processed
                 );
@@ -524,7 +524,7 @@ class BulkEdit {
                 
             case 'tmu_sync_tmdb':
                 $message = sprintf(
-                    __('%d items synced with TMDB. %d errors.', 'tmu-theme'),
+                    __('%d items synced with TMDB. %d errors.', 'tmu'),
                     $processed,
                     $errors
                 );

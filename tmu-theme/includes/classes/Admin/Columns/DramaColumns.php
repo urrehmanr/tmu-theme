@@ -42,13 +42,13 @@ class DramaColumns {
             $new_columns[$key] = $value;
             
             if ($key === 'title') {
-                $new_columns['poster'] = __('Poster', 'tmu-theme');
-                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu-theme');
-                $new_columns['release_date'] = __('Air Date', 'tmu-theme');
-                $new_columns['channel'] = __('Channel', 'tmu-theme');
-                $new_columns['schedule'] = __('Schedule', 'tmu-theme');
-                $new_columns['status'] = __('Status', 'tmu-theme');
-                $new_columns['rating'] = __('Rating', 'tmu-theme');
+                $new_columns['poster'] = __('Poster', 'tmu');
+                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu');
+                $new_columns['release_date'] = __('Air Date', 'tmu');
+                $new_columns['channel'] = __('Channel', 'tmu');
+                $new_columns['schedule'] = __('Schedule', 'tmu');
+                $new_columns['status'] = __('Status', 'tmu');
+                $new_columns['rating'] = __('Rating', 'tmu');
             }
         }
         

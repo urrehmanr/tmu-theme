@@ -26,7 +26,6 @@ class MovieColumns {
         add_action('manage_movie_posts_custom_column', [$this, 'renderColumns'], 10, 2);
         add_filter('manage_edit-movie_sortable_columns', [$this, 'addSortableColumns']);
         add_action('pre_get_posts', [$this, 'handleSorting']);
-        add_filter('posts_clauses', [$this, 'modifyQueryForSorting'], 10, 2);
     }
     
     /**
@@ -42,12 +41,11 @@ class MovieColumns {
             $new_columns[$key] = $value;
             
             if ($key === 'title') {
-                $new_columns['poster'] = __('Poster', 'tmu-theme');
-                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu-theme');
-                $new_columns['release_date'] = __('Release Date', 'tmu-theme');
-                $new_columns['rating'] = __('Rating', 'tmu-theme');
-                $new_columns['runtime'] = __('Runtime', 'tmu-theme');
-                $new_columns['status'] = __('Status', 'tmu-theme');
+                $new_columns['poster'] = __('Poster', 'tmu');
+                $new_columns['release_date'] = __('Release Date', 'tmu');
+                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu');
+                $new_columns['rating'] = __('Rating', 'tmu');
+                $new_columns['runtime'] = __('Runtime', 'tmu');
             }
         }
         
@@ -65,20 +63,17 @@ class MovieColumns {
             case 'poster':
                 $this->renderPoster($post_id);
                 break;
-            case 'tmdb_id':
-                $this->renderTMDBId($post_id);
-                break;
             case 'release_date':
                 $this->renderReleaseDate($post_id);
+                break;
+            case 'tmdb_id':
+                $this->renderTMDBId($post_id);
                 break;
             case 'rating':
                 $this->renderRating($post_id);
                 break;
             case 'runtime':
                 $this->renderRuntime($post_id);
-                break;
-            case 'status':
-                $this->renderStatus($post_id);
                 break;
         }
     }
@@ -92,7 +87,6 @@ class MovieColumns {
     public function addSortableColumns(array $columns): array {
         $columns['release_date'] = 'release_date';
         $columns['rating'] = 'rating';
-        $columns['runtime'] = 'runtime';
         return $columns;
     }
     
@@ -102,7 +96,7 @@ class MovieColumns {
      * @param \WP_Query $query Current query
      */
     public function handleSorting(\WP_Query $query): void {
-        if (!is_admin() || !$query->is_main_query() || $query->get('post_type') !== 'movie') {
+        if (!is_admin() || !$query->is_main_query()) {
             return;
         }
         
@@ -112,48 +106,12 @@ class MovieColumns {
             $query->set('meta_key', 'release_date');
             $query->set('orderby', 'meta_value');
         } elseif ($orderby === 'rating') {
-            $query->set('meta_key', 'average_rating');
-            $query->set('orderby', 'meta_value_num');
-        } elseif ($orderby === 'runtime') {
-            $query->set('meta_key', 'runtime');
+            $query->set('meta_key', 'vote_average');
             $query->set('orderby', 'meta_value_num');
         }
     }
     
-    /**
-     * Modify query for sorting with database integration
-     * 
-     * @param array $clauses Query clauses
-     * @param \WP_Query $query Current query
-     * @return array Modified clauses
-     */
-    public function modifyQueryForSorting(array $clauses, \WP_Query $query): array {
-        global $wpdb;
-        
-        if (!is_admin() || !$query->is_main_query() || $query->get('post_type') !== 'movie') {
-            return $clauses;
-        }
-        
-        $orderby = $query->get('orderby');
-        
-        if (in_array($orderby, ['release_date', 'rating', 'runtime'])) {
-            $clauses['join'] .= " LEFT JOIN {$wpdb->prefix}tmu_movies ON {$wpdb->posts}.ID = {$wpdb->prefix}tmu_movies.ID";
-            
-            switch ($orderby) {
-                case 'release_date':
-                    $clauses['orderby'] = "{$wpdb->prefix}tmu_movies.release_timestamp " . $query->get('order');
-                    break;
-                case 'rating':
-                    $clauses['orderby'] = "{$wpdb->prefix}tmu_movies.average_rating " . $query->get('order');
-                    break;
-                case 'runtime':
-                    $clauses['orderby'] = "{$wpdb->prefix}tmu_movies.runtime " . $query->get('order');
-                    break;
-            }
-        }
-        
-        return $clauses;
-    }
+
     
     /**
      * Render poster column
@@ -179,15 +137,14 @@ class MovieColumns {
      * @param int $post_id Post ID
      */
     private function renderTMDBId(int $post_id): void {
-        $tmdb_id = $this->getMovieData($post_id, 'tmdb_id');
+        $tmdb_id = tmu_get_meta($post_id, 'tmdb_id');
         if ($tmdb_id) {
             $url = 'https://www.themoviedb.org/movie/' . $tmdb_id;
-            echo '<a href="' . esc_url($url) . '" target="_blank" class="tmu-tmdb-link" style="color: #0073aa; text-decoration: none;">';
-            echo '<span class="dashicons dashicons-external" style="font-size: 16px; vertical-align: middle;"></span> ';
+            echo '<a href="' . esc_url($url) . '" target="_blank" class="tmu-tmdb-link">';
             echo esc_html($tmdb_id);
             echo '</a>';
         } else {
-            echo '<span class="tmu-no-tmdb" style="color: #999;">—</span>';
+            echo '<span class="tmu-no-tmdb">No TMDB ID</span>';
         }
     }
     
@@ -197,19 +154,12 @@ class MovieColumns {
      * @param int $post_id Post ID
      */
     private function renderReleaseDate(int $post_id): void {
-        $date = $this->getMovieData($post_id, 'release_date');
+        $date = tmu_get_meta($post_id, 'release_date');
         if ($date) {
-            $timestamp = strtotime($date);
-            if ($timestamp) {
-                $formatted = date('M j, Y', $timestamp);
-                $year = date('Y', $timestamp);
-                echo '<span class="tmu-release-date" style="display: block;">' . esc_html($formatted) . '</span>';
-                echo '<small style="color: #666;">(' . esc_html($year) . ')</small>';
-            } else {
-                echo '<span class="tmu-no-date" style="color: #999;">—</span>';
-            }
+            $formatted = date('M j, Y', strtotime($date));
+            echo '<span class="tmu-release-date">' . esc_html($formatted) . '</span>';
         } else {
-            echo '<span class="tmu-no-date" style="color: #999;">—</span>';
+            echo '<span class="tmu-no-date">—</span>';
         }
     }
     
@@ -219,20 +169,14 @@ class MovieColumns {
      * @param int $post_id Post ID
      */
     private function renderRating(int $post_id): void {
-        $rating = $this->getMovieData($post_id, 'average_rating');
-        $vote_count = $this->getMovieData($post_id, 'vote_count');
-        
-        if ($rating && $rating > 0) {
-            $stars = $this->getStarRating($rating);
+        $rating = tmu_get_meta($post_id, 'vote_average', 0);
+        if ($rating > 0) {
             echo '<div class="tmu-rating-display">';
-            echo '<span class="rating-value" style="font-weight: bold; color: #0073aa;">' . number_format($rating, 1) . '/10</span><br>';
-            echo '<span class="rating-stars" style="color: #ffb900; font-size: 14px;">' . $stars . '</span>';
-            if ($vote_count > 0) {
-                echo '<br><small style="color: #666;">(' . number_format($vote_count) . ' votes)</small>';
-            }
+            echo '<span class="rating-value">' . number_format($rating, 1) . '</span>';
+            echo '<span class="rating-stars">' . $this->getStarRating($rating) . '</span>';
             echo '</div>';
         } else {
-            echo '<span class="tmu-no-rating" style="color: #999;">Not rated</span>';
+            echo '<span class="tmu-no-rating">Not rated</span>';
         }
     }
     
@@ -242,69 +186,18 @@ class MovieColumns {
      * @param int $post_id Post ID
      */
     private function renderRuntime(int $post_id): void {
-        $runtime = $this->getMovieData($post_id, 'runtime');
+        $runtime = tmu_get_meta($post_id, 'runtime');
         if ($runtime && $runtime > 0) {
             $formatted = $this->formatRuntime($runtime);
-            echo '<span class="tmu-runtime" style="color: #333;">' . esc_html($formatted) . '</span>';
+            echo '<span class="tmu-runtime">' . esc_html($formatted) . '</span>';
         } else {
-            echo '<span class="tmu-no-runtime" style="color: #999;">—</span>';
+            echo '<span class="tmu-no-runtime">—</span>';
         }
     }
     
-    /**
-     * Render status column
-     * 
-     * @param int $post_id Post ID
-     */
-    private function renderStatus(int $post_id): void {
-        $status = get_post_status($post_id);
-        $sync_status = get_post_meta($post_id, '_tmdb_last_sync', true);
-        
-        echo '<div class="tmu-status-display">';
-        
-        // Post status
-        $status_colors = [
-            'publish' => '#008a00',
-            'draft' => '#b32d2e',
-            'pending' => '#996633',
-            'private' => '#0073aa'
-        ];
-        
-        $color = $status_colors[$status] ?? '#666';
-        echo '<span class="post-status" style="color: ' . $color . '; font-weight: bold;">' . ucfirst($status) . '</span><br>';
-        
-        // TMDB sync status
-        if ($sync_status) {
-            $time_diff = human_time_diff(strtotime($sync_status));
-            echo '<small style="color: #666;">Synced ' . $time_diff . ' ago</small>';
-        } else {
-            echo '<small style="color: #e74c3c;">Not synced</small>';
-        }
-        
-        echo '</div>';
-    }
+
     
-    /**
-     * Get movie data from database
-     * 
-     * @param int $post_id Post ID
-     * @param string $field Field name
-     * @return mixed Field value
-     */
-    private function getMovieData(int $post_id, string $field) {
-        global $wpdb;
-        
-        static $cache = [];
-        
-        if (!isset($cache[$post_id])) {
-            $cache[$post_id] = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}tmu_movies WHERE ID = %d",
-                $post_id
-            ), ARRAY_A);
-        }
-        
-        return $cache[$post_id][$field] ?? null;
-    }
+
     
     /**
      * Generate star rating
@@ -322,12 +215,6 @@ class MovieColumns {
         }
         
         if ($half_star) {
-            $stars .= '☆';
-        }
-        
-        // Fill remaining with empty stars
-        $remaining = 5 - $full_stars - ($half_star ? 1 : 0);
-        for ($i = 0; $i < $remaining; $i++) {
             $stars .= '☆';
         }
         
