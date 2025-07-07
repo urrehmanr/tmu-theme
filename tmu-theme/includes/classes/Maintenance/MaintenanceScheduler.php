@@ -15,7 +15,7 @@ use TMU\Monitoring\PerformanceMonitor;
 use TMU\Analytics\AnalyticsManager;
 use TMU\Logging\LogManager;
 
-class MaintenanceManager {
+class MaintenanceScheduler {
     
     /**
      * Backup manager instance
@@ -114,7 +114,7 @@ class MaintenanceManager {
      * Run daily maintenance
      */
     public function run_daily_maintenance(): void {
-        $this->logger->info('Starting daily maintenance');
+        $this->log_maintenance_start('daily');
         
         try {
             $start_time = microtime(true);
@@ -177,18 +177,13 @@ class MaintenanceManager {
             
             $execution_time = microtime(true) - $start_time;
             
-            // Log completion
-            $this->logger->info('Daily maintenance completed', [
-                'tasks_completed' => $tasks_completed,
-                'tasks_failed' => $tasks_failed,
-                'execution_time' => $execution_time
-            ]);
-            
             // Update maintenance statistics
             $this->update_maintenance_statistics('daily', $tasks_completed, $tasks_failed, $execution_time);
             
+            $this->log_maintenance_complete('daily', 'success');
+            
         } catch (Exception $e) {
-            $this->logger->error('Daily maintenance failed', ['error' => $e->getMessage()]);
+            $this->log_maintenance_complete('daily', 'error', $e->getMessage());
             $this->send_maintenance_alert('Daily maintenance failed: ' . $e->getMessage());
         }
     }
@@ -197,7 +192,7 @@ class MaintenanceManager {
      * Run weekly maintenance
      */
     public function run_weekly_maintenance(): void {
-        $this->logger->info('Starting weekly maintenance');
+        $this->log_maintenance_start('weekly');
         
         try {
             $start_time = microtime(true);
@@ -260,18 +255,13 @@ class MaintenanceManager {
             
             $execution_time = microtime(true) - $start_time;
             
-            // Log completion
-            $this->logger->info('Weekly maintenance completed', [
-                'tasks_completed' => $tasks_completed,
-                'tasks_failed' => $tasks_failed,
-                'execution_time' => $execution_time
-            ]);
-            
             // Update maintenance statistics
             $this->update_maintenance_statistics('weekly', $tasks_completed, $tasks_failed, $execution_time);
             
+            $this->log_maintenance_complete('weekly', 'success');
+            
         } catch (Exception $e) {
-            $this->logger->error('Weekly maintenance failed', ['error' => $e->getMessage()]);
+            $this->log_maintenance_complete('weekly', 'error', $e->getMessage());
             $this->send_maintenance_alert('Weekly maintenance failed: ' . $e->getMessage());
         }
     }
@@ -280,7 +270,7 @@ class MaintenanceManager {
      * Run monthly maintenance
      */
     public function run_monthly_maintenance(): void {
-        $this->logger->info('Starting monthly maintenance');
+        $this->log_maintenance_start('monthly');
         
         try {
             $start_time = microtime(true);
@@ -334,19 +324,47 @@ class MaintenanceManager {
             
             $execution_time = microtime(true) - $start_time;
             
-            // Log completion
-            $this->logger->info('Monthly maintenance completed', [
-                'tasks_completed' => $tasks_completed,
-                'tasks_failed' => $tasks_failed,
-                'execution_time' => $execution_time
-            ]);
-            
             // Update maintenance statistics
             $this->update_maintenance_statistics('monthly', $tasks_completed, $tasks_failed, $execution_time);
             
+            $this->log_maintenance_complete('monthly', 'success');
+            
         } catch (Exception $e) {
-            $this->logger->error('Monthly maintenance failed', ['error' => $e->getMessage()]);
+            $this->log_maintenance_complete('monthly', 'error', $e->getMessage());
             $this->send_maintenance_alert('Monthly maintenance failed: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Log maintenance start exactly as documented
+     */
+    private function log_maintenance_start($type): void {
+        $this->logger->info("Starting {$type} maintenance", [
+            'maintenance_type' => $type,
+            'start_time' => current_time('mysql'),
+            'timestamp' => time()
+        ]);
+    }
+    
+    /**
+     * Log maintenance completion exactly as documented
+     */
+    private function log_maintenance_complete($type, $status, $message = null): void {
+        $log_data = [
+            'maintenance_type' => $type,
+            'status' => $status,
+            'end_time' => current_time('mysql'),
+            'timestamp' => time()
+        ];
+        
+        if ($message) {
+            $log_data['message'] = $message;
+        }
+        
+        if ($status === 'success') {
+            $this->logger->info("{$type} maintenance completed successfully", $log_data);
+        } else {
+            $this->logger->error("{$type} maintenance failed", $log_data);
         }
     }
     

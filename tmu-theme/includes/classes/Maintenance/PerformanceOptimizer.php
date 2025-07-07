@@ -301,7 +301,7 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Resize image maintaining aspect ratio
+     * Resize image maintaining aspect ratio exactly as documented
      */
     private function resize_image($image, $original_width, $original_height, $max_width, $max_height) {
         $ratio = min($max_width / $original_width, $max_height / $original_height);

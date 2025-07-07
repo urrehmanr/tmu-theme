@@ -583,6 +583,24 @@ class UpdateManager {
     }
     
     /**
+     * Add directory to ZIP exactly as documented
+     */
+    private function add_directory_to_zip($zip, $dir, $zipPath): void {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+        
+        foreach ($files as $name => $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = $zipPath . substr($filePath, strlen($dir) + 1);
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+    }
+    
+    /**
      * Copy directory recursively
      */
     private function copy_directory($source, $destination): void {

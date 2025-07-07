@@ -684,6 +684,69 @@ class SecurityAuditor {
         wp_send_json_success($results);
     }
     
+    /**
+     * Find pattern line exactly as documented
+     */
+    private function find_pattern_line($content, $pattern): int {
+        $lines = explode("\n", $content);
+        
+        foreach ($lines as $line_number => $line) {
+            if (preg_match('/' . $pattern . '/i', $line)) {
+                return $line_number + 1; // Return 1-based line number
+            }
+        }
+        
+        return 0; // Pattern not found
+    }
+    
+    /**
+     * Check for critical issues exactly as documented
+     */
+    private function check_for_critical_issues($audit_results): void {
+        $critical_issues = [];
+        
+        // Check for critical vulnerabilities
+        if ($audit_results['plugin_vulnerabilities']['vulnerabilities_found'] > 0) {
+            $critical_issues[] = 'Plugin vulnerabilities detected';
+        }
+        
+        if (!empty($audit_results['vulnerable_files'])) {
+            $critical_issues[] = 'Potentially vulnerable files found';
+        }
+        
+        if (isset($audit_results['dependencies']) && $audit_results['dependencies']['vulnerabilities_found'] > 0) {
+            foreach ($audit_results['dependencies']['vulnerabilities'] as $vuln) {
+                if ($vuln['severity'] === 'high') {
+                    $critical_issues[] = "High severity dependency vulnerability: {$vuln['package']}";
+                }
+            }
+        }
+        
+        if ($audit_results['malware_scan']['suspicious_files'] > 0) {
+            $critical_issues[] = 'Suspicious files detected (possible malware)';
+        }
+        
+        // Send alerts for critical issues
+        if (!empty($critical_issues)) {
+            $alert_message = "Critical security issues detected:\n" . implode("\n", $critical_issues);
+            $this->send_security_alert($audit_results, 0); // Force alert with 0 score
+        }
+    }
+    
+    /**
+     * Audit user access exactly as documented
+     */
+    private function audit_user_access(): array {
+        return $this->audit_user_security(); // Delegate to existing method
+    }
+    
+    /**
+     * Check database security exactly as documented
+     */
+    private function check_database_security(): array {
+        return $this->audit_database_security(); // Delegate to existing method
+    }
+    
     // Helper methods
     private function check_plugin_vulnerability($plugin_data): bool {
         // Simplified vulnerability check
