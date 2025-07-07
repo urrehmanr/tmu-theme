@@ -144,8 +144,20 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Admin/MetaBoxes/TMDBBox.php';
         require_once TMU_INCLUDES_DIR . '/classes/Admin/Actions/TMDBSync.php';
         
+        // Load Step 09 - TMDB API Integration
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/Exception.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/Cache.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/RateLimiter.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/Client.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/DataMapper.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/ImageSyncService.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/SyncService.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/SyncScheduler.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/SearchService.php';
+        require_once TMU_INCLUDES_DIR . '/classes/API/TMDB/WebhookHandler.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Admin/Settings/TMDBSettings.php';
+        
         // Load placeholder classes - will be created in future steps
-        // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
         // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
         // require_once TMU_INCLUDES_DIR . '/classes/Frontend/AssetManager.php';
     }
@@ -182,8 +194,18 @@ class ThemeCore {
             Admin\AdminManager::getInstance();
         }
         
+        // Initialize Step 09 - TMDB API Integration
+        if (get_option('tmu_tmdb_api_key')) {
+            API\TMDB\SyncScheduler::getInstance()->init();
+            API\TMDB\WebhookHandler::getInstance();
+        }
+        
+        // Initialize TMDB Settings (always available in admin)
+        if (is_admin()) {
+            Admin\Settings\TMDBSettings::getInstance();
+        }
+        
         // Initialize managers - will be activated in future steps
-        // API\TMDBClient::getInstance();
         // Frontend\TemplateLoader::getInstance();
         // Frontend\AssetManager::getInstance();
     }
