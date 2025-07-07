@@ -14,6 +14,33 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Get post data for template display (generic function)
+ * 
+ * @param int $post_id Post ID
+ * @return array Post data
+ */
+function tmu_get_post_data(int $post_id): array {
+    $post_type = get_post_type($post_id);
+    
+    switch ($post_type) {
+        case 'movie':
+            return tmu_get_movie_data($post_id);
+        case 'tv':
+            return tmu_get_tv_data($post_id);
+        case 'drama':
+            return tmu_get_drama_data($post_id);
+        case 'people':
+            return tmu_get_person_data($post_id);
+        case 'episode':
+            return tmu_get_episode_data($post_id);
+        case 'season':
+            return tmu_get_season_data($post_id);
+        default:
+            return [];
+    }
+}
+
+/**
  * Get movie data for template display
  * 
  * @param int $post_id Post ID
