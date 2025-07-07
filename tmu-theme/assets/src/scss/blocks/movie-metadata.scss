@@ -1,0 +1,171 @@
+/**
+ * Movie Metadata Block Styles
+ * 
+ * Specific styling for movie metadata blocks both in editor and frontend.
+ */
+
+.tmu-movie-metadata-block {
+  .tmu-metadata-preview {
+    .movie-info {
+      @apply flex gap-4;
+      
+      @media (max-width: 640px) {
+        @apply flex-col;
+      }
+      
+      .movie-poster {
+        @apply flex-shrink-0;
+        
+        img {
+          @apply w-24 h-auto rounded shadow-lg transition-transform duration-200;
+          aspect-ratio: 2/3;
+          object-fit: cover;
+          
+          &:hover {
+            @apply transform scale-105;
+          }
+        }
+      }
+      
+      .movie-details {
+        @apply flex-1;
+        
+        .movie-title {
+          @apply text-xl font-bold text-gray-900 mb-2;
+          line-height: 1.3;
+        }
+        
+        .movie-original-title {
+          @apply text-sm text-gray-600 italic mb-2;
+        }
+        
+        .movie-tagline {
+          @apply text-sm text-blue-600 mb-3 italic;
+          
+          &::before,
+          &::after {
+            content: '"';
+          }
+        }
+        
+        .movie-meta {
+          @apply grid grid-cols-2 gap-2 text-sm;
+          
+          @media (max-width: 480px) {
+            @apply grid-cols-1;
+          }
+          
+          .meta-item {
+            @apply flex flex-col;
+            
+            .meta-label {
+              @apply font-semibold text-gray-700 text-xs uppercase tracking-wide;
+            }
+            
+            .meta-value {
+              @apply text-gray-900 mt-1;
+            }
+          }
+        }
+        
+        .movie-financial {
+          @apply mt-3 p-3 bg-green-50 rounded border border-green-200;
+          
+          .financial-item {
+            @apply inline-block mr-4 text-green-700;
+            
+            .label {
+              @apply font-semibold text-xs uppercase tracking-wide;
+            }
+            
+            .value {
+              @apply text-lg font-bold;
+            }
+          }
+        }
+      }
+    }
+    
+    .movie-overview {
+      @apply mt-4 p-3 bg-gray-50 rounded text-sm text-gray-700 leading-relaxed;
+      border-left: 4px solid theme('colors.blue.400');
+    }
+  }
+  
+  // Editor specific styles
+  .editor-styles-wrapper & {
+    .movie-poster img {
+      max-width: 100px;
+    }
+  }
+}
+
+// Frontend specific styles
+.wp-block-tmu-movie-metadata {
+  @apply border border-gray-200 rounded-lg p-6 bg-white shadow-sm;
+  
+  &:hover {
+    @apply shadow-md border-gray-300;
+  }
+  
+  .movie-info {
+    @apply grid gap-6;
+    grid-template-columns: 200px 1fr;
+    
+    @media (max-width: 768px) {
+      @apply grid-cols-1;
+    }
+    
+    .movie-poster {
+      img {
+        @apply w-full h-auto rounded-lg shadow-md;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+      }
+    }
+    
+    .movie-details {
+      .movie-title {
+        @apply text-2xl font-bold text-gray-900 mb-3;
+      }
+      
+      .movie-overview {
+        @apply mb-4 text-gray-700 leading-relaxed;
+      }
+      
+      .movie-meta {
+        @apply grid gap-4;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        
+        .meta-item {
+          @apply p-3 bg-gray-50 rounded;
+          
+          .meta-label {
+            @apply block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1;
+          }
+          
+          .meta-value {
+            @apply text-lg font-medium text-gray-900;
+          }
+        }
+      }
+    }
+  }
+  
+  .production-companies {
+    @apply mt-6 p-4 bg-blue-50 rounded border border-blue-200;
+    
+    h3 {
+      @apply text-lg font-semibold text-blue-900 mb-3;
+    }
+    
+    ul {
+      @apply list-none grid gap-2;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      
+      li {
+        @apply text-blue-800 text-sm;
+      }
+    }
+  }
+}

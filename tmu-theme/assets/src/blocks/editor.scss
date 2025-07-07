@@ -1,0 +1,505 @@
+/**
+ * Block Editor Styles
+ * 
+ * Comprehensive styling for all TMU Gutenberg blocks in the WordPress editor.
+ * Uses Tailwind CSS utility classes with custom component styles.
+ */
+
+/* Import Tailwind CSS */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom TMU Block Variables */
+:root {
+  --tmu-primary: #3b82f6;
+  --tmu-secondary: #6b7280;
+  --tmu-success: #10b981;
+  --tmu-warning: #f59e0b;
+  --tmu-error: #ef4444;
+  --tmu-text: #1f2937;
+  --tmu-text-light: #6b7280;
+  --tmu-border: #e5e7eb;
+  --tmu-background: #f9fafb;
+  --tmu-white: #ffffff;
+  --tmu-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --tmu-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tmu-border-radius: 0.375rem;
+  --tmu-border-radius-lg: 0.5rem;
+}
+
+/* Base Block Styles */
+.tmu-metadata-block {
+  @apply border border-gray-200 rounded-lg p-4 bg-white;
+  box-shadow: var(--tmu-shadow);
+  
+  &:hover {
+    @apply border-gray-300;
+    box-shadow: var(--tmu-shadow-md);
+  }
+}
+
+/* Common Block Classes */
+.tmu-movie-metadata-block,
+.tmu-tv-series-metadata-block,
+.tmu-drama-metadata-block,
+.tmu-people-metadata-block,
+.tmu-tv-episode-metadata-block {
+  @extend .tmu-metadata-block;
+}
+
+/* Block Preview Styles */
+.tmu-metadata-preview {
+  @apply w-full;
+  
+  h3 {
+    @apply text-xl font-bold text-gray-900 mb-2;
+    line-height: 1.3;
+  }
+  
+  .tmu-original-title {
+    @apply text-sm text-gray-600 italic mb-2;
+  }
+  
+  .tmu-tagline {
+    @apply text-sm text-blue-600 mb-3 italic;
+    
+    &::before,
+    &::after {
+      content: '"';
+    }
+  }
+  
+  .tmu-overview {
+    @apply mt-4 p-3 bg-gray-50 rounded text-sm text-gray-700 leading-relaxed;
+  }
+  
+  .tmu-meta-grid {
+    @apply grid grid-cols-2 gap-2 text-sm mt-3;
+    
+    @media (max-width: 640px) {
+      @apply grid-cols-1;
+    }
+    
+    .tmu-meta-item {
+      display: flex;
+      flex-direction: column;
+      
+      .tmu-meta-label {
+        @apply font-semibold text-gray-700 text-xs uppercase tracking-wide;
+      }
+      
+      .tmu-meta-value {
+        @apply text-gray-900 mt-1;
+      }
+    }
+  }
+}
+
+/* TMDB Integration Panel */
+.tmu-panel-tmdb {
+  .tmu-tmdb-actions {
+    @apply mt-3;
+    
+    .tmu-sync-button {
+      @apply w-full;
+      
+      .components-spinner {
+        @apply mr-2;
+      }
+    }
+  }
+  
+  .tmu-last-sync {
+    @apply text-xs text-gray-500 mt-2 mb-0;
+  }
+}
+
+/* Inspector Controls Styling */
+.components-panel__body.tmu-panel-tmdb {
+  .components-base-control__field {
+    margin-bottom: 16px;
+  }
+  
+  .components-notice {
+    margin: 12px 0;
+  }
+}
+
+/* Movie Metadata Block Specific */
+.tmu-movie-metadata-block {
+  .tmu-metadata-preview {
+    .movie-poster {
+      flex-shrink: 0;
+      
+      img {
+        @apply w-24 h-auto rounded shadow-lg;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+      }
+    }
+    
+    .movie-financial {
+      @apply mt-2 p-2 bg-green-50 rounded text-xs;
+      
+      .budget, .revenue {
+        @apply inline-block mr-4 text-green-700;
+        
+        .label {
+          @apply font-semibold;
+        }
+      }
+    }
+  }
+}
+
+/* TV Series Metadata Block Specific */
+.tmu-tv-series-metadata-block {
+  .tmu-metadata-preview {
+    .series-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      
+      .info-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        
+        &.seasons {
+          @apply bg-blue-100 text-blue-800;
+        }
+        
+        &.episodes {
+          @apply bg-purple-100 text-purple-800;
+        }
+        
+        &.status {
+          @apply bg-gray-100 text-gray-800;
+          
+          &.returning {
+            @apply bg-green-100 text-green-800;
+          }
+          
+          &.ended {
+            @apply bg-red-100 text-red-800;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Drama Metadata Block Specific */
+.tmu-drama-metadata-block {
+  .tmu-metadata-preview {
+    .drama-info {
+      @apply mt-2;
+      
+      .channel-info {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        background-color: #e0e7ff;
+        color: #3730a3;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .broadcast-day {
+        @apply ml-2 text-xs text-gray-600;
+      }
+    }
+  }
+}
+
+/* People Metadata Block Specific */
+.tmu-people-metadata-block {
+  .tmu-metadata-preview {
+    .person-profile {
+      flex-shrink: 0;
+      
+      img {
+        @apply w-24 h-auto rounded shadow-lg;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+      }
+    }
+    
+    .person-department {
+      @apply text-sm text-blue-600 mb-2 font-medium;
+    }
+    
+    .person-age {
+      @apply text-xs text-gray-600 ml-1;
+    }
+  }
+}
+
+/* Episode Metadata Block Specific */
+.tmu-tv-episode-metadata-block {
+  .tmu-metadata-preview {
+    .episode-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      
+      .episode-number {
+        @apply text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-mono;
+      }
+      
+      .episode-type {
+        @apply text-xs bg-green-100 text-green-800 px-2 py-1 rounded capitalize;
+      }
+    }
+    
+    .episode-still {
+      flex-shrink: 0;
+      
+      img {
+        @apply w-32 h-auto rounded shadow-lg;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+      }
+    }
+    
+    .guest-stars {
+      @apply mt-2;
+      
+      .guest-stars-label {
+        @apply text-xs font-semibold text-gray-700;
+      }
+      
+      .guest-stars-list {
+        @apply text-xs text-gray-600;
+      }
+    }
+  }
+}
+
+/* Placeholder Styles */
+.tmu-placeholder {
+  @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center;
+  
+  .components-placeholder__label {
+    @apply text-lg font-semibold text-gray-700 mb-2;
+  }
+  
+  .components-placeholder__instructions {
+    @apply text-sm text-gray-500 leading-relaxed;
+  }
+  
+  .components-placeholder__illustration {
+    @apply text-gray-400 mb-4;
+    
+    svg {
+      @apply w-12 h-12 mx-auto;
+    }
+  }
+}
+
+/* Form Controls Styling */
+.components-panel__body {
+  .components-base-control {
+    margin-bottom: 16px;
+    
+    .components-base-control__label {
+      @apply text-sm font-medium text-gray-700 mb-1;
+    }
+    
+    .components-base-control__help {
+      @apply text-xs text-gray-500 mt-1;
+    }
+  }
+  
+  .components-text-control__input,
+  .components-textarea-control__input {
+    @apply border border-gray-300 rounded-md px-3 py-2 text-sm;
+    
+    &:focus {
+      @apply border-blue-500 ring-1 ring-blue-500 outline-none;
+    }
+  }
+  
+  .components-select-control__input {
+    @apply border border-gray-300 rounded-md px-3 py-2 text-sm bg-white;
+    
+    &:focus {
+      @apply border-blue-500 ring-1 ring-blue-500 outline-none;
+    }
+  }
+  
+  .components-number-control {
+    .components-input-control__input {
+      @apply border border-gray-300 rounded-md px-3 py-2 text-sm;
+      
+      &:focus {
+        @apply border-blue-500 ring-1 ring-blue-500 outline-none;
+      }
+    }
+  }
+  
+  .components-toggle-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    .components-toggle-control__label {
+      @apply text-sm font-medium text-gray-700;
+    }
+  }
+}
+
+/* Button Styling */
+.components-button {
+  &.is-primary {
+    @apply bg-blue-600 text-white border-blue-600;
+    
+    &:hover:not(:disabled) {
+      @apply bg-blue-700 border-blue-700;
+    }
+    
+    &:disabled {
+      @apply bg-gray-400 border-gray-400 cursor-not-allowed;
+    }
+  }
+  
+  &.is-secondary {
+    @apply bg-white text-gray-700 border-gray-300;
+    
+    &:hover:not(:disabled) {
+      @apply bg-gray-50 border-gray-400;
+    }
+  }
+}
+
+/* Notice Styling */
+.components-notice {
+  @apply rounded-md border-l-4 p-3;
+  
+  &.is-error {
+    @apply bg-red-50 border-red-400;
+    
+    .components-notice__content {
+      @apply text-red-800;
+    }
+  }
+  
+  &.is-warning {
+    @apply bg-yellow-50 border-yellow-400;
+    
+    .components-notice__content {
+      @apply text-yellow-800;
+    }
+  }
+  
+  &.is-success {
+    @apply bg-green-50 border-green-400;
+    
+    .components-notice__content {
+      @apply text-green-800;
+    }
+  }
+  
+  &.is-info {
+    @apply bg-blue-50 border-blue-400;
+    
+    .components-notice__content {
+      @apply text-blue-800;
+    }
+  }
+}
+
+/* Panel Body Styling */
+.components-panel__body {
+  border-bottom: 1px solid #e2e4e7;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  .components-panel__body-title {
+    @apply text-sm font-semibold text-gray-900;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tmu-metadata-preview {
+    .flex {
+      flex-direction: column;
+    }
+    
+    .tmu-meta-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* Loading States */
+.tmu-loading {
+  display: inline-flex;
+  align-items: center;
+  
+  .components-spinner {
+    margin-right: 0.5rem;
+  }
+}
+
+/* Custom Scrollbar for Panels */
+.components-panel__body .components-textarea-control__input {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f7fafc;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+}
+
+/* Date Input Styling */
+input[type="date"].components-text-control__input {
+  appearance: none;
+  
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/* Utility Classes for Blocks */
+.tmu-block-hidden {
+  display: none;
+}
+
+.tmu-block-loading {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.tmu-block-error {
+  border-color: #fca5a5;
+  background-color: #fef2f2;
+}

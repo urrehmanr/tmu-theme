@@ -12,11 +12,11 @@ import { registerBlockType } from '@wordpress/blocks';
 import './editor.scss';
 
 // Import individual block components
-import MovieMetadataBlock from './components/MovieMetadataBlock';
-import TvSeriesMetadataBlock from './components/TvSeriesMetadataBlock';
-import DramaMetadataBlock from './components/DramaMetadataBlock';
-import PeopleMetadataBlock from './components/PeopleMetadataBlock';
-import TvEpisodeMetadataBlock from './components/TvEpisodeMetadataBlock';
+import MovieMetadataBlock from './components/MovieMetadataBlock.jsx';
+import TvSeriesMetadataBlock from './components/TvSeriesMetadataBlock.jsx';
+import DramaMetadataBlock from './components/DramaMetadataBlock.jsx';
+import PeopleMetadataBlock from './components/PeopleMetadataBlock.jsx';
+import TvEpisodeMetadataBlock from './components/TvEpisodeMetadataBlock.jsx';
 
 // Block configurations
 const blocks = [
