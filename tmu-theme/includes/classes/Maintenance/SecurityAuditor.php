@@ -37,7 +37,9 @@ class SecurityAuditor {
             'database_security' => $this->audit_database_security(),
             'configuration_security' => $this->audit_configuration(),
             'malware_scan' => $this->scan_for_malware(),
-            'ssl_check' => $this->check_ssl_configuration()
+            'ssl_check' => $this->check_ssl_configuration(),
+            'dependencies' => $this->check_dependencies(),
+            'security_headers' => $this->check_security_headers()
         ];
         
         $security_score = $this->calculate_security_score($audit_results);
@@ -48,6 +50,9 @@ class SecurityAuditor {
             'audit_date' => current_time('mysql'),
             'recommendations' => $this->generate_recommendations($audit_results)
         ]);
+        
+        // Generate detailed security report
+        $this->generate_security_report($audit_results, $security_score);
         
         if ($security_score < 80) {
             $this->send_security_alert($audit_results, $security_score);
@@ -344,6 +349,323 @@ class SecurityAuditor {
         }
         
         return $message;
+    }
+    
+    /**
+     * Check dependencies for vulnerabilities
+     */
+    private function check_dependencies(): array {
+        $composer_file = get_template_directory() . '/composer.json';
+        
+        if (!file_exists($composer_file)) {
+            return ['status' => 'no_composer', 'vulnerabilities' => []];
+        }
+        
+        $composer_data = json_decode(file_get_contents($composer_file), true);
+        $vulnerabilities = [];
+        
+        // Known vulnerable packages (simplified database)
+        $vulnerable_packages = [
+            'symfony/http-foundation' => [
+                'vulnerable_versions' => ['< 4.4.7', '< 5.0.7'],
+                'severity' => 'high',
+                'description' => 'HTTP Response Splitting vulnerability'
+            ],
+            'twig/twig' => [
+                'vulnerable_versions' => ['< 1.44.1', '< 2.12.1', '< 3.0.5'],
+                'severity' => 'medium',
+                'description' => 'Sandbox bypass vulnerability'
+            ],
+            'symfony/process' => [
+                'vulnerable_versions' => ['< 4.4.11', '< 5.1.3'],
+                'severity' => 'high',
+                'description' => 'Command injection vulnerability'
+            ]
+        ];
+        
+        if (isset($composer_data['require'])) {
+            foreach ($composer_data['require'] as $package => $version) {
+                if (isset($vulnerable_packages[$package])) {
+                    $vuln_info = $vulnerable_packages[$package];
+                    
+                    foreach ($vuln_info['vulnerable_versions'] as $vulnerable_version) {
+                        if (version_compare($version, $vulnerable_version, '<')) {
+                            $vulnerabilities[] = [
+                                'package' => $package,
+                                'current_version' => $version,
+                                'vulnerable_version' => $vulnerable_version,
+                                'severity' => $vuln_info['severity'],
+                                'description' => $vuln_info['description']
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+        
+        return [
+            'status' => empty($vulnerabilities) ? 'secure' : 'warning',
+            'total_packages' => isset($composer_data['require']) ? count($composer_data['require']) : 0,
+            'vulnerabilities_found' => count($vulnerabilities),
+            'vulnerabilities' => $vulnerabilities
+        ];
+    }
+    
+    /**
+     * Check security headers
+     */
+    private function check_security_headers(): array {
+        $test_url = home_url();
+        $response = wp_remote_get($test_url, [
+            'timeout' => 10,
+            'headers' => ['User-Agent' => 'TMU Security Scanner']
+        ]);
+        
+        if (is_wp_error($response)) {
+            return ['status' => 'error', 'message' => $response->get_error_message()];
+        }
+        
+        $headers = wp_remote_retrieve_headers($response);
+        
+        $required_headers = [
+            'X-Frame-Options' => [
+                'description' => 'Prevents clickjacking attacks',
+                'recommended' => 'DENY or SAMEORIGIN',
+                'severity' => 'medium'
+            ],
+            'X-XSS-Protection' => [
+                'description' => 'Enables XSS filtering',
+                'recommended' => '1; mode=block',
+                'severity' => 'medium'
+            ],
+            'X-Content-Type-Options' => [
+                'description' => 'Prevents MIME type sniffing',
+                'recommended' => 'nosniff',
+                'severity' => 'low'
+            ],
+            'Strict-Transport-Security' => [
+                'description' => 'Enforces HTTPS connections',
+                'recommended' => 'max-age=31536000; includeSubDomains',
+                'severity' => 'high'
+            ],
+            'Content-Security-Policy' => [
+                'description' => 'Prevents XSS and data injection attacks',
+                'recommended' => 'Custom policy based on site needs',
+                'severity' => 'high'
+            ],
+            'Referrer-Policy' => [
+                'description' => 'Controls referrer information',
+                'recommended' => 'strict-origin-when-cross-origin',
+                'severity' => 'low'
+            ],
+            'Permissions-Policy' => [
+                'description' => 'Controls browser features',
+                'recommended' => 'Custom policy based on site needs',
+                'severity' => 'low'
+            ]
+        ];
+        
+        $results = [];
+        $missing_headers = [];
+        $secure_score = 0;
+        $total_score = count($required_headers);
+        
+        foreach ($required_headers as $header => $info) {
+            $header_present = isset($headers[$header]) || isset($headers[strtolower($header)]);
+            $header_value = $header_present ? ($headers[$header] ?? $headers[strtolower($header)]) : null;
+            
+            $results[$header] = [
+                'present' => $header_present,
+                'value' => $header_value,
+                'description' => $info['description'],
+                'recommended' => $info['recommended'],
+                'severity' => $info['severity'],
+                'status' => $header_present ? 'present' : 'missing'
+            ];
+            
+            if ($header_present) {
+                $secure_score++;
+            } else {
+                $missing_headers[] = $header;
+            }
+        }
+        
+        return [
+            'status' => empty($missing_headers) ? 'secure' : 'warning',
+            'headers' => $results,
+            'missing_headers' => $missing_headers,
+            'security_score' => round(($secure_score / $total_score) * 100),
+            'recommendations' => $this->get_header_recommendations($missing_headers)
+        ];
+    }
+    
+    /**
+     * Generate detailed security report
+     */
+    private function generate_security_report($audit_results, $security_score): void {
+        $report = "TMU Theme Security Audit Report\n";
+        $report .= "Generated: " . current_time('Y-m-d H:i:s') . "\n";
+        $report .= "Overall Security Score: {$security_score}/100\n\n";
+        
+        // File Permissions Section
+        $report .= "=== FILE PERMISSIONS ===\n";
+        foreach ($audit_results['file_permissions'] as $file => $data) {
+            $status = $data['status'] === 'secure' ? '✓' : '⚠';
+            $report .= "{$status} {$file}: {$data['permissions']} (recommended: {$data['recommended']})\n";
+        }
+        $report .= "\n";
+        
+        // Plugin Vulnerabilities Section
+        $report .= "=== PLUGIN VULNERABILITIES ===\n";
+        $vuln_count = $audit_results['plugin_vulnerabilities']['vulnerabilities_found'];
+        if ($vuln_count > 0) {
+            $report .= "⚠ {$vuln_count} vulnerabilities found:\n";
+            foreach ($audit_results['plugin_vulnerabilities']['vulnerabilities'] as $vuln) {
+                $report .= "  - {$vuln['plugin']} v{$vuln['version']}: {$vuln['description']}\n";
+            }
+        } else {
+            $report .= "✓ No plugin vulnerabilities detected\n";
+        }
+        $report .= "\n";
+        
+        // Dependencies Section
+        if (isset($audit_results['dependencies'])) {
+            $report .= "=== DEPENDENCIES ===\n";
+            $dep_status = $audit_results['dependencies']['status'];
+            if ($dep_status === 'no_composer') {
+                $report .= "ℹ No composer.json file found\n";
+            } else {
+                $vuln_count = $audit_results['dependencies']['vulnerabilities_found'];
+                if ($vuln_count > 0) {
+                    $report .= "⚠ {$vuln_count} dependency vulnerabilities found:\n";
+                    foreach ($audit_results['dependencies']['vulnerabilities'] as $vuln) {
+                        $report .= "  - {$vuln['package']} {$vuln['current_version']}: {$vuln['description']}\n";
+                    }
+                } else {
+                    $report .= "✓ No dependency vulnerabilities detected\n";
+                }
+            }
+            $report .= "\n";
+        }
+        
+        // Security Headers Section
+        if (isset($audit_results['security_headers'])) {
+            $report .= "=== SECURITY HEADERS ===\n";
+            $headers = $audit_results['security_headers'];
+            if ($headers['status'] === 'error') {
+                $report .= "⚠ Error checking headers: {$headers['message']}\n";
+            } else {
+                $report .= "Header Security Score: {$headers['security_score']}%\n";
+                foreach ($headers['missing_headers'] as $missing_header) {
+                    $header_info = $headers['headers'][$missing_header];
+                    $report .= "⚠ Missing: {$missing_header} - {$header_info['description']}\n";
+                }
+                if (empty($headers['missing_headers'])) {
+                    $report .= "✓ All recommended security headers present\n";
+                }
+            }
+            $report .= "\n";
+        }
+        
+        // User Security Section
+        $report .= "=== USER SECURITY ===\n";
+        $user_sec = $audit_results['user_security'];
+        $report .= "Admin users: {$user_sec['admin_users']}\n";
+        if ($user_sec['weak_passwords'] > 0) {
+            $report .= "⚠ Weak passwords detected: {$user_sec['weak_passwords']}\n";
+        } else {
+            $report .= "✓ No weak passwords detected\n";
+        }
+        $report .= "\n";
+        
+        // Database Security Section
+        $report .= "=== DATABASE SECURITY ===\n";
+        $db_sec = $audit_results['database_security'];
+        foreach ($db_sec as $check_name => $check_data) {
+            $status = $check_data['status'] === 'secure' ? '✓' : '⚠';
+            $report .= "{$status} {$check_name}: {$check_data['current']}\n";
+        }
+        $report .= "\n";
+        
+        // Malware Scan Section
+        $report .= "=== MALWARE SCAN ===\n";
+        $malware = $audit_results['malware_scan'];
+        $report .= "Files scanned: {$malware['files_scanned']}\n";
+        if ($malware['suspicious_files'] > 0) {
+            $report .= "⚠ Suspicious files found: {$malware['suspicious_files']}\n";
+            foreach ($malware['threats'] as $threat) {
+                $report .= "  - {$threat['file']}: {$threat['pattern']}\n";
+            }
+        } else {
+            $report .= "✓ No suspicious files detected\n";
+        }
+        $report .= "\n";
+        
+        // SSL Configuration Section
+        $report .= "=== SSL CONFIGURATION ===\n";
+        $ssl = $audit_results['ssl_check'];
+        $ssl_status = $ssl['status'] === 'secure' ? '✓' : '⚠';
+        $report .= "{$ssl_status} SSL enabled: " . ($ssl['ssl_enabled'] ? 'Yes' : 'No') . "\n";
+        $report .= "{$ssl_status} Force SSL admin: " . ($ssl['force_ssl_admin'] ? 'Yes' : 'No') . "\n";
+        $report .= "\n";
+        
+        // Recommendations Section
+        $report .= "=== RECOMMENDATIONS ===\n";
+        $recommendations = $this->generate_recommendations($audit_results);
+        if (!empty($recommendations)) {
+            foreach ($recommendations as $i => $recommendation) {
+                $report .= ($i + 1) . ". {$recommendation}\n";
+            }
+        } else {
+            $report .= "✓ No immediate security improvements needed\n";
+        }
+        
+        // Save report to file
+        $reports_dir = WP_CONTENT_DIR . '/uploads/tmu-security-reports/';
+        if (!is_dir($reports_dir)) {
+            wp_mkdir_p($reports_dir);
+        }
+        
+        $report_file = $reports_dir . 'security-audit-' . date('Y-m-d-H-i-s') . '.txt';
+        file_put_contents($report_file, $report);
+        
+        // Also save as option for admin viewing
+        update_option('tmu_latest_security_report', [
+            'content' => $report,
+            'file_path' => $report_file,
+            'generated_at' => current_time('mysql')
+        ]);
+        
+        $this->logger->info('Security report generated', ['file' => $report_file]);
+    }
+    
+    /**
+     * Get header recommendations
+     */
+    private function get_header_recommendations($missing_headers): array {
+        $recommendations = [];
+        
+        foreach ($missing_headers as $header) {
+            switch ($header) {
+                case 'X-Frame-Options':
+                    $recommendations[] = "Add 'X-Frame-Options: DENY' header to prevent clickjacking";
+                    break;
+                case 'X-XSS-Protection':
+                    $recommendations[] = "Add 'X-XSS-Protection: 1; mode=block' header";
+                    break;
+                case 'X-Content-Type-Options':
+                    $recommendations[] = "Add 'X-Content-Type-Options: nosniff' header";
+                    break;
+                case 'Strict-Transport-Security':
+                    $recommendations[] = "Add HSTS header to enforce HTTPS";
+                    break;
+                case 'Content-Security-Policy':
+                    $recommendations[] = "Implement Content Security Policy to prevent XSS attacks";
+                    break;
+            }
+        }
+        
+        return $recommendations;
     }
     
     /**

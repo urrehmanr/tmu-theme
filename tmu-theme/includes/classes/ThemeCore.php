@@ -187,6 +187,9 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Maintenance/MaintenanceManager.php';
         require_once TMU_INCLUDES_DIR . '/classes/Updates/UpdateManager.php';
         require_once TMU_INCLUDES_DIR . '/classes/Maintenance/SecurityAuditor.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/TmdbDataUpdater.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/PerformanceOptimizer.php';
         
         // Load placeholder classes - will be created in future steps
         // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
@@ -241,6 +244,9 @@ class ThemeCore {
         new Maintenance\MaintenanceManager();
         new Updates\UpdateManager();
         new Maintenance\SecurityAuditor();
+        new Migration\MigrationManager();
+        new Maintenance\TmdbDataUpdater();
+        new Maintenance\PerformanceOptimizer();
         
         // Initialize managers - will be activated in future steps
         // API\TMDBClient::getInstance();
