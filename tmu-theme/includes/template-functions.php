@@ -14,6 +14,33 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Get post data for template display (generic function)
+ * 
+ * @param int $post_id Post ID
+ * @return array Post data
+ */
+function tmu_get_post_data(int $post_id): array {
+    $post_type = get_post_type($post_id);
+    
+    switch ($post_type) {
+        case 'movie':
+            return tmu_get_movie_data($post_id);
+        case 'tv':
+            return tmu_get_tv_data($post_id);
+        case 'drama':
+            return tmu_get_drama_data($post_id);
+        case 'people':
+            return tmu_get_person_data($post_id);
+        case 'episode':
+            return tmu_get_episode_data($post_id);
+        case 'season':
+            return tmu_get_season_data($post_id);
+        default:
+            return [];
+    }
+}
+
+/**
  * Get movie data for template display
  * 
  * @param int $post_id Post ID
@@ -494,4 +521,44 @@ function tmu_fallback_menu(): string {
     $output .= '</ul>';
     
     return $output;
+}
+
+/**
+ * Get episode data for template display
+ * 
+ * @param int $post_id Post ID
+ * @return array Episode data
+ */
+function tmu_get_episode_data(int $post_id): array {
+    $storage = new \TMU\Fields\Storage\CustomTableStorage();
+    
+    return [
+        'overview' => $storage->get($post_id, 'overview') ?: '',
+        'episode_number' => $storage->get($post_id, 'episode_number') ?: 0,
+        'season_number' => $storage->get($post_id, 'season_number') ?: 0,
+        'air_date' => $storage->get($post_id, 'air_date') ?: '',
+        'runtime' => $storage->get($post_id, 'runtime') ?: 0,
+        'vote_average' => $storage->get($post_id, 'vote_average') ?: 0,
+        'vote_count' => $storage->get($post_id, 'vote_count') ?: 0,
+        'still_path' => $storage->get($post_id, 'still_path') ?: '',
+    ];
+}
+
+/**
+ * Get season data for template display
+ * 
+ * @param int $post_id Post ID
+ * @return array Season data
+ */
+function tmu_get_season_data(int $post_id): array {
+    $storage = new \TMU\Fields\Storage\CustomTableStorage();
+    
+    return [
+        'overview' => $storage->get($post_id, 'overview') ?: '',
+        'season_number' => $storage->get($post_id, 'season_number') ?: 0,
+        'air_date' => $storage->get($post_id, 'air_date') ?: '',
+        'episode_count' => $storage->get($post_id, 'episode_count') ?: 0,
+        'poster_path' => $storage->get($post_id, 'poster_path') ?: '',
+        'vote_average' => $storage->get($post_id, 'vote_average') ?: 0,
+    ];
 }

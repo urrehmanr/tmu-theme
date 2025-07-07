@@ -144,6 +144,44 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Admin/MetaBoxes/TMDBBox.php';
         require_once TMU_INCLUDES_DIR . '/classes/Admin/Actions/TMDBSync.php';
         
+        // Load Step 11 - SEO and Schema Markup classes
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/SEOManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/SchemaManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/MetaTags.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/SitemapGenerator.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/OpenGraph.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/TwitterCard.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/BreadcrumbManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Analytics.php';
+        
+        // Load individual Schema classes
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/MovieSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/TVShowSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/PersonSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/EpisodeSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/SeasonSchema.php';
+        
+        // Load Step 12 - Search and Filtering classes
+        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchEngine.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchIndexManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/QueryBuilder.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/ResultProcessor.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/FilterManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/AjaxSearch.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/RecommendationEngine.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchResult.php';
+        
+        // Load Facet classes
+        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/PostTypeFacet.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/TaxonomyFacet.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/YearFacet.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/RatingFacet.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/RuntimeFacet.php';
+        
+        // Load API REST endpoints
+        require_once TMU_INCLUDES_DIR . '/classes/API/REST/SearchEndpoints.php';
+        
         // Load placeholder classes - will be created in future steps
         // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
         // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
@@ -181,6 +219,16 @@ class ThemeCore {
         if (is_admin()) {
             Admin\AdminManager::getInstance();
         }
+        
+        // Initialize Step 11 - SEO and Schema Markup
+        SEO\SEOManager::getInstance();
+        
+        // Initialize Step 12 - Search and Filtering
+        Search\SearchManager::getInstance();
+        
+        // Initialize API REST endpoints
+        $search_endpoints = new API\REST\SearchEndpoints();
+        $search_endpoints->init();
         
         // Initialize managers - will be activated in future steps
         // API\TMDBClient::getInstance();

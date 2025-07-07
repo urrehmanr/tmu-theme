@@ -1,7 +1,10 @@
 <?php
 namespace TMU\SEO;
 
-class Sitemap {
+/**
+ * XML Sitemap Generator for comprehensive site indexing
+ */
+class SitemapGenerator {
     public function init(): void {
         add_action('init', [$this, 'add_rewrite_rules']);
         add_action('template_redirect', [$this, 'handle_sitemap_request']);
@@ -241,7 +244,7 @@ class Sitemap {
         foreach ($search_engines as $engine => $ping_url) {
             wp_remote_get($ping_url, [
                 'timeout' => 10,
-                'user-agent' => 'TMU WordPress Theme Sitemap'
+                'user-agent' => 'TMU WordPress Theme SitemapGenerator'
             ]);
         }
     }
