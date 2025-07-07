@@ -1,0 +1,47 @@
+/**
+ * CSS Grid Layout
+ * 
+ * Grid system for TMU theme templates exactly as specified in documentation
+ * 
+ * @package TMU
+ * @since 1.0.0
+ */
+
+.tmu-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.tmu-grid-movies {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.tmu-grid-people {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+@media (max-width: 768px) {
+    .tmu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .tmu-grid-movies {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tmu-grid-people {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .tmu-grid-movies {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tmu-grid-people {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -190,12 +190,14 @@ if (have_posts()) :
                                     data-tab="cast">
                                 <?php _e('Cast & Crew', 'tmu-theme'); ?>
                             </button>
-                            <?php if (!empty($related_movies)): ?>
-                                <button class="tmu-tab-button pb-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium transition-colors" 
-                                        data-tab="similar">
-                                    <?php _e('Similar Movies', 'tmu-theme'); ?>
-                                </button>
-                            <?php endif; ?>
+                            <button class="tmu-tab-button pb-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium transition-colors" 
+                                    data-tab="media">
+                                <?php _e('Media', 'tmu-theme'); ?>
+                            </button>
+                            <button class="tmu-tab-button pb-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium transition-colors" 
+                                    data-tab="similar">
+                                <?php _e('Similar Movies', 'tmu-theme'); ?>
+                            </button>
                         </nav>
                     </div>
                     
@@ -208,25 +210,18 @@ if (have_posts()) :
                         
                         <!-- Cast & Crew Tab -->
                         <div class="tmu-tab-pane hidden" id="cast">
-                            <?php get_template_part('templates/movie/cast', null, ['cast_crew' => $cast_crew]); ?>
+                            <?php get_template_part('templates/movie/cast', null, ['movie_data' => $movie_data]); ?>
+                        </div>
+                        
+                        <!-- Media Tab -->
+                        <div class="tmu-tab-pane hidden" id="media">
+                            <?php get_template_part('templates/movie/media', null, ['movie_data' => $movie_data]); ?>
                         </div>
                         
                         <!-- Similar Movies Tab -->
-                        <?php if (!empty($related_movies)): ?>
-                            <div class="tmu-tab-pane hidden" id="similar">
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                                    <?php foreach ($related_movies as $related_movie): ?>
-                                        <?php 
-                                        get_template_part('templates/components/movie-card', null, [
-                                            'movie_data' => tmu_get_movie_data($related_movie->ID),
-                                            'post_id' => $related_movie->ID,
-                                            'size' => 'small'
-                                        ]);
-                                        ?>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+                        <div class="tmu-tab-pane hidden" id="similar">
+                            <?php get_template_part('templates/movie/similar', null, ['movie_data' => $movie_data]); ?>
+                        </div>
                     </div>
                 </div>
             </section>
