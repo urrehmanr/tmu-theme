@@ -64,7 +64,7 @@ class DataImport {
         check_ajax_referer('tmu_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Unauthorized', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Unauthorized', 'tmu')]);
         }
         
         $import_type = sanitize_text_field($_POST['import_type'] ?? '');
@@ -72,7 +72,7 @@ class DataImport {
         $source_data = $_POST['source_data'] ?? [];
         
         if (!in_array($import_type, self::SUPPORTED_FORMATS)) {
-            wp_send_json_error(['message' => __('Unsupported import format', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Unsupported import format', 'tmu')]);
         }
         
         try {
@@ -108,7 +108,7 @@ class DataImport {
             case 'xml':
                 return $this->processXmlImport($import_id, $post_type, $source_data);
             default:
-                throw new \Exception(__('Unsupported import type', 'tmu-theme'));
+                throw new \Exception(__('Unsupported import type', 'tmu'));
         }
     }
     
@@ -122,7 +122,7 @@ class DataImport {
      */
     private function processCsvImport(string $import_id, string $post_type, array $source_data): array {
         if (!isset($source_data['file_path'])) {
-            throw new \Exception(__('CSV file path not provided', 'tmu-theme'));
+            throw new \Exception(__('CSV file path not provided', 'tmu'));
         }
         
         $file_path = $source_data['file_path'];
@@ -148,7 +148,7 @@ class DataImport {
             'import_id' => $import_id,
             'total_items' => count($validated_data),
             'total_batches' => $total_batches,
-            'message' => __('CSV import scheduled successfully', 'tmu-theme')
+            'message' => __('CSV import scheduled successfully', 'tmu')
         ];
     }
     
@@ -162,12 +162,12 @@ class DataImport {
      */
     private function processJsonImport(string $import_id, string $post_type, array $source_data): array {
         if (!isset($source_data['json_data'])) {
-            throw new \Exception(__('JSON data not provided', 'tmu-theme'));
+            throw new \Exception(__('JSON data not provided', 'tmu'));
         }
         
         $json_data = json_decode($source_data['json_data'], true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception(__('Invalid JSON format', 'tmu-theme'));
+            throw new \Exception(__('Invalid JSON format', 'tmu'));
         }
         
         $validated_data = $this->validateJsonData($json_data, $post_type);
@@ -188,7 +188,7 @@ class DataImport {
             'import_id' => $import_id,
             'total_items' => count($validated_data),
             'total_batches' => $total_batches,
-            'message' => __('JSON import scheduled successfully', 'tmu-theme')
+            'message' => __('JSON import scheduled successfully', 'tmu')
         ];
     }
     
@@ -202,7 +202,7 @@ class DataImport {
      */
     private function processTmdbImport(string $import_id, string $post_type, array $source_data): array {
         if (!isset($source_data['tmdb_ids']) && !isset($source_data['search_query'])) {
-            throw new \Exception(__('TMDB IDs or search query required', 'tmu-theme'));
+            throw new \Exception(__('TMDB IDs or search query required', 'tmu'));
         }
         
         $tmdb_ids = [];
@@ -233,7 +233,7 @@ class DataImport {
             'import_id' => $import_id,
             'total_items' => count($filtered_ids),
             'total_batches' => $total_batches,
-            'message' => __('TMDB import scheduled successfully', 'tmu-theme')
+            'message' => __('TMDB import scheduled successfully', 'tmu')
         ];
     }
     
@@ -247,12 +247,12 @@ class DataImport {
      */
     private function processXmlImport(string $import_id, string $post_type, array $source_data): array {
         if (!isset($source_data['xml_data'])) {
-            throw new \Exception(__('XML data not provided', 'tmu-theme'));
+            throw new \Exception(__('XML data not provided', 'tmu'));
         }
         
         $xml_data = simplexml_load_string($source_data['xml_data']);
         if ($xml_data === false) {
-            throw new \Exception(__('Invalid XML format', 'tmu-theme'));
+            throw new \Exception(__('Invalid XML format', 'tmu'));
         }
         
         $validated_data = $this->validateXmlData($xml_data, $post_type);
@@ -273,7 +273,7 @@ class DataImport {
             'import_id' => $import_id,
             'total_items' => count($validated_data),
             'total_batches' => $total_batches,
-            'message' => __('XML import scheduled successfully', 'tmu-theme')
+            'message' => __('XML import scheduled successfully', 'tmu')
         ];
     }
     
@@ -312,7 +312,7 @@ class DataImport {
         $post_data = [
             'post_type' => $post_type,
             'post_status' => 'publish',
-            'post_title' => $item_data['title'] ?? __('Imported Content', 'tmu-theme'),
+            'post_title' => $item_data['title'] ?? __('Imported Content', 'tmu'),
             'post_content' => $item_data['content'] ?? '',
             'post_excerpt' => $item_data['excerpt'] ?? '',
         ];
@@ -346,39 +346,39 @@ class DataImport {
     public function renderImportTools(): void {
         ?>
         <div class="tmu-import-tools-section">
-            <h2><?php _e('Data Import Tools', 'tmu-theme'); ?></h2>
-            <p><?php _e('Import content from various sources into your TMU database.', 'tmu-theme'); ?></p>
+            <h2><?php _e('Data Import Tools', 'tmu'); ?></h2>
+            <p><?php _e('Import content from various sources into your TMU database.', 'tmu'); ?></p>
             
             <div class="tmu-import-formats">
                 <div class="import-format-card">
-                    <h3><?php _e('CSV Import', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Import content from CSV spreadsheet files.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('CSV Import', 'tmu'); ?></h3>
+                    <p><?php _e('Import content from CSV spreadsheet files.', 'tmu'); ?></p>
                     <button class="button" onclick="tmuOpenImportModal('csv')">
-                        <?php _e('Import CSV', 'tmu-theme'); ?>
+                        <?php _e('Import CSV', 'tmu'); ?>
                     </button>
                 </div>
                 
                 <div class="import-format-card">
-                    <h3><?php _e('JSON Import', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Import content from JSON data files.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('JSON Import', 'tmu'); ?></h3>
+                    <p><?php _e('Import content from JSON data files.', 'tmu'); ?></p>
                     <button class="button" onclick="tmuOpenImportModal('json')">
-                        <?php _e('Import JSON', 'tmu-theme'); ?>
+                        <?php _e('Import JSON', 'tmu'); ?>
                     </button>
                 </div>
                 
                 <div class="import-format-card">
-                    <h3><?php _e('TMDB Bulk Import', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Import multiple items from TMDB database.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('TMDB Bulk Import', 'tmu'); ?></h3>
+                    <p><?php _e('Import multiple items from TMDB database.', 'tmu'); ?></p>
                     <button class="button button-primary" onclick="tmuOpenImportModal('tmdb')">
-                        <?php _e('Import from TMDB', 'tmu-theme'); ?>
+                        <?php _e('Import from TMDB', 'tmu'); ?>
                     </button>
                 </div>
                 
                 <div class="import-format-card">
-                    <h3><?php _e('XML Import', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Import content from XML data files.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('XML Import', 'tmu'); ?></h3>
+                    <p><?php _e('Import content from XML data files.', 'tmu'); ?></p>
                     <button class="button" onclick="tmuOpenImportModal('xml')">
-                        <?php _e('Import XML', 'tmu-theme'); ?>
+                        <?php _e('Import XML', 'tmu'); ?>
                     </button>
                 </div>
             </div>
@@ -421,15 +421,15 @@ class DataImport {
     public function renderPostTypeImportTools(string $post_type): void {
         ?>
         <div class="tmu-post-type-import">
-            <h3><?php printf(__('Import %s Content', 'tmu-theme'), ucfirst($post_type)); ?></h3>
+            <h3><?php printf(__('Import %s Content', 'tmu'), ucfirst($post_type)); ?></h3>
             
             <div class="import-options">
                 <button class="button button-primary" onclick="tmuOpenPostTypeImport('<?php echo $post_type; ?>', 'tmdb')">
-                    <?php printf(__('Import %s from TMDB', 'tmu-theme'), ucfirst($post_type)); ?>
+                    <?php printf(__('Import %s from TMDB', 'tmu'), ucfirst($post_type)); ?>
                 </button>
                 
                 <button class="button" onclick="tmuOpenPostTypeImport('<?php echo $post_type; ?>', 'csv')">
-                    <?php printf(__('Import %s from CSV', 'tmu-theme'), ucfirst($post_type)); ?>
+                    <?php printf(__('Import %s from CSV', 'tmu'), ucfirst($post_type)); ?>
                 </button>
             </div>
         </div>
@@ -473,11 +473,11 @@ class DataImport {
         check_ajax_referer('tmu_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Unauthorized', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Unauthorized', 'tmu')]);
         }
         
         if (!isset($_FILES['import_file'])) {
-            wp_send_json_error(['message' => __('No file uploaded', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('No file uploaded', 'tmu')]);
         }
         
         $file = $_FILES['import_file'];
@@ -587,7 +587,7 @@ class DataImport {
      */
     private function readCsvFile(string $file_path): array {
         if (!file_exists($file_path)) {
-            throw new \Exception(__('CSV file not found', 'tmu-theme'));
+            throw new \Exception(__('CSV file not found', 'tmu'));
         }
         
         $csv_data = [];

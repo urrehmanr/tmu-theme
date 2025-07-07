@@ -36,7 +36,7 @@ class Widgets {
         
         wp_add_dashboard_widget(
             'tmu_content_stats',
-            __('TMU Content Statistics', 'tmu-theme'),
+            __('TMU Content Statistics', 'tmu'),
             [$this, 'renderContentStatsWidget'],
             null,
             null,
@@ -46,7 +46,7 @@ class Widgets {
         
         wp_add_dashboard_widget(
             'tmu_recent_additions',
-            __('Recent TMU Additions', 'tmu-theme'),
+            __('Recent TMU Additions', 'tmu'),
             [$this, 'renderRecentAdditionsWidget'],
             null,
             null,
@@ -56,7 +56,7 @@ class Widgets {
         
         wp_add_dashboard_widget(
             'tmu_tmdb_status',
-            __('TMDB Sync Status', 'tmu-theme'),
+            __('TMDB Sync Status', 'tmu'),
             [$this, 'renderTMDBStatusWidget'],
             null,
             null,
@@ -66,7 +66,7 @@ class Widgets {
         
         wp_add_dashboard_widget(
             'tmu_quick_actions',
-            __('TMU Quick Actions', 'tmu-theme'),
+            __('TMU Quick Actions', 'tmu'),
             [$this, 'renderQuickActionsWidget'],
             null,
             null,
@@ -94,11 +94,11 @@ class Widgets {
                             <div class="stat-label"><?php echo esc_html($data['label']); ?></div>
                             <div class="stat-actions">
                                 <a href="<?php echo admin_url('edit.php?post_type=' . $post_type); ?>" class="view-all">
-                                    <?php _e('View All', 'tmu-theme'); ?>
+                                    <?php _e('View All', 'tmu'); ?>
                                 </a>
                                 |
                                 <a href="<?php echo admin_url('post-new.php?post_type=' . $post_type); ?>" class="add-new">
-                                    <?php _e('Add New', 'tmu-theme'); ?>
+                                    <?php _e('Add New', 'tmu'); ?>
                                 </a>
                             </div>
                         </div>
@@ -107,29 +107,29 @@ class Widgets {
             </div>
             
             <div class="total-stats">
-                <h4><?php _e('Content Overview', 'tmu-theme'); ?></h4>
+                <h4><?php _e('Content Overview', 'tmu'); ?></h4>
                 <div class="overview-grid">
                     <div class="overview-item">
-                        <span class="label"><?php _e('Total Content:', 'tmu-theme'); ?></span>
+                        <span class="label"><?php _e('Total Content:', 'tmu'); ?></span>
                         <span class="value"><?php echo number_format($total_stats['total']); ?></span>
                     </div>
                     <div class="overview-item">
-                        <span class="label"><?php _e('Published:', 'tmu-theme'); ?></span>
+                        <span class="label"><?php _e('Published:', 'tmu'); ?></span>
                         <span class="value"><?php echo number_format($total_stats['published']); ?></span>
                     </div>
                     <div class="overview-item">
-                        <span class="label"><?php _e('With TMDB:', 'tmu-theme'); ?></span>
+                        <span class="label"><?php _e('With TMDB:', 'tmu'); ?></span>
                         <span class="value"><?php echo number_format($total_stats['with_tmdb']); ?></span>
                     </div>
                     <div class="overview-item">
-                        <span class="label"><?php _e('This Month:', 'tmu-theme'); ?></span>
+                        <span class="label"><?php _e('This Month:', 'tmu'); ?></span>
                         <span class="value"><?php echo number_format($total_stats['this_month']); ?></span>
                     </div>
                 </div>
             </div>
             
             <button type="button" id="refresh-stats" class="button button-secondary">
-                <?php _e('Refresh Stats', 'tmu-theme'); ?>
+                <?php _e('Refresh Stats', 'tmu'); ?>
             </button>
         </div>
         
@@ -137,7 +137,7 @@ class Widgets {
         jQuery(document).ready(function($) {
             $('#refresh-stats').on('click', function() {
                 var button = $(this);
-                button.text('<?php _e('Refreshing...', 'tmu-theme'); ?>').prop('disabled', true);
+                button.text('<?php _e('Refreshing...', 'tmu'); ?>').prop('disabled', true);
                 
                 $.post(ajaxurl, {
                     action: 'tmu_dashboard_stats',
@@ -147,7 +147,7 @@ class Widgets {
                         location.reload();
                     }
                 }).always(function() {
-                    button.text('<?php _e('Refresh Stats', 'tmu-theme'); ?>').prop('disabled', false);
+                    button.text('<?php _e('Refresh Stats', 'tmu'); ?>').prop('disabled', false);
                 });
             });
         });
@@ -264,11 +264,11 @@ class Widgets {
                 
                 <div class="widget-footer">
                     <a href="<?php echo admin_url('edit.php?post_type=movie'); ?>" class="view-all-link">
-                        <?php _e('View All Content', 'tmu-theme'); ?>
+                        <?php _e('View All Content', 'tmu'); ?>
                     </a>
                 </div>
             <?php else: ?>
-                <p class="no-content"><?php _e('No content added yet.', 'tmu-theme'); ?></p>
+                <p class="no-content"><?php _e('No content added yet.', 'tmu'); ?></p>
             <?php endif; ?>
         </div>
         
@@ -359,32 +359,32 @@ class Widgets {
         <div class="tmu-tmdb-status">
             <div class="status-overview">
                 <div class="status-item">
-                    <span class="label"><?php _e('Synced Content:', 'tmu-theme'); ?></span>
+                    <span class="label"><?php _e('Synced Content:', 'tmu'); ?></span>
                     <span class="value success"><?php echo number_format($tmdb_stats['synced']); ?></span>
                 </div>
                 <div class="status-item">
-                    <span class="label"><?php _e('Pending Sync:', 'tmu-theme'); ?></span>
+                    <span class="label"><?php _e('Pending Sync:', 'tmu'); ?></span>
                     <span class="value warning"><?php echo number_format($tmdb_stats['pending']); ?></span>
                 </div>
                 <div class="status-item">
-                    <span class="label"><?php _e('Sync Errors:', 'tmu-theme'); ?></span>
+                    <span class="label"><?php _e('Sync Errors:', 'tmu'); ?></span>
                     <span class="value error"><?php echo number_format($tmdb_stats['errors']); ?></span>
                 </div>
             </div>
             
             <?php if ($tmdb_stats['last_sync']): ?>
                 <div class="last-sync">
-                    <strong><?php _e('Last Sync:', 'tmu-theme'); ?></strong>
+                    <strong><?php _e('Last Sync:', 'tmu'); ?></strong>
                     <?php echo human_time_diff(strtotime($tmdb_stats['last_sync'])); ?> ago
                 </div>
             <?php endif; ?>
             
             <div class="sync-actions">
                 <button type="button" id="quick-sync" class="button button-primary button-small">
-                    <?php _e('Quick Sync', 'tmu-theme'); ?>
+                    <?php _e('Quick Sync', 'tmu'); ?>
                 </button>
                 <a href="<?php echo admin_url('admin.php?page=tmu-quick-actions'); ?>" class="button button-secondary button-small">
-                    <?php _e('Sync Settings', 'tmu-theme'); ?>
+                    <?php _e('Sync Settings', 'tmu'); ?>
                 </a>
             </div>
         </div>
@@ -447,10 +447,10 @@ class Widgets {
                 <div class="action-item">
                     <div class="action-icon">📊</div>
                     <div class="action-content">
-                        <h4><?php _e('Analytics', 'tmu-theme'); ?></h4>
-                        <p><?php _e('View content performance and statistics', 'tmu-theme'); ?></p>
+                        <h4><?php _e('Analytics', 'tmu'); ?></h4>
+                        <p><?php _e('View content performance and statistics', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-analytics'); ?>" class="button button-small">
-                            <?php _e('View Analytics', 'tmu-theme'); ?>
+                            <?php _e('View Analytics', 'tmu'); ?>
                         </a>
                     </div>
                 </div>
@@ -458,10 +458,10 @@ class Widgets {
                 <div class="action-item">
                     <div class="action-icon">🔄</div>
                     <div class="action-content">
-                        <h4><?php _e('Bulk Sync', 'tmu-theme'); ?></h4>
-                        <p><?php _e('Sync all content with TMDB database', 'tmu-theme'); ?></p>
+                        <h4><?php _e('Bulk Sync', 'tmu'); ?></h4>
+                        <p><?php _e('Sync all content with TMDB database', 'tmu'); ?></p>
                         <button type="button" id="bulk-sync-action" class="button button-small">
-                            <?php _e('Start Sync', 'tmu-theme'); ?>
+                            <?php _e('Start Sync', 'tmu'); ?>
                         </button>
                     </div>
                 </div>
@@ -469,10 +469,10 @@ class Widgets {
                 <div class="action-item">
                     <div class="action-icon">📥</div>
                     <div class="action-content">
-                        <h4><?php _e('Import', 'tmu-theme'); ?></h4>
-                        <p><?php _e('Import content from external sources', 'tmu-theme'); ?></p>
+                        <h4><?php _e('Import', 'tmu'); ?></h4>
+                        <p><?php _e('Import content from external sources', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-import'); ?>" class="button button-small">
-                            <?php _e('Import Tools', 'tmu-theme'); ?>
+                            <?php _e('Import Tools', 'tmu'); ?>
                         </a>
                     </div>
                 </div>
@@ -480,10 +480,10 @@ class Widgets {
                 <div class="action-item">
                     <div class="action-icon">🔧</div>
                     <div class="action-content">
-                        <h4><?php _e('Settings', 'tmu-theme'); ?></h4>
-                        <p><?php _e('Configure TMU theme options', 'tmu-theme'); ?></p>
+                        <h4><?php _e('Settings', 'tmu'); ?></h4>
+                        <p><?php _e('Configure TMU theme options', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-settings'); ?>" class="button button-small">
-                            <?php _e('Settings', 'tmu-theme'); ?>
+                            <?php _e('Settings', 'tmu'); ?>
                         </a>
                     </div>
                 </div>
@@ -705,12 +705,12 @@ class Widgets {
         check_ajax_referer('tmu_dashboard_stats', 'nonce');
         
         if (!current_user_can('edit_posts')) {
-            wp_die(__('Unauthorized', 'tmu-theme'));
+            wp_die(__('Unauthorized', 'tmu'));
         }
         
         // Clear any cached stats
         wp_cache_delete('tmu_dashboard_stats');
         
-        wp_send_json_success(['message' => __('Statistics refreshed', 'tmu-theme')]);
+        wp_send_json_success(['message' => __('Statistics refreshed', 'tmu')]);
     }
 }

@@ -83,7 +83,7 @@ class QuickActions {
         foreach ($post_types as $post_type) {
             add_meta_box(
                 'tmu-quick-actions',
-                __('Quick Actions', 'tmu-theme'),
+                __('Quick Actions', 'tmu'),
                 [$this, 'renderMetaBox'],
                 $post_type,
                 'side',
@@ -117,7 +117,7 @@ class QuickActions {
                                     data-post-id="<?php echo $post->ID; ?>"
                                     <?php echo $this->isActionDisabled($action_key, $post) ? 'disabled' : ''; ?>>
                                 <?php echo $this->getActionIcon($action_key); ?>
-                                <?php echo esc_html(__($action_label, 'tmu-theme')); ?>
+                                <?php echo esc_html(__($action_label, 'tmu')); ?>
                             </button>
                             
                             <div class="action-status" id="status-<?php echo esc_attr($action_key); ?>">
@@ -128,14 +128,14 @@ class QuickActions {
                 </div>
                 
                 <div class="quick-actions-settings">
-                    <h4><?php _e('Action Settings', 'tmu-theme'); ?></h4>
+                    <h4><?php _e('Action Settings', 'tmu'); ?></h4>
                     
                     <label>
                         <input type="checkbox" 
                                name="auto_sync_tmdb" 
                                value="1" 
                                <?php checked(isset($action_settings['auto_sync_tmdb'])); ?>>
-                        <?php _e('Auto-sync with TMDB on save', 'tmu-theme'); ?>
+                        <?php _e('Auto-sync with TMDB on save', 'tmu'); ?>
                     </label>
                     
                     <label>
@@ -143,7 +143,7 @@ class QuickActions {
                                name="auto_update_images" 
                                value="1" 
                                <?php checked(isset($action_settings['auto_update_images'])); ?>>
-                        <?php _e('Auto-update images from TMDB', 'tmu-theme'); ?>
+                        <?php _e('Auto-update images from TMDB', 'tmu'); ?>
                     </label>
                     
                     <label>
@@ -151,19 +151,19 @@ class QuickActions {
                                name="notify_on_completion" 
                                value="1" 
                                <?php checked(isset($action_settings['notify_on_completion'])); ?>>
-                        <?php _e('Show notifications when actions complete', 'tmu-theme'); ?>
+                        <?php _e('Show notifications when actions complete', 'tmu'); ?>
                     </label>
                 </div>
                 
                 <div class="bulk-quick-actions">
-                    <h4><?php _e('Bulk Actions', 'tmu-theme'); ?></h4>
+                    <h4><?php _e('Bulk Actions', 'tmu'); ?></h4>
                     <button type="button" class="button" onclick="tmuBulkQuickAction('sync_all', '<?php echo $post_type; ?>')">
-                        <?php _e('Sync All Similar Content', 'tmu-theme'); ?>
+                        <?php _e('Sync All Similar Content', 'tmu'); ?>
                     </button>
                 </div>
                 
             <?php else: ?>
-                <p><?php _e('No quick actions available for this content type.', 'tmu-theme'); ?></p>
+                <p><?php _e('No quick actions available for this content type.', 'tmu'); ?></p>
             <?php endif; ?>
         </div>
         
@@ -303,14 +303,14 @@ class QuickActions {
         check_ajax_referer('tmu_admin_nonce', 'nonce');
         
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error(['message' => __('Unauthorized', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Unauthorized', 'tmu')]);
         }
         
         $action = sanitize_text_field($_POST['action_type'] ?? '');
         $post_id = intval($_POST['post_id'] ?? 0);
         
         if (!$post_id || !$action) {
-            wp_send_json_error(['message' => __('Invalid parameters', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Invalid parameters', 'tmu')]);
         }
         
         try {
@@ -331,7 +331,7 @@ class QuickActions {
     private function executeQuickAction(string $action, int $post_id): array {
         $post = get_post($post_id);
         if (!$post) {
-            throw new \Exception(__('Post not found', 'tmu-theme'));
+            throw new \Exception(__('Post not found', 'tmu'));
         }
         
         switch ($action) {
@@ -360,7 +360,7 @@ class QuickActions {
                 return $this->duplicatePost($post_id);
                 
             default:
-                throw new \Exception(__('Unknown action', 'tmu-theme'));
+                throw new \Exception(__('Unknown action', 'tmu'));
         }
     }
     
@@ -374,7 +374,7 @@ class QuickActions {
         $tmdb_id = get_post_meta($post_id, 'tmdb_id', true);
         
         if (!$tmdb_id) {
-            throw new \Exception(__('No TMDB ID found', 'tmu-theme'));
+            throw new \Exception(__('No TMDB ID found', 'tmu'));
         }
         
         // Trigger TMDB sync (would integrate with TMDB API)
@@ -384,7 +384,7 @@ class QuickActions {
         update_post_meta($post_id, '_last_tmdb_sync', current_time('mysql'));
         
         return [
-            'message' => __('Successfully synced with TMDB', 'tmu-theme'),
+            'message' => __('Successfully synced with TMDB', 'tmu'),
             'action' => 'sync_tmdb',
             'timestamp' => current_time('mysql')
         ];
@@ -401,7 +401,7 @@ class QuickActions {
         do_action('tmu_update_post_images', $post_id);
         
         return [
-            'message' => __('Images updated successfully', 'tmu-theme'),
+            'message' => __('Images updated successfully', 'tmu'),
             'action' => 'update_images',
             'timestamp' => current_time('mysql')
         ];
@@ -418,7 +418,7 @@ class QuickActions {
         do_action('tmu_find_trailer', $post_id);
         
         return [
-            'message' => __('Trailer search completed', 'tmu-theme'),
+            'message' => __('Trailer search completed', 'tmu'),
             'action' => 'generate_trailer',
             'timestamp' => current_time('mysql')
         ];
@@ -435,7 +435,7 @@ class QuickActions {
         do_action('tmu_sync_episodes', $post_id);
         
         return [
-            'message' => __('Episode sync initiated', 'tmu-theme'),
+            'message' => __('Episode sync initiated', 'tmu'),
             'action' => 'sync_episodes',
             'timestamp' => current_time('mysql')
         ];
@@ -452,7 +452,7 @@ class QuickActions {
         do_action('tmu_find_credits', $post_id);
         
         return [
-            'message' => __('Credits search completed', 'tmu-theme'),
+            'message' => __('Credits search completed', 'tmu'),
             'action' => 'find_credits',
             'timestamp' => current_time('mysql')
         ];
@@ -472,8 +472,8 @@ class QuickActions {
         
         return [
             'message' => $new_status 
-                ? __('Content set as featured', 'tmu-theme')
-                : __('Content removed from featured', 'tmu-theme'),
+                ? __('Content set as featured', 'tmu')
+                : __('Content removed from featured', 'tmu'),
             'action' => 'set_featured',
             'featured' => $new_status,
             'timestamp' => current_time('mysql')
@@ -490,7 +490,7 @@ class QuickActions {
         $post = get_post($post_id);
         
         if ($post->post_status === 'publish') {
-            throw new \Exception(__('Post is already published', 'tmu-theme'));
+            throw new \Exception(__('Post is already published', 'tmu'));
         }
         
         wp_update_post([
@@ -499,7 +499,7 @@ class QuickActions {
         ]);
         
         return [
-            'message' => __('Content published successfully', 'tmu-theme'),
+            'message' => __('Content published successfully', 'tmu'),
             'action' => 'quick_publish',
             'timestamp' => current_time('mysql')
         ];
@@ -544,7 +544,7 @@ class QuickActions {
         }
         
         return [
-            'message' => __('Content duplicated successfully', 'tmu-theme'),
+            'message' => __('Content duplicated successfully', 'tmu'),
             'action' => 'duplicate_post',
             'new_post_id' => $new_post_id,
             'edit_url' => admin_url("post.php?post={$new_post_id}&action=edit"),
@@ -617,10 +617,10 @@ class QuickActions {
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('tmu_admin_nonce'),
                 'strings' => [
-                    'confirm_action' => __('Are you sure you want to perform this action?', 'tmu-theme'),
-                    'processing' => __('Processing...', 'tmu-theme'),
-                    'success' => __('Action completed successfully!', 'tmu-theme'),
-                    'error' => __('Action failed. Please try again.', 'tmu-theme'),
+                    'confirm_action' => __('Are you sure you want to perform this action?', 'tmu'),
+                    'processing' => __('Processing...', 'tmu'),
+                    'success' => __('Action completed successfully!', 'tmu'),
+                    'error' => __('Action failed. Please try again.', 'tmu'),
                 ]
             ]);
         }

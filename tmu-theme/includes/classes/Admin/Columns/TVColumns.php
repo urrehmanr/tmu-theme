@@ -42,13 +42,13 @@ class TVColumns {
             $new_columns[$key] = $value;
             
             if ($key === 'title') {
-                $new_columns['poster'] = __('Poster', 'tmu-theme');
-                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu-theme');
-                $new_columns['first_air_date'] = __('First Air Date', 'tmu-theme');
-                $new_columns['networks'] = __('Network', 'tmu-theme');
-                $new_columns['seasons'] = __('Seasons', 'tmu-theme');
-                $new_columns['status'] = __('Status', 'tmu-theme');
-                $new_columns['rating'] = __('Rating', 'tmu-theme');
+                $new_columns['poster'] = __('Poster', 'tmu');
+                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu');
+                $new_columns['first_air_date'] = __('First Air Date', 'tmu');
+                $new_columns['networks'] = __('Network', 'tmu');
+                $new_columns['seasons'] = __('Seasons', 'tmu');
+                $new_columns['status'] = __('Status', 'tmu');
+                $new_columns['rating'] = __('Rating', 'tmu');
             }
         }
         

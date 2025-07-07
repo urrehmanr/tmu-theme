@@ -37,7 +37,7 @@ class RelationshipBox {
         foreach ($post_types as $post_type) {
             add_meta_box(
                 'tmu-relationships',
-                __('Content Relationships', 'tmu-theme'),
+                __('Content Relationships', 'tmu'),
                 [$this, 'renderMetaBox'],
                 $post_type,
                 'normal',
@@ -61,23 +61,23 @@ class RelationshipBox {
             <div class="relationships-tabs">
                 <?php if ($post_type !== 'people'): ?>
                     <button type="button" class="tab-button active" data-tab="cast">
-                        <?php _e('Cast & Crew', 'tmu-theme'); ?>
+                        <?php _e('Cast & Crew', 'tmu'); ?>
                     </button>
                 <?php endif; ?>
                 
                 <?php if (in_array($post_type, ['tv', 'drama'])): ?>
                     <button type="button" class="tab-button" data-tab="episodes">
-                        <?php _e('Episodes', 'tmu-theme'); ?>
+                        <?php _e('Episodes', 'tmu'); ?>
                     </button>
                 <?php endif; ?>
                 
                 <button type="button" class="tab-button" data-tab="related">
-                    <?php _e('Related Content', 'tmu-theme'); ?>
+                    <?php _e('Related Content', 'tmu'); ?>
                 </button>
                 
                 <?php if ($post_type === 'people'): ?>
                     <button type="button" class="tab-button active" data-tab="filmography">
-                        <?php _e('Filmography', 'tmu-theme'); ?>
+                        <?php _e('Filmography', 'tmu'); ?>
                     </button>
                 <?php endif; ?>
             </div>
@@ -336,8 +336,8 @@ class RelationshipBox {
     private function renderCastPanel(int $post_id, array $relationships): void {
         ?>
         <div class="search-section">
-            <label for="cast-search"><?php _e('Add Cast Member:', 'tmu-theme'); ?></label>
-            <input type="text" id="cast-search" class="content-search" data-content-type="people" placeholder="<?php esc_attr_e('Search for people...', 'tmu-theme'); ?>">
+            <label for="cast-search"><?php _e('Add Cast Member:', 'tmu'); ?></label>
+            <input type="text" id="cast-search" class="content-search" data-content-type="people" placeholder="<?php esc_attr_e('Search for people...', 'tmu'); ?>">
             <div class="search-results"></div>
         </div>
         
@@ -372,15 +372,15 @@ class RelationshipBox {
     private function renderEpisodesPanel(int $post_id, array $relationships): void {
         ?>
         <div class="episodes-management">
-            <h4><?php _e('Episode Management', 'tmu-theme'); ?></h4>
-            <p><?php _e('Episodes are managed automatically through TMDB sync or can be added manually.', 'tmu-theme'); ?></p>
+            <h4><?php _e('Episode Management', 'tmu'); ?></h4>
+            <p><?php _e('Episodes are managed automatically through TMDB sync or can be added manually.', 'tmu'); ?></p>
             
             <div class="episode-actions">
                 <button type="button" id="sync-episodes" class="button button-secondary">
-                    <?php _e('Sync Episodes from TMDB', 'tmu-theme'); ?>
+                    <?php _e('Sync Episodes from TMDB', 'tmu'); ?>
                 </button>
                 <button type="button" id="add-episode" class="button button-secondary">
-                    <?php _e('Add Episode Manually', 'tmu-theme'); ?>
+                    <?php _e('Add Episode Manually', 'tmu'); ?>
                 </button>
             </div>
             
@@ -404,10 +404,10 @@ class RelationshipBox {
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
-                                <th><?php _e('Episode', 'tmu-theme'); ?></th>
-                                <th><?php _e('Title', 'tmu-theme'); ?></th>
-                                <th><?php _e('Air Date', 'tmu-theme'); ?></th>
-                                <th><?php _e('Actions', 'tmu-theme'); ?></th>
+                                <th><?php _e('Episode', 'tmu'); ?></th>
+                                <th><?php _e('Title', 'tmu'); ?></th>
+                                <th><?php _e('Air Date', 'tmu'); ?></th>
+                                <th><?php _e('Actions', 'tmu'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -422,7 +422,7 @@ class RelationshipBox {
                                     <td><?php echo esc_html(get_post_meta($episode->ID, 'air_date', true)); ?></td>
                                     <td>
                                         <a href="<?php echo get_edit_post_link($episode->ID); ?>" class="button button-small">
-                                            <?php _e('Edit', 'tmu-theme'); ?>
+                                            <?php _e('Edit', 'tmu'); ?>
                                         </a>
                                     </td>
                                 </tr>
@@ -430,7 +430,7 @@ class RelationshipBox {
                         </tbody>
                     </table>
                 <?php else: ?>
-                    <p class="no-episodes"><?php _e('No episodes found. Sync with TMDB or add manually.', 'tmu-theme'); ?></p>
+                    <p class="no-episodes"><?php _e('No episodes found. Sync with TMDB or add manually.', 'tmu'); ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -446,8 +446,8 @@ class RelationshipBox {
     private function renderRelatedPanel(int $post_id, array $relationships): void {
         ?>
         <div class="search-section">
-            <label for="related-search"><?php _e('Add Related Content:', 'tmu-theme'); ?></label>
-            <input type="text" id="related-search" class="content-search" data-content-type="all" placeholder="<?php esc_attr_e('Search for movies, TV shows, dramas...', 'tmu-theme'); ?>">
+            <label for="related-search"><?php _e('Add Related Content:', 'tmu'); ?></label>
+            <input type="text" id="related-search" class="content-search" data-content-type="all" placeholder="<?php esc_attr_e('Search for movies, TV shows, dramas...', 'tmu'); ?>">
             <div class="search-results"></div>
         </div>
         
@@ -462,10 +462,10 @@ class RelationshipBox {
                             <div class="relationship-title"><?php echo esc_html($content['title']); ?></div>
                             <div class="relationship-role">
                                 <select name="relationships[related][<?php echo $content['id']; ?>][type]" class="small-text">
-                                    <option value="similar" <?php selected($content['type'], 'similar'); ?>><?php _e('Similar', 'tmu-theme'); ?></option>
-                                    <option value="sequel" <?php selected($content['type'], 'sequel'); ?>><?php _e('Sequel', 'tmu-theme'); ?></option>
-                                    <option value="prequel" <?php selected($content['type'], 'prequel'); ?>><?php _e('Prequel', 'tmu-theme'); ?></option>
-                                    <option value="remake" <?php selected($content['type'], 'remake'); ?>><?php _e('Remake', 'tmu-theme'); ?></option>
+                                    <option value="similar" <?php selected($content['type'], 'similar'); ?>><?php _e('Similar', 'tmu'); ?></option>
+                                    <option value="sequel" <?php selected($content['type'], 'sequel'); ?>><?php _e('Sequel', 'tmu'); ?></option>
+                                    <option value="prequel" <?php selected($content['type'], 'prequel'); ?>><?php _e('Prequel', 'tmu'); ?></option>
+                                    <option value="remake" <?php selected($content['type'], 'remake'); ?>><?php _e('Remake', 'tmu'); ?></option>
                                 </select>
                             </div>
                         </div>
@@ -487,8 +487,8 @@ class RelationshipBox {
     private function renderFilmographyPanel(int $post_id, array $relationships): void {
         ?>
         <div class="search-section">
-            <label for="filmography-search"><?php _e('Add to Filmography:', 'tmu-theme'); ?></label>
-            <input type="text" id="filmography-search" class="content-search" data-content-type="content" placeholder="<?php esc_attr_e('Search for movies, TV shows, dramas...', 'tmu-theme'); ?>">
+            <label for="filmography-search"><?php _e('Add to Filmography:', 'tmu'); ?></label>
+            <input type="text" id="filmography-search" class="content-search" data-content-type="content" placeholder="<?php esc_attr_e('Search for movies, TV shows, dramas...', 'tmu'); ?>">
             <div class="search-results"></div>
         </div>
         

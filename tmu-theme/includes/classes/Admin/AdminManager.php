@@ -11,6 +11,8 @@
 
 namespace TMU\Admin;
 
+use TMU\Config\ThemeConfig;
+
 /**
  * AdminManager class
  * 
@@ -23,6 +25,12 @@ class AdminManager {
      * @var AdminManager|null
      */
     private static $instance = null;
+    
+    /**
+     * Theme configuration
+     * @var ThemeConfig
+     */
+    private $config;
     
     /**
      * Admin components
@@ -46,6 +54,7 @@ class AdminManager {
      * Constructor
      */
     private function __construct() {
+        $this->config = ThemeConfig::getInstance();
         $this->initHooks();
         $this->loadComponents();
     }
@@ -154,22 +163,24 @@ class AdminManager {
         // Group TMU content together
         $tmu_position = 25;
         
-        // Main TMU content menu
-        add_menu_page(
-            __('TMU Content', 'tmu-theme'),
-            __('TMU Content', 'tmu-theme'),
-            'edit_posts',
-            'edit.php?post_type=movie',
-            '',
-            'dashicons-video-alt2',
-            $tmu_position
-        );
+        // Main TMU content menu (only if movies are enabled)
+        if ($this->config->isFeatureEnabled('movies')) {
+            add_menu_page(
+                __('TMU Content', 'tmu'),
+                __('TMU Content', 'tmu'),
+                'edit_posts',
+                'edit.php?post_type=movie',
+                '',
+                'dashicons-video-alt2',
+                $tmu_position
+            );
+        }
         
         // Add quick actions submenu
         add_submenu_page(
             'edit.php?post_type=movie',
-            __('Quick Actions', 'tmu-theme'),
-            __('Quick Actions', 'tmu-theme'),
+            __('Quick Actions', 'tmu'),
+            __('Quick Actions', 'tmu'),
             'manage_options',
             'tmu-quick-actions',
             [$this, 'renderQuickActionsPage']
@@ -178,8 +189,8 @@ class AdminManager {
         // Add data management submenu
         add_submenu_page(
             'edit.php?post_type=movie',
-            __('Data Management', 'tmu-theme'),
-            __('Data Management', 'tmu-theme'),
+            __('Data Management', 'tmu'),
+            __('Data Management', 'tmu'),
             'manage_options',
             'tmu-data-management',
             [$this, 'renderDataManagementPage']
@@ -188,8 +199,8 @@ class AdminManager {
         // Add statistics submenu
         add_submenu_page(
             'edit.php?post_type=movie',
-            __('Statistics', 'tmu-theme'),
-            __('Statistics', 'tmu-theme'),
+            __('Statistics', 'tmu'),
+            __('Statistics', 'tmu'),
             'manage_options',
             'tmu-statistics',
             [$this, 'renderStatisticsPage']
@@ -210,16 +221,16 @@ class AdminManager {
             
             wp_enqueue_style(
                 'tmu-admin',
-                get_template_directory_uri() . '/assets/build/css/admin-styles.css',
+                TMU_ASSETS_BUILD_URL . '/css/admin-styles.css',
                 [],
-                get_theme_file_version('assets/build/css/admin-styles.css')
+                TMU_VERSION
             );
             
             wp_enqueue_script(
                 'tmu-admin',
-                get_template_directory_uri() . '/assets/build/js/admin.js',
+                TMU_ASSETS_BUILD_URL . '/js/admin.js',
                 ['jquery', 'wp-util'],
-                get_theme_file_version('assets/build/js/admin.js'),
+                TMU_VERSION,
                 true
             );
             
@@ -228,12 +239,12 @@ class AdminManager {
                 'nonce' => wp_create_nonce('tmu_admin_nonce'),
                 'postType' => $post_type,
                 'strings' => [
-                    'confirm_sync' => __('Sync with TMDB? This will overwrite existing data.', 'tmu-theme'),
-                    'syncing' => __('Syncing...', 'tmu-theme'),
-                    'sync_complete' => __('Sync completed successfully!', 'tmu-theme'),
-                    'sync_error' => __('Sync failed. Please try again.', 'tmu-theme'),
-                    'bulk_processing' => __('Processing bulk action...', 'tmu-theme'),
-                    'select_items' => __('Please select items to process.', 'tmu-theme'),
+                    'confirm_sync' => __('Sync with TMDB? This will overwrite existing data.', 'tmu'),
+                    'syncing' => __('Syncing...', 'tmu'),
+                    'sync_complete' => __('Sync completed successfully!', 'tmu'),
+                    'sync_error' => __('Sync failed. Please try again.', 'tmu'),
+                    'bulk_processing' => __('Processing bulk action...', 'tmu'),
+                    'select_items' => __('Please select items to process.', 'tmu'),
                 ],
             ]);
         }
@@ -258,7 +269,7 @@ class AdminManager {
         $wp_admin_bar->add_node([
             'id' => 'tmu-sync-all',
             'parent' => 'tmu-quick-menu',
-            'title' => __('Sync All TMDB', 'tmu-theme'),
+            'title' => __('Sync All TMDB', 'tmu'),
             'href' => '#',
             'meta' => ['class' => 'tmu-sync-all-link'],
         ]);
@@ -266,7 +277,7 @@ class AdminManager {
         $wp_admin_bar->add_node([
             'id' => 'tmu-statistics',
             'parent' => 'tmu-quick-menu',
-            'title' => __('View Statistics', 'tmu-theme'),
+            'title' => __('View Statistics', 'tmu'),
             'href' => admin_url('admin.php?page=tmu-statistics'),
         ]);
     }
@@ -282,7 +293,7 @@ class AdminManager {
         
         if (in_array($post_type, ['movie', 'tv', 'drama', 'people'])) {
             $text = sprintf(
-                __('Managing %s with TMU Theme', 'tmu-theme'),
+                __('Managing %s with TMU Theme', 'tmu'),
                 ucfirst($post_type)
             );
         }
@@ -296,13 +307,13 @@ class AdminManager {
     public function addDashboardWidgets(): void {
         wp_add_dashboard_widget(
             'tmu-content-stats',
-            __('TMU Content Statistics', 'tmu-theme'),
+            __('TMU Content Statistics', 'tmu'),
             [$this, 'renderContentStatsWidget']
         );
         
         wp_add_dashboard_widget(
             'tmu-recent-updates',
-            __('Recent TMU Updates', 'tmu-theme'),
+            __('Recent TMU Updates', 'tmu'),
             [$this, 'renderRecentUpdatesWidget']
         );
     }
@@ -313,17 +324,17 @@ class AdminManager {
     public function renderQuickActionsPage(): void {
         ?>
         <div class="wrap tmu-quick-actions">
-            <h1><?php _e('TMU Quick Actions', 'tmu-theme'); ?></h1>
+            <h1><?php _e('TMU Quick Actions', 'tmu'); ?></h1>
             
             <div class="tmu-action-cards">
                 <div class="tmu-action-card">
                     <div class="card-icon">
                         <span class="dashicons dashicons-update"></span>
                     </div>
-                    <h3><?php _e('TMDB Sync', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Sync all content with TMDB for latest information.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('TMDB Sync', 'tmu'); ?></h3>
+                    <p><?php _e('Sync all content with TMDB for latest information.', 'tmu'); ?></p>
                     <button id="bulk-tmdb-sync" class="button button-primary">
-                        <?php _e('Start Sync', 'tmu-theme'); ?>
+                        <?php _e('Start Sync', 'tmu'); ?>
                     </button>
                 </div>
                 
@@ -331,10 +342,10 @@ class AdminManager {
                     <div class="card-icon">
                         <span class="dashicons dashicons-download"></span>
                     </div>
-                    <h3><?php _e('Import Content', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Import new movies/shows from TMDB.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('Import Content', 'tmu'); ?></h3>
+                    <p><?php _e('Import new movies/shows from TMDB.', 'tmu'); ?></p>
                     <a href="<?php echo admin_url('admin.php?page=tmu-data-management'); ?>" class="button">
-                        <?php _e('Import Tools', 'tmu-theme'); ?>
+                        <?php _e('Import Tools', 'tmu'); ?>
                     </a>
                 </div>
                 
@@ -342,10 +353,10 @@ class AdminManager {
                     <div class="card-icon">
                         <span class="dashicons dashicons-admin-tools"></span>
                     </div>
-                    <h3><?php _e('Data Health', 'tmu-theme'); ?></h3>
-                    <p><?php _e('Check and repair data integrity issues.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('Data Health', 'tmu'); ?></h3>
+                    <p><?php _e('Check and repair data integrity issues.', 'tmu'); ?></p>
                     <button id="data-health-check" class="button">
-                        <?php _e('Health Check', 'tmu-theme'); ?>
+                        <?php _e('Health Check', 'tmu'); ?>
                     </button>
                 </div>
                 
@@ -353,10 +364,10 @@ class AdminManager {
                     <div class="card-icon">
                         <span class="dashicons dashicons-chart-bar"></span>
                     </div>
-                    <h3><?php _e('View Statistics', 'tmu-theme'); ?></h3>
-                    <p><?php _e('See detailed statistics about your content.', 'tmu-theme'); ?></p>
+                    <h3><?php _e('View Statistics', 'tmu'); ?></h3>
+                    <p><?php _e('See detailed statistics about your content.', 'tmu'); ?></p>
                     <a href="<?php echo admin_url('admin.php?page=tmu-statistics'); ?>" class="button">
-                        <?php _e('View Stats', 'tmu-theme'); ?>
+                        <?php _e('View Stats', 'tmu'); ?>
                     </a>
                 </div>
             </div>
@@ -375,24 +386,24 @@ class AdminManager {
     public function renderDataManagementPage(): void {
         ?>
         <div class="wrap tmu-data-management">
-            <h1><?php _e('TMU Data Management', 'tmu-theme'); ?></h1>
+            <h1><?php _e('TMU Data Management', 'tmu'); ?></h1>
             
             <div class="tmu-management-sections">
                 <section class="tmu-import-section">
-                    <h2><?php _e('Import Content', 'tmu-theme'); ?></h2>
-                    <p><?php _e('Import content from TMDB or other sources.', 'tmu-theme'); ?></p>
+                    <h2><?php _e('Import Content', 'tmu'); ?></h2>
+                    <p><?php _e('Import content from TMDB or other sources.', 'tmu'); ?></p>
                     <!-- Import tools will be implemented here -->
                 </section>
                 
                 <section class="tmu-export-section">
-                    <h2><?php _e('Export Content', 'tmu-theme'); ?></h2>
-                    <p><?php _e('Export your content data for backup or migration.', 'tmu-theme'); ?></p>
+                    <h2><?php _e('Export Content', 'tmu'); ?></h2>
+                    <p><?php _e('Export your content data for backup or migration.', 'tmu'); ?></p>
                     <!-- Export tools will be implemented here -->
                 </section>
                 
                 <section class="tmu-cleanup-section">
-                    <h2><?php _e('Data Cleanup', 'tmu-theme'); ?></h2>
-                    <p><?php _e('Clean up orphaned data and optimize your database.', 'tmu-theme'); ?></p>
+                    <h2><?php _e('Data Cleanup', 'tmu'); ?></h2>
+                    <p><?php _e('Clean up orphaned data and optimize your database.', 'tmu'); ?></p>
                     <!-- Cleanup tools will be implemented here -->
                 </section>
             </div>
@@ -407,26 +418,26 @@ class AdminManager {
         $stats = $this->getContentStatistics();
         ?>
         <div class="wrap tmu-statistics">
-            <h1><?php _e('TMU Content Statistics', 'tmu-theme'); ?></h1>
+            <h1><?php _e('TMU Content Statistics', 'tmu'); ?></h1>
             
             <div class="tmu-stats-grid">
                 <div class="stat-card">
-                    <h3><?php _e('Movies', 'tmu-theme'); ?></h3>
+                    <h3><?php _e('Movies', 'tmu'); ?></h3>
                     <div class="stat-number"><?php echo number_format($stats['movies']); ?></div>
                 </div>
                 
                 <div class="stat-card">
-                    <h3><?php _e('TV Shows', 'tmu-theme'); ?></h3>
+                    <h3><?php _e('TV Shows', 'tmu'); ?></h3>
                     <div class="stat-number"><?php echo number_format($stats['tv_shows']); ?></div>
                 </div>
                 
                 <div class="stat-card">
-                    <h3><?php _e('Dramas', 'tmu-theme'); ?></h3>
+                    <h3><?php _e('Dramas', 'tmu'); ?></h3>
                     <div class="stat-number"><?php echo number_format($stats['dramas']); ?></div>
                 </div>
                 
                 <div class="stat-card">
-                    <h3><?php _e('People', 'tmu-theme'); ?></h3>
+                    <h3><?php _e('People', 'tmu'); ?></h3>
                     <div class="stat-number"><?php echo number_format($stats['people']); ?></div>
                 </div>
             </div>
@@ -442,14 +453,14 @@ class AdminManager {
         ?>
         <div class="tmu-content-stats-widget">
             <ul>
-                <li><strong><?php _e('Movies:', 'tmu-theme'); ?></strong> <?php echo number_format($stats['movies']); ?></li>
-                <li><strong><?php _e('TV Shows:', 'tmu-theme'); ?></strong> <?php echo number_format($stats['tv_shows']); ?></li>
-                <li><strong><?php _e('Dramas:', 'tmu-theme'); ?></strong> <?php echo number_format($stats['dramas']); ?></li>
-                <li><strong><?php _e('People:', 'tmu-theme'); ?></strong> <?php echo number_format($stats['people']); ?></li>
+                <li><strong><?php _e('Movies:', 'tmu'); ?></strong> <?php echo number_format($stats['movies']); ?></li>
+                <li><strong><?php _e('TV Shows:', 'tmu'); ?></strong> <?php echo number_format($stats['tv_shows']); ?></li>
+                <li><strong><?php _e('Dramas:', 'tmu'); ?></strong> <?php echo number_format($stats['dramas']); ?></li>
+                <li><strong><?php _e('People:', 'tmu'); ?></strong> <?php echo number_format($stats['people']); ?></li>
             </ul>
             <p>
                 <a href="<?php echo admin_url('admin.php?page=tmu-statistics'); ?>" class="button">
-                    <?php _e('View Detailed Stats', 'tmu-theme'); ?>
+                    <?php _e('View Detailed Stats', 'tmu'); ?>
                 </a>
             </p>
         </div>
@@ -477,12 +488,12 @@ class AdminManager {
                     <strong><?php echo esc_html($post->post_title); ?></strong>
                     <span class="post-type">(<?php echo ucfirst($post->post_type); ?>)</span>
                     <br>
-                    <small><?php echo human_time_diff(strtotime($post->post_modified)); ?> <?php _e('ago', 'tmu-theme'); ?></small>
+                    <small><?php echo human_time_diff(strtotime($post->post_modified)); ?> <?php _e('ago', 'tmu'); ?></small>
                 </li>
                 <?php endforeach; ?>
             </ul>
             <?php else: ?>
-            <p><?php _e('No recent updates.', 'tmu-theme'); ?></p>
+            <p><?php _e('No recent updates.', 'tmu'); ?></p>
             <?php endif; ?>
         </div>
         <?php
@@ -523,7 +534,7 @@ class AdminManager {
         if (isset($_GET['tmu_sync_complete'])) {
             ?>
             <div class="notice notice-success is-dismissible">
-                <p><?php _e('TMDB sync completed successfully!', 'tmu-theme'); ?></p>
+                <p><?php _e('TMDB sync completed successfully!', 'tmu'); ?></p>
             </div>
             <?php
         }
@@ -531,7 +542,7 @@ class AdminManager {
         if (isset($_GET['tmu_sync_error'])) {
             ?>
             <div class="notice notice-error is-dismissible">
-                <p><?php _e('TMDB sync failed. Please check your API configuration.', 'tmu-theme'); ?></p>
+                <p><?php _e('TMDB sync failed. Please check your API configuration.', 'tmu'); ?></p>
             </div>
             <?php
         }

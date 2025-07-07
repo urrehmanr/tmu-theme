@@ -41,9 +41,9 @@ class TMDBSync {
      * @return array Modified bulk actions
      */
     public function addBulkActions(array $actions): array {
-        $actions['tmdb_sync'] = __('Sync with TMDB', 'tmu-theme');
-        $actions['tmdb_update_images'] = __('Update TMDB Images', 'tmu-theme');
-        $actions['tmdb_update_ratings'] = __('Update TMDB Ratings', 'tmu-theme');
+        $actions['tmdb_sync'] = __('Sync with TMDB', 'tmu');
+        $actions['tmdb_update_images'] = __('Update TMDB Images', 'tmu');
+        $actions['tmdb_update_ratings'] = __('Update TMDB Ratings', 'tmu');
         return $actions;
     }
     
@@ -100,7 +100,7 @@ class TMDBSync {
         check_ajax_referer('tmu_admin_nonce', 'nonce');
         
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error(['message' => __('Insufficient permissions.', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Insufficient permissions.', 'tmu')]);
         }
         
         $post_type = sanitize_text_field($_POST['post_type'] ?? 'all');
@@ -112,7 +112,7 @@ class TMDBSync {
             
             wp_send_json_success([
                 'message' => sprintf(
-                    __('Successfully synced %d items. %d errors encountered.', 'tmu-theme'),
+                    __('Successfully synced %d items. %d errors encountered.', 'tmu'),
                     $result['processed'],
                     $result['errors']
                 ),
@@ -123,7 +123,7 @@ class TMDBSync {
             
         } catch (Exception $e) {
             wp_send_json_error([
-                'message' => __('Sync failed: ', 'tmu-theme') . $e->getMessage()
+                'message' => __('Sync failed: ', 'tmu') . $e->getMessage()
             ]);
         }
     }
@@ -133,7 +133,7 @@ class TMDBSync {
      */
     public function handleBulkSyncPost(): void {
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions.', 'tmu-theme'));
+            wp_die(__('Insufficient permissions.', 'tmu'));
         }
         
         check_admin_referer('tmu_bulk_sync_nonce');
@@ -273,7 +273,7 @@ class TMDBSync {
         if (!$tmdb_id) {
             return [
                 'success' => false,
-                'message' => __('No TMDB ID found', 'tmu-theme')
+                'message' => __('No TMDB ID found', 'tmu')
             ];
         }
         
@@ -283,7 +283,7 @@ class TMDBSync {
             if ($last_sync && strtotime($last_sync) > strtotime('-1 hour')) {
                 return [
                     'success' => true,
-                    'message' => __('Recently synced, skipped', 'tmu-theme')
+                    'message' => __('Recently synced, skipped', 'tmu')
                 ];
             }
         }
@@ -298,14 +298,14 @@ class TMDBSync {
                 
                 return [
                     'success' => true,
-                    'message' => __('Synced successfully', 'tmu-theme')
+                    'message' => __('Synced successfully', 'tmu')
                 ];
             } else {
                 update_post_meta($post_id, '_tmdb_sync_status', 'error');
                 
                 return [
                     'success' => false,
-                    'message' => __('TMDB API sync failed', 'tmu-theme')
+                    'message' => __('TMDB API sync failed', 'tmu')
                 ];
             }
             

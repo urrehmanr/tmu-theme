@@ -144,8 +144,8 @@ class SubMenus {
         // Quick actions for this post type
         add_submenu_page(
             $parent_slug,
-            sprintf(__('%s Quick Actions', 'tmu-theme'), ucfirst($post_type)),
-            __('Quick Actions', 'tmu-theme'),
+            sprintf(__('%s Quick Actions', 'tmu'), ucfirst($post_type)),
+            __('Quick Actions', 'tmu'),
             'edit_posts',
             "tmu-{$post_type}-actions",
             [$this, 'renderPostTypeActions']
@@ -154,8 +154,8 @@ class SubMenus {
         // TMDB tools for this post type
         add_submenu_page(
             $parent_slug,
-            sprintf(__('%s TMDB Tools', 'tmu-theme'), ucfirst($post_type)),
-            __('TMDB Tools', 'tmu-theme'),
+            sprintf(__('%s TMDB Tools', 'tmu'), ucfirst($post_type)),
+            __('TMDB Tools', 'tmu'),
             'edit_posts',
             "tmu-{$post_type}-tmdb",
             [$this, 'renderPostTypeTMDBTools']
@@ -164,8 +164,8 @@ class SubMenus {
         // Import tools for this post type
         add_submenu_page(
             $parent_slug,
-            sprintf(__('Import %s', 'tmu-theme'), ucfirst($post_type)),
-            __('Import', 'tmu-theme'),
+            sprintf(__('Import %s', 'tmu'), ucfirst($post_type)),
+            __('Import', 'tmu'),
             'edit_posts',
             "tmu-{$post_type}-import",
             [$this, 'renderPostTypeImport']
@@ -182,8 +182,8 @@ class SubMenus {
             // Add contextual actions for each taxonomy
             add_submenu_page(
                 "edit-tags.php?taxonomy={$taxonomy}",
-                sprintf(__('%s Tools', 'tmu-theme'), ucfirst($taxonomy)),
-                __('Tools', 'tmu-theme'),
+                sprintf(__('%s Tools', 'tmu'), ucfirst($taxonomy)),
+                __('Tools', 'tmu'),
                 'manage_categories',
                 "tmu-{$taxonomy}-tools",
                 [$this, 'renderTaxonomyTools']
@@ -270,14 +270,14 @@ class SubMenus {
         $wp_admin_bar->add_node([
             'id' => "tmu-{$post_type}-quick",
             'parent' => 'tmu-quick-menu',
-            'title' => sprintf(__('Quick %s Actions', 'tmu-theme'), ucfirst($post_type)),
+            'title' => sprintf(__('Quick %s Actions', 'tmu'), ucfirst($post_type)),
             'href' => admin_url("admin.php?page=tmu-{$post_type}-actions"),
         ]);
         
         $wp_admin_bar->add_node([
             'id' => "tmu-{$post_type}-import",
             'parent' => 'tmu-quick-menu', 
-            'title' => sprintf(__('Import %s', 'tmu-theme'), ucfirst($post_type)),
+            'title' => sprintf(__('Import %s', 'tmu'), ucfirst($post_type)),
             'href' => admin_url("admin.php?page=tmu-{$post_type}-import"),
         ]);
     }
@@ -292,7 +292,7 @@ class SubMenus {
         $wp_admin_bar->add_node([
             'id' => "tmu-{$taxonomy}-tools",
             'parent' => 'tmu-quick-menu',
-            'title' => sprintf(__('%s Tools', 'tmu-theme'), ucfirst($taxonomy)),
+            'title' => sprintf(__('%s Tools', 'tmu'), ucfirst($taxonomy)),
             'href' => admin_url("admin.php?page=tmu-{$taxonomy}-tools"),
         ]);
     }
@@ -350,32 +350,32 @@ class SubMenus {
         $post_type = $this->extractPostTypeFromPage();
         ?>
         <div class="wrap tmu-post-type-actions">
-            <h1><?php printf(__('%s Quick Actions', 'tmu-theme'), ucfirst($post_type)); ?></h1>
+            <h1><?php printf(__('%s Quick Actions', 'tmu'), ucfirst($post_type)); ?></h1>
             
             <div class="tmu-action-sections">
                 <section class="bulk-actions">
-                    <h2><?php _e('Bulk Actions', 'tmu-theme'); ?></h2>
-                    <p><?php printf(__('Perform bulk operations on %s content.', 'tmu-theme'), $post_type); ?></p>
+                    <h2><?php _e('Bulk Actions', 'tmu'); ?></h2>
+                    <p><?php printf(__('Perform bulk operations on %s content.', 'tmu'), $post_type); ?></p>
                     
                     <div class="action-buttons">
                         <button class="button" onclick="tmuBulkAction('sync_tmdb', '<?php echo $post_type; ?>')">
-                            <?php _e('Bulk TMDB Sync', 'tmu-theme'); ?>
+                            <?php _e('Bulk TMDB Sync', 'tmu'); ?>
                         </button>
                         <button class="button" onclick="tmuBulkAction('update_metadata', '<?php echo $post_type; ?>')">
-                            <?php _e('Update Metadata', 'tmu-theme'); ?>
+                            <?php _e('Update Metadata', 'tmu'); ?>
                         </button>
                         <button class="button" onclick="tmuBulkAction('regenerate_thumbnails', '<?php echo $post_type; ?>')">
-                            <?php _e('Regenerate Images', 'tmu-theme'); ?>
+                            <?php _e('Regenerate Images', 'tmu'); ?>
                         </button>
                     </div>
                 </section>
                 
                 <section class="quick-create">
-                    <h2><?php _e('Quick Create', 'tmu-theme'); ?></h2>
-                    <p><?php printf(__('Quickly create new %s content.', 'tmu-theme'), $post_type); ?></p>
+                    <h2><?php _e('Quick Create', 'tmu'); ?></h2>
+                    <p><?php printf(__('Quickly create new %s content.', 'tmu'), $post_type); ?></p>
                     
                     <a href="<?php echo admin_url("post-new.php?post_type={$post_type}"); ?>" class="button button-primary">
-                        <?php printf(__('Add New %s', 'tmu-theme'), ucfirst($post_type)); ?>
+                        <?php printf(__('Add New %s', 'tmu'), ucfirst($post_type)); ?>
                     </a>
                 </section>
             </div>
@@ -390,12 +390,12 @@ class SubMenus {
         $post_type = $this->extractPostTypeFromPage();
         ?>
         <div class="wrap tmu-tmdb-tools">
-            <h1><?php printf(__('%s TMDB Tools', 'tmu-theme'), ucfirst($post_type)); ?></h1>
+            <h1><?php printf(__('%s TMDB Tools', 'tmu'), ucfirst($post_type)); ?></h1>
             
             <div class="tmdb-tool-sections">
                 <section class="sync-section">
-                    <h2><?php _e('TMDB Synchronization', 'tmu-theme'); ?></h2>
-                    <p><?php printf(__('Sync %s data with TMDB database.', 'tmu-theme'), $post_type); ?></p>
+                    <h2><?php _e('TMDB Synchronization', 'tmu'); ?></h2>
+                    <p><?php printf(__('Sync %s data with TMDB database.', 'tmu'), $post_type); ?></p>
                     
                     <!-- TMDB sync tools will be rendered here -->
                     <?php do_action('tmu_render_tmdb_tools', $post_type); ?>
@@ -412,12 +412,12 @@ class SubMenus {
         $post_type = $this->extractPostTypeFromPage();
         ?>
         <div class="wrap tmu-import-tools">
-            <h1><?php printf(__('Import %s', 'tmu-theme'), ucfirst($post_type)); ?></h1>
+            <h1><?php printf(__('Import %s', 'tmu'), ucfirst($post_type)); ?></h1>
             
             <div class="import-sections">
                 <section class="tmdb-import">
-                    <h2><?php _e('TMDB Import', 'tmu-theme'); ?></h2>
-                    <p><?php printf(__('Import %s from TMDB database.', 'tmu-theme'), $post_type); ?></p>
+                    <h2><?php _e('TMDB Import', 'tmu'); ?></h2>
+                    <p><?php printf(__('Import %s from TMDB database.', 'tmu'), $post_type); ?></p>
                     
                     <!-- Import tools will be rendered here -->
                     <?php do_action('tmu_render_import_tools', $post_type); ?>
@@ -434,12 +434,12 @@ class SubMenus {
         $taxonomy = $this->extractTaxonomyFromPage();
         ?>
         <div class="wrap tmu-taxonomy-tools">
-            <h1><?php printf(__('%s Tools', 'tmu-theme'), ucfirst($taxonomy)); ?></h1>
+            <h1><?php printf(__('%s Tools', 'tmu'), ucfirst($taxonomy)); ?></h1>
             
             <div class="taxonomy-tool-sections">
                 <section class="management-section">
-                    <h2><?php _e('Taxonomy Management', 'tmu-theme'); ?></h2>
-                    <p><?php printf(__('Manage %s taxonomy terms and relationships.', 'tmu-theme'), $taxonomy); ?></p>
+                    <h2><?php _e('Taxonomy Management', 'tmu'); ?></h2>
+                    <p><?php printf(__('Manage %s taxonomy terms and relationships.', 'tmu'), $taxonomy); ?></p>
                     
                     <!-- Taxonomy tools will be rendered here -->
                     <?php do_action('tmu_render_taxonomy_tools', $taxonomy); ?>

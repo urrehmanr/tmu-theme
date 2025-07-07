@@ -55,25 +55,25 @@ class QuickStats {
     public function addDashboardWidgets(): void {
         wp_add_dashboard_widget(
             'tmu-quick-stats',
-            __('TMU Quick Statistics', 'tmu-theme'),
+            __('TMU Quick Statistics', 'tmu'),
             [$this, 'renderQuickStatsWidget']
         );
         
         wp_add_dashboard_widget(
             'tmu-content-breakdown',
-            __('Content Breakdown', 'tmu-theme'),
+            __('Content Breakdown', 'tmu'),
             [$this, 'renderContentBreakdownWidget']
         );
         
         wp_add_dashboard_widget(
             'tmu-recent-activity',
-            __('Recent Activity', 'tmu-theme'),
+            __('Recent Activity', 'tmu'),
             [$this, 'renderRecentActivityWidget']
         );
         
         wp_add_dashboard_widget(
             'tmu-tmdb-sync-status',
-            __('TMDB Sync Status', 'tmu-theme'),
+            __('TMDB Sync Status', 'tmu'),
             [$this, 'renderTMDBSyncStatusWidget']
         );
     }
@@ -103,7 +103,7 @@ class QuickStats {
                         </div>
                         <div class="stat-actions">
                             <a href="<?php echo admin_url($stat_data['link']); ?>" class="button button-small">
-                                <?php _e('View All', 'tmu-theme'); ?>
+                                <?php _e('View All', 'tmu'); ?>
                             </a>
                         </div>
                     </div>
@@ -112,10 +112,10 @@ class QuickStats {
             
             <div class="stats-footer">
                 <button type="button" id="refresh-stats" class="button button-small">
-                    <?php _e('Refresh Statistics', 'tmu-theme'); ?>
+                    <?php _e('Refresh Statistics', 'tmu'); ?>
                 </button>
                 <span class="last-updated">
-                    <?php printf(__('Last updated: %s', 'tmu-theme'), $this->getLastUpdated()); ?>
+                    <?php printf(__('Last updated: %s', 'tmu'), $this->getLastUpdated()); ?>
                 </span>
             </div>
         </div>
@@ -210,12 +210,12 @@ class QuickStats {
             </div>
             
             <div class="breakdown-summary">
-                <h4><?php _e('Content Summary', 'tmu-theme'); ?></h4>
+                <h4><?php _e('Content Summary', 'tmu'); ?></h4>
                 <ul>
-                    <li><?php printf(__('Total Content: %s items', 'tmu-theme'), number_format($this->getTotalContentCount())); ?></li>
-                    <li><?php printf(__('Published: %s items', 'tmu-theme'), number_format($this->getPublishedContentCount())); ?></li>
-                    <li><?php printf(__('Drafts: %s items', 'tmu-theme'), number_format($this->getDraftContentCount())); ?></li>
-                    <li><?php printf(__('With TMDB Data: %s items', 'tmu-theme'), number_format($this->getTMDBLinkedCount())); ?></li>
+                    <li><?php printf(__('Total Content: %s items', 'tmu'), number_format($this->getTotalContentCount())); ?></li>
+                    <li><?php printf(__('Published: %s items', 'tmu'), number_format($this->getPublishedContentCount())); ?></li>
+                    <li><?php printf(__('Drafts: %s items', 'tmu'), number_format($this->getDraftContentCount())); ?></li>
+                    <li><?php printf(__('With TMDB Data: %s items', 'tmu'), number_format($this->getTMDBLinkedCount())); ?></li>
                 </ul>
             </div>
         </div>
@@ -307,12 +307,12 @@ class QuickStats {
                     <?php endforeach; ?>
                 </ul>
             <?php else: ?>
-                <p><?php _e('No recent activity found.', 'tmu-theme'); ?></p>
+                <p><?php _e('No recent activity found.', 'tmu'); ?></p>
             <?php endif; ?>
             
             <div class="activity-footer">
                 <a href="<?php echo admin_url('edit.php?post_type=movie'); ?>" class="button button-small">
-                    <?php _e('View All Content', 'tmu-theme'); ?>
+                    <?php _e('View All Content', 'tmu'); ?>
                 </a>
             </div>
         </div>
@@ -391,15 +391,15 @@ class QuickStats {
             <div class="sync-overview">
                 <div class="sync-stat">
                     <div class="sync-number"><?php echo number_format($sync_status['total_items']); ?></div>
-                    <div class="sync-label"><?php _e('Total Items', 'tmu-theme'); ?></div>
+                    <div class="sync-label"><?php _e('Total Items', 'tmu'); ?></div>
                 </div>
                 <div class="sync-stat">
                     <div class="sync-number"><?php echo number_format($sync_status['synced_items']); ?></div>
-                    <div class="sync-label"><?php _e('TMDB Linked', 'tmu-theme'); ?></div>
+                    <div class="sync-label"><?php _e('TMDB Linked', 'tmu'); ?></div>
                 </div>
                 <div class="sync-stat">
                     <div class="sync-number"><?php echo number_format($sync_status['pending_sync']); ?></div>
-                    <div class="sync-label"><?php _e('Needs Sync', 'tmu-theme'); ?></div>
+                    <div class="sync-label"><?php _e('Needs Sync', 'tmu'); ?></div>
                 </div>
             </div>
             
@@ -408,23 +408,23 @@ class QuickStats {
                     <div class="progress-fill" style="width: <?php echo $sync_status['sync_percentage']; ?>%;"></div>
                 </div>
                 <div class="progress-text">
-                    <?php printf(__('%s%% of content linked to TMDB', 'tmu-theme'), $sync_status['sync_percentage']); ?>
+                    <?php printf(__('%s%% of content linked to TMDB', 'tmu'), $sync_status['sync_percentage']); ?>
                 </div>
             </div>
             
             <div class="sync-actions">
                 <button type="button" id="bulk-tmdb-sync" class="button button-primary button-small">
-                    <?php _e('Sync All Missing', 'tmu-theme'); ?>
+                    <?php _e('Sync All Missing', 'tmu'); ?>
                 </button>
                 <button type="button" id="refresh-tmdb-status" class="button button-small">
-                    <?php _e('Refresh Status', 'tmu-theme'); ?>
+                    <?php _e('Refresh Status', 'tmu'); ?>
                 </button>
             </div>
             
             <?php if ($sync_status['last_sync']): ?>
                 <div class="sync-info">
                     <small>
-                        <?php printf(__('Last sync: %s', 'tmu-theme'), human_time_diff(strtotime($sync_status['last_sync']))); ?> ago
+                        <?php printf(__('Last sync: %s', 'tmu'), human_time_diff(strtotime($sync_status['last_sync']))); ?> ago
                     </small>
                 </div>
             <?php endif; ?>
@@ -505,25 +505,25 @@ class QuickStats {
             $stats = [
                 'movies' => [
                     'count' => $this->getPostTypeCount('movie'),
-                    'label' => __('Movies', 'tmu-theme'),
+                    'label' => __('Movies', 'tmu'),
                     'link' => 'edit.php?post_type=movie',
                     'change' => $this->getWeeklyChange('movie')
                 ],
                 'tv_shows' => [
                     'count' => $this->getPostTypeCount('tv'),
-                    'label' => __('TV Shows', 'tmu-theme'),
+                    'label' => __('TV Shows', 'tmu'),
                     'link' => 'edit.php?post_type=tv',
                     'change' => $this->getWeeklyChange('tv')
                 ],
                 'dramas' => [
                     'count' => $this->getPostTypeCount('drama'),
-                    'label' => __('Dramas', 'tmu-theme'),
+                    'label' => __('Dramas', 'tmu'),
                     'link' => 'edit.php?post_type=drama',
                     'change' => $this->getWeeklyChange('drama')
                 ],
                 'people' => [
                     'count' => $this->getPostTypeCount('people'),
-                    'label' => __('People', 'tmu-theme'),
+                    'label' => __('People', 'tmu'),
                     'link' => 'edit.php?post_type=people',
                     'change' => $this->getWeeklyChange('people')
                 ]
@@ -550,22 +550,22 @@ class QuickStats {
             $breakdown = [
                 'movies' => [
                     'count' => $this->getPostTypeCount('movie'),
-                    'label' => __('Movies', 'tmu-theme'),
+                    'label' => __('Movies', 'tmu'),
                     'color' => '#d63638'
                 ],
                 'tv_shows' => [
                     'count' => $this->getPostTypeCount('tv'),
-                    'label' => __('TV Shows', 'tmu-theme'),
+                    'label' => __('TV Shows', 'tmu'),
                     'color' => '#00a32a'
                 ],
                 'dramas' => [
                     'count' => $this->getPostTypeCount('drama'),
-                    'label' => __('Dramas', 'tmu-theme'),
+                    'label' => __('Dramas', 'tmu'),
                     'color' => '#dba617'
                 ],
                 'people' => [
                     'count' => $this->getPostTypeCount('people'),
-                    'label' => __('People', 'tmu-theme'),
+                    'label' => __('People', 'tmu'),
                     'color' => '#8b5cf6'
                 ]
             ];
@@ -801,7 +801,7 @@ class QuickStats {
         check_ajax_referer('tmu_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Unauthorized', 'tmu-theme')]);
+            wp_send_json_error(['message' => __('Unauthorized', 'tmu')]);
         }
         
         // Clear all stats caches
@@ -812,7 +812,7 @@ class QuickStats {
         
         wp_send_json_success([
             'stats' => $stats,
-            'message' => __('Statistics refreshed successfully', 'tmu-theme')
+            'message' => __('Statistics refreshed successfully', 'tmu')
         ]);
     }
     
@@ -847,9 +847,9 @@ class QuickStats {
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('tmu_admin_nonce'),
                 'strings' => [
-                    'refreshing' => __('Refreshing...', 'tmu-theme'),
-                    'refreshed' => __('Statistics refreshed!', 'tmu-theme'),
-                    'error' => __('Failed to refresh statistics', 'tmu-theme')
+                    'refreshing' => __('Refreshing...', 'tmu'),
+                    'refreshed' => __('Statistics refreshed!', 'tmu'),
+                    'error' => __('Failed to refresh statistics', 'tmu')
                 ]
             ]);
         }
@@ -884,11 +884,11 @@ class QuickStats {
         ?>
         <div class="notice notice-info tmu-list-stats">
             <p>
-                <strong><?php printf(__('%s Statistics:', 'tmu-theme'), ucfirst($post_type)); ?></strong>
-                <?php printf(__('Total: %s', 'tmu-theme'), number_format($stats['total'])); ?> |
-                <?php printf(__('Published: %s', 'tmu-theme'), number_format($stats['published'])); ?> |
-                <?php printf(__('TMDB Linked: %s', 'tmu-theme'), number_format($stats['tmdb_linked'])); ?> |
-                <?php printf(__('This Week: +%s', 'tmu-theme'), number_format($stats['weekly_change'])); ?>
+                <strong><?php printf(__('%s Statistics:', 'tmu'), ucfirst($post_type)); ?></strong>
+                <?php printf(__('Total: %s', 'tmu'), number_format($stats['total'])); ?> |
+                <?php printf(__('Published: %s', 'tmu'), number_format($stats['published'])); ?> |
+                <?php printf(__('TMDB Linked: %s', 'tmu'), number_format($stats['tmdb_linked'])); ?> |
+                <?php printf(__('This Week: +%s', 'tmu'), number_format($stats['weekly_change'])); ?>
             </p>
         </div>
         <?php

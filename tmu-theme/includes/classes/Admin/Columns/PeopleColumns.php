@@ -42,13 +42,13 @@ class PeopleColumns {
             $new_columns[$key] = $value;
             
             if ($key === 'title') {
-                $new_columns['photo'] = __('Photo', 'tmu-theme');
-                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu-theme');
-                $new_columns['birth_date'] = __('Birth Date', 'tmu-theme');
-                $new_columns['known_for'] = __('Known For', 'tmu-theme');
-                $new_columns['popularity'] = __('Popularity', 'tmu-theme');
-                $new_columns['credits'] = __('Credits', 'tmu-theme');
-                $new_columns['status'] = __('Status', 'tmu-theme');
+                $new_columns['photo'] = __('Photo', 'tmu');
+                $new_columns['tmdb_id'] = __('TMDB ID', 'tmu');
+                $new_columns['birth_date'] = __('Birth Date', 'tmu');
+                $new_columns['known_for'] = __('Known For', 'tmu');
+                $new_columns['popularity'] = __('Popularity', 'tmu');
+                $new_columns['credits'] = __('Credits', 'tmu');
+                $new_columns['status'] = __('Status', 'tmu');
             }
         }
         

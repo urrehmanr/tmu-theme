@@ -73,8 +73,8 @@ class MenuManager {
      */
     private function createMainTMUMenu(): void {
         add_menu_page(
-            __('TMU Content Hub', 'tmu-theme'),
-            __('TMU Content', 'tmu-theme'),
+            __('TMU Content Hub', 'tmu'),
+            __('TMU Content', 'tmu'),
             'edit_posts',
             'tmu-content-hub',
             [$this, 'renderContentHub'],
@@ -90,8 +90,8 @@ class MenuManager {
         // Movies submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('Movies', 'tmu-theme'),
-            __('Movies', 'tmu-theme'),
+            __('Movies', 'tmu'),
+            __('Movies', 'tmu'),
             'edit_posts',
             'edit.php?post_type=movie'
         );
@@ -99,8 +99,8 @@ class MenuManager {
         // TV Shows submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('TV Shows', 'tmu-theme'),
-            __('TV Shows', 'tmu-theme'),
+            __('TV Shows', 'tmu'),
+            __('TV Shows', 'tmu'),
             'edit_posts',
             'edit.php?post_type=tv'
         );
@@ -108,8 +108,8 @@ class MenuManager {
         // Dramas submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('Dramas', 'tmu-theme'),
-            __('Dramas', 'tmu-theme'),
+            __('Dramas', 'tmu'),
+            __('Dramas', 'tmu'),
             'edit_posts',
             'edit.php?post_type=drama'
         );
@@ -117,8 +117,8 @@ class MenuManager {
         // People submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('People', 'tmu-theme'),
-            __('People', 'tmu-theme'),
+            __('People', 'tmu'),
+            __('People', 'tmu'),
             'edit_posts',
             'edit.php?post_type=people'
         );
@@ -126,8 +126,8 @@ class MenuManager {
         // Taxonomies submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('Categories & Tags', 'tmu-theme'),
-            __('Categories & Tags', 'tmu-theme'),
+            __('Categories & Tags', 'tmu'),
+            __('Categories & Tags', 'tmu'),
             'manage_categories',
             'tmu-taxonomies',
             [$this, 'renderTaxonomiesPage']
@@ -136,8 +136,8 @@ class MenuManager {
         // Tools & Actions submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('Tools & Actions', 'tmu-theme'),
-            __('Tools & Actions', 'tmu-theme'),
+            __('Tools & Actions', 'tmu'),
+            __('Tools & Actions', 'tmu'),
             'manage_options',
             'tmu-tools',
             [$this, 'renderToolsPage']
@@ -146,8 +146,8 @@ class MenuManager {
         // Settings submenu
         add_submenu_page(
             'tmu-content-hub',
-            __('TMU Settings', 'tmu-theme'),
-            __('Settings', 'tmu-theme'),
+            __('TMU Settings', 'tmu'),
+            __('Settings', 'tmu'),
             'manage_options',
             'tmu-settings',
             [$this, 'renderSettingsPage']
@@ -222,21 +222,21 @@ class MenuManager {
         $stats = $this->getContentStats();
         ?>
         <div class="wrap tmu-content-hub">
-            <h1><?php _e('TMU Content Hub', 'tmu-theme'); ?></h1>
+            <h1><?php _e('TMU Content Hub', 'tmu'); ?></h1>
             <p class="description">
-                <?php _e('Manage all your movies, TV shows, dramas, and people from this central hub.', 'tmu-theme'); ?>
+                <?php _e('Manage all your movies, TV shows, dramas, and people from this central hub.', 'tmu'); ?>
             </p>
             
             <div class="tmu-hub-stats">
-                <h2><?php _e('Content Overview', 'tmu-theme'); ?></h2>
+                <h2><?php _e('Content Overview', 'tmu'); ?></h2>
                 <div class="tmu-stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">🎬</div>
                         <div class="stat-content">
                             <h3><?php echo number_format($stats['movies']); ?></h3>
-                            <p><?php _e('Movies', 'tmu-theme'); ?></p>
+                            <p><?php _e('Movies', 'tmu'); ?></p>
                             <a href="<?php echo admin_url('edit.php?post_type=movie'); ?>" class="button">
-                                <?php _e('Manage Movies', 'tmu-theme'); ?>
+                                <?php _e('Manage Movies', 'tmu'); ?>
                             </a>
                         </div>
                     </div>
@@ -245,9 +245,9 @@ class MenuManager {
                         <div class="stat-icon">📺</div>
                         <div class="stat-content">
                             <h3><?php echo number_format($stats['tv_shows']); ?></h3>
-                            <p><?php _e('TV Shows', 'tmu-theme'); ?></p>
+                            <p><?php _e('TV Shows', 'tmu'); ?></p>
                             <a href="<?php echo admin_url('edit.php?post_type=tv'); ?>" class="button">
-                                <?php _e('Manage TV Shows', 'tmu-theme'); ?>
+                                <?php _e('Manage TV Shows', 'tmu'); ?>
                             </a>
                         </div>
                     </div>
@@ -256,9 +256,9 @@ class MenuManager {
                         <div class="stat-icon">🎭</div>
                         <div class="stat-content">
                             <h3><?php echo number_format($stats['dramas']); ?></h3>
-                            <p><?php _e('Dramas', 'tmu-theme'); ?></p>
+                            <p><?php _e('Dramas', 'tmu'); ?></p>
                             <a href="<?php echo admin_url('edit.php?post_type=drama'); ?>" class="button">
-                                <?php _e('Manage Dramas', 'tmu-theme'); ?>
+                                <?php _e('Manage Dramas', 'tmu'); ?>
                             </a>
                         </div>
                     </div>
@@ -267,9 +267,9 @@ class MenuManager {
                         <div class="stat-icon">👥</div>
                         <div class="stat-content">
                             <h3><?php echo number_format($stats['people']); ?></h3>
-                            <p><?php _e('People', 'tmu-theme'); ?></p>
+                            <p><?php _e('People', 'tmu'); ?></p>
                             <a href="<?php echo admin_url('edit.php?post_type=people'); ?>" class="button">
-                                <?php _e('Manage People', 'tmu-theme'); ?>
+                                <?php _e('Manage People', 'tmu'); ?>
                             </a>
                         </div>
                     </div>
@@ -277,37 +277,37 @@ class MenuManager {
             </div>
             
             <div class="tmu-hub-actions">
-                <h2><?php _e('Quick Actions', 'tmu-theme'); ?></h2>
+                <h2><?php _e('Quick Actions', 'tmu'); ?></h2>
                 <div class="tmu-actions-grid">
                     <div class="action-card">
-                        <h3><?php _e('TMDB Sync', 'tmu-theme'); ?></h3>
-                        <p><?php _e('Synchronize content with TMDB database.', 'tmu-theme'); ?></p>
+                        <h3><?php _e('TMDB Sync', 'tmu'); ?></h3>
+                        <p><?php _e('Synchronize content with TMDB database.', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-tools&action=tmdb-sync'); ?>" class="button button-primary">
-                            <?php _e('Start Sync', 'tmu-theme'); ?>
+                            <?php _e('Start Sync', 'tmu'); ?>
                         </a>
                     </div>
                     
                     <div class="action-card">
-                        <h3><?php _e('Import Content', 'tmu-theme'); ?></h3>
-                        <p><?php _e('Import new content from various sources.', 'tmu-theme'); ?></p>
+                        <h3><?php _e('Import Content', 'tmu'); ?></h3>
+                        <p><?php _e('Import new content from various sources.', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-tools&action=import'); ?>" class="button">
-                            <?php _e('Import Tools', 'tmu-theme'); ?>
+                            <?php _e('Import Tools', 'tmu'); ?>
                         </a>
                     </div>
                     
                     <div class="action-card">
-                        <h3><?php _e('Manage Categories', 'tmu-theme'); ?></h3>
-                        <p><?php _e('Organize genres, countries, and other taxonomies.', 'tmu-theme'); ?></p>
+                        <h3><?php _e('Manage Categories', 'tmu'); ?></h3>
+                        <p><?php _e('Organize genres, countries, and other taxonomies.', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-taxonomies'); ?>" class="button">
-                            <?php _e('Manage Categories', 'tmu-theme'); ?>
+                            <?php _e('Manage Categories', 'tmu'); ?>
                         </a>
                     </div>
                     
                     <div class="action-card">
-                        <h3><?php _e('TMU Settings', 'tmu-theme'); ?></h3>
-                        <p><?php _e('Configure theme settings and API keys.', 'tmu-theme'); ?></p>
+                        <h3><?php _e('TMU Settings', 'tmu'); ?></h3>
+                        <p><?php _e('Configure theme settings and API keys.', 'tmu'); ?></p>
                         <a href="<?php echo admin_url('admin.php?page=tmu-settings'); ?>" class="button">
-                            <?php _e('Open Settings', 'tmu-theme'); ?>
+                            <?php _e('Open Settings', 'tmu'); ?>
                         </a>
                     </div>
                 </div>
@@ -367,17 +367,17 @@ class MenuManager {
     public function renderTaxonomiesPage(): void {
         ?>
         <div class="wrap tmu-taxonomies">
-            <h1><?php _e('TMU Categories & Tags', 'tmu-theme'); ?></h1>
+            <h1><?php _e('TMU Categories & Tags', 'tmu'); ?></h1>
             
             <div class="tmu-taxonomy-links">
                 <div class="taxonomy-section">
-                    <h2><?php _e('Content Categories', 'tmu-theme'); ?></h2>
+                    <h2><?php _e('Content Categories', 'tmu'); ?></h2>
                     <ul>
-                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=genre'); ?>"><?php _e('Genres', 'tmu-theme'); ?></a></li>
-                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=country'); ?>"><?php _e('Countries', 'tmu-theme'); ?></a></li>
-                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=language'); ?>"><?php _e('Languages', 'tmu-theme'); ?></a></li>
-                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=network'); ?>"><?php _e('Networks', 'tmu-theme'); ?></a></li>
-                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=channel'); ?>"><?php _e('Channels', 'tmu-theme'); ?></a></li>
+                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=genre'); ?>"><?php _e('Genres', 'tmu'); ?></a></li>
+                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=country'); ?>"><?php _e('Countries', 'tmu'); ?></a></li>
+                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=language'); ?>"><?php _e('Languages', 'tmu'); ?></a></li>
+                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=network'); ?>"><?php _e('Networks', 'tmu'); ?></a></li>
+                        <li><a href="<?php echo admin_url('edit-tags.php?taxonomy=channel'); ?>"><?php _e('Channels', 'tmu'); ?></a></li>
                     </ul>
                 </div>
             </div>
@@ -391,8 +391,8 @@ class MenuManager {
     public function renderToolsPage(): void {
         ?>
         <div class="wrap tmu-tools">
-            <h1><?php _e('TMU Tools & Actions', 'tmu-theme'); ?></h1>
-            <p><?php _e('Tools and utilities for managing your TMU content.', 'tmu-theme'); ?></p>
+            <h1><?php _e('TMU Tools & Actions', 'tmu'); ?></h1>
+            <p><?php _e('Tools and utilities for managing your TMU content.', 'tmu'); ?></p>
             
             <!-- Tools content will be managed by other components -->
             <div id="tmu-tools-content">
@@ -408,7 +408,7 @@ class MenuManager {
     public function renderSettingsPage(): void {
         ?>
         <div class="wrap tmu-settings">
-            <h1><?php _e('TMU Settings', 'tmu-theme'); ?></h1>
+            <h1><?php _e('TMU Settings', 'tmu'); ?></h1>
             
             <!-- Settings content will be managed by Settings component -->
             <div id="tmu-settings-content">
