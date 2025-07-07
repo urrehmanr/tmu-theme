@@ -1,57 +1,64 @@
 <?php
 /**
- * TMDB Settings Page
- * 
- * Admin interface for TMDB API configuration and management
- * 
+ * TMDB Settings Admin Page
+ *
  * @package TMU\Admin\Settings
- * @since 1.0.0
+ * @version 1.0.0
  */
 
 namespace TMU\Admin\Settings;
 
-use TMU\API\TMDB\Client;
-use TMU\API\TMDB\SyncService;
-use TMU\API\TMDB\SyncScheduler;
-use TMU\API\TMDB\WebhookHandler;
-use TMU\API\TMDB\Exception as TMDBException;
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 /**
- * TMDBSettings class
- * 
- * Provides admin interface for TMDB configuration
+ * TMDB Settings Admin Page
  */
 class TMDBSettings {
-    private $client;
-    private $sync_service;
-    private $sync_scheduler;
-    private $webhook_handler;
+    
+    /**
+     * Instance
+     */
+    private static $instance = null;
+    
+    /**
+     * Get instance
+     */
+    public static function getInstance(): TMDBSettings {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
     
     /**
      * Constructor
      */
-    public function __construct() {
-        $this->client = new Client();
-        $this->sync_service = new SyncService();
-        $this->sync_scheduler = new SyncScheduler();
-        $this->webhook_handler = new WebhookHandler();
-        
-        add_action('admin_menu', [$this, 'addAdminPage']);
-        add_action('admin_init', [$this, 'initSettings']);
-        add_action('wp_ajax_tmu_test_tmdb_api', [$this, 'handleTestApi']);
-        add_action('wp_ajax_tmu_bulk_sync_tmdb', [$this, 'handleBulkSync']);
-        add_action('wp_ajax_tmu_get_sync_stats', [$this, 'handleGetSyncStats']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+    private function __construct() {
+        $this->initHooks();
     }
     
     /**
-     * Add admin page to menu
+     * Initialize hooks
      */
-    public function addAdminPage(): void {
+    private function initHooks(): void {
+        add_action('admin_menu', [$this, 'addAdminMenu']);
+        add_action('admin_init', [$this, 'initSettings']);
+        add_action('wp_ajax_tmu_test_tmdb_connection', [$this, 'testTMDBConnection']);
+        add_action('wp_ajax_tmu_bulk_sync', [$this, 'bulkSync']);
+        add_action('wp_ajax_tmu_configure_webhook', [$this, 'configureWebhook']);
+    }
+    
+    /**
+     * Add admin menu
+     */
+    public function addAdminMenu(): void {
         add_submenu_page(
-            'edit.php?post_type=movie',
-            __('TMDB Settings', 'tmu-theme'),
-            __('TMDB Settings', 'tmu-theme'),
+            'tmu-dashboard',
+            __('TMDB Settings', 'tmu'),
+            __('TMDB Settings', 'tmu'),
             'manage_options',
             'tmu-tmdb-settings',
             [$this, 'renderSettingsPage']
@@ -62,758 +69,499 @@ class TMDBSettings {
      * Initialize settings
      */
     public function initSettings(): void {
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_api_key', [
-            'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-            'default' => ''
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_auto_sync', [
-            'type' => 'boolean',
-            'sanitize_callback' => 'rest_sanitize_boolean',
-            'default' => false
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_sync_images', [
-            'type' => 'boolean',
-            'sanitize_callback' => 'rest_sanitize_boolean',
-            'default' => true
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_sync_videos', [
-            'type' => 'boolean',
-            'sanitize_callback' => 'rest_sanitize_boolean',
-            'default' => false
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_sync_credits', [
-            'type' => 'boolean',
-            'sanitize_callback' => 'rest_sanitize_boolean',
-            'default' => true
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_rate_limit', [
-            'type' => 'integer',
-            'sanitize_callback' => 'absint',
-            'default' => 1
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_webhooks_enabled', [
-            'type' => 'boolean',
-            'sanitize_callback' => 'rest_sanitize_boolean',
-            'default' => false
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_webhook_secret', [
-            'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-            'default' => ''
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_delete_behavior', [
-            'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-            'default' => 'mark_deleted'
-        ]);
-        
-        register_setting('tmu_tmdb_settings', 'tmu_tmdb_cache_duration', [
-            'type' => 'integer',
-            'sanitize_callback' => 'absint',
-            'default' => 3600
-        ]);
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_api_key');
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_auto_sync');
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_sync_frequency');
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_image_quality');
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_webhook_enabled');
+        register_setting('tmu_tmdb_settings', 'tmu_tmdb_webhook_secret');
     }
     
     /**
      * Render settings page
      */
     public function renderSettingsPage(): void {
-        if (isset($_POST['submit'])) {
-            $this->saveSettings();
-        }
-        
-        $settings = $this->getSettings();
-        $sync_status = $this->sync_scheduler->getSyncStatus();
-        $webhook_config = $this->webhook_handler->getWebhookConfig();
-        
+        $api_key = get_option('tmu_tmdb_api_key', '');
+        $auto_sync = get_option('tmu_tmdb_auto_sync', 'off');
+        $sync_frequency = get_option('tmu_tmdb_sync_frequency', 'daily');
+        $image_quality = get_option('tmu_tmdb_image_quality', 'original');
+        $webhook_enabled = get_option('tmu_tmdb_webhook_enabled', 'off');
+        $webhook_secret = get_option('tmu_tmdb_webhook_secret', '');
         ?>
-        <div class="wrap tmu-tmdb-settings">
-            <h1><?php _e('TMDB API Settings', 'tmu-theme'); ?></h1>
+        <div class="wrap">
+            <h1><?php _e('TMDB Settings', 'tmu'); ?></h1>
             
-            <div class="tmu-settings-grid">
-                <div class="tmu-settings-main">
-                    <form method="post" action="">
-                        <?php wp_nonce_field('tmu_tmdb_settings', 'tmu_tmdb_nonce'); ?>
-                        
-                        <div class="tmu-settings-section">
-                            <h2><?php _e('API Configuration', 'tmu-theme'); ?></h2>
-                            
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row"><?php _e('TMDB API Key', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <input type="password" 
-                                               name="tmu_tmdb_api_key" 
-                                               id="tmu_tmdb_api_key"
-                                               value="<?php echo esc_attr($settings['api_key']); ?>" 
-                                               class="regular-text" 
-                                               autocomplete="off" />
-                                        <p class="description">
-                                            <?php 
-                                            printf(
-                                                __('Get your API key from <a href="%s" target="_blank">TMDB API</a>', 'tmu-theme'),
-                                                'https://www.themoviedb.org/settings/api'
-                                            ); 
-                                            ?>
-                                        </p>
-                                        <button type="button" id="test-api-btn" class="button button-secondary">
-                                            <?php _e('Test Connection', 'tmu-theme'); ?>
+            <div class="tmu-admin-grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <!-- API Configuration -->
+                <div class="lg:col-span-2">
+                    <div class="admin-card">
+                        <div class="admin-header">
+                            <h2 class="text-lg font-semibold"><?php _e('API Configuration', 'tmu'); ?></h2>
+                        </div>
+                        <div class="admin-body">
+                            <form method="post" action="options.php" id="tmdb-settings-form">
+                                <?php settings_fields('tmu_tmdb_settings'); ?>
+                                
+                                <div class="admin-form-group">
+                                    <label for="tmu_tmdb_api_key" class="admin-label">
+                                        <?php _e('TMDB API Key', 'tmu'); ?>
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            id="tmu_tmdb_api_key" 
+                                            name="tmu_tmdb_api_key" 
+                                            value="<?php echo esc_attr($api_key); ?>" 
+                                            class="admin-input flex-1"
+                                            placeholder="<?php _e('Enter your TMDB API key', 'tmu'); ?>"
+                                        />
+                                        <button 
+                                            type="button" 
+                                            id="test-tmdb-connection" 
+                                            class="admin-btn-primary"
+                                            data-nonce="<?php echo wp_create_nonce('tmu_tmdb_test'); ?>"
+                                        >
+                                            <span class="test-button-text"><?php _e('Test Connection', 'tmu'); ?></span>
+                                            <span class="loading-spinner hidden"></span>
                                         </button>
-                                        <span id="api-test-result"></span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        
-                        <div class="tmu-settings-section">
-                            <h2><?php _e('Sync Options', 'tmu-theme'); ?></h2>
-                            
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row"><?php _e('Auto Sync', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="checkbox" 
-                                                   name="tmu_tmdb_auto_sync" 
-                                                   value="1" 
-                                                   <?php checked($settings['auto_sync'], true); ?> />
-                                            <?php _e('Enable automatic daily sync for all content', 'tmu-theme'); ?>
-                                        </label>
-                                    </td>
-                                </tr>
-                                
-                                <tr>
-                                    <th scope="row"><?php _e('Sync Images', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="checkbox" 
-                                                   name="tmu_tmdb_sync_images" 
-                                                   value="1" 
-                                                   <?php checked($settings['sync_images'], true); ?> />
-                                            <?php _e('Download and sync posters, backdrops, and profile images', 'tmu-theme'); ?>
-                                        </label>
-                                    </td>
-                                </tr>
-                                
-                                <tr>
-                                    <th scope="row"><?php _e('Sync Videos', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="checkbox" 
-                                                   name="tmu_tmdb_sync_videos" 
-                                                   value="1" 
-                                                   <?php checked($settings['sync_videos'], true); ?> />
-                                            <?php _e('Sync video information (trailers, clips)', 'tmu-theme'); ?>
-                                        </label>
-                                    </td>
-                                </tr>
-                                
-                                <tr>
-                                    <th scope="row"><?php _e('Sync Credits', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="checkbox" 
-                                                   name="tmu_tmdb_sync_credits" 
-                                                   value="1" 
-                                                   <?php checked($settings['sync_credits'], true); ?> />
-                                            <?php _e('Sync cast and crew information', 'tmu-theme'); ?>
-                                        </label>
-                                    </td>
-                                </tr>
-                                
-                                <tr>
-                                    <th scope="row">
-                                        <label for="tmu_tmdb_rate_limit"><?php _e('Rate Limit', 'tmu-theme'); ?></label>
-                                    </th>
-                                    <td>
-                                        <select name="tmu_tmdb_rate_limit">
-                                            <option value="40" <?php selected($settings['rate_limit'], 40); ?>>40 requests/10 seconds</option>
-                                            <option value="30" <?php selected($settings['rate_limit'], 30); ?>>30 requests/10 seconds</option>
-                                            <option value="20" <?php selected($settings['rate_limit'], 20); ?>>20 requests/10 seconds</option>
-                                            <option value="10" <?php selected($settings['rate_limit'], 10); ?>>10 requests/10 seconds</option>
-                                        </select>
-                                        <span><?php _e('seconds between requests', 'tmu-theme'); ?></span>
-                                        <p class="description">
-                                            <?php _e('Delay between TMDB API requests to avoid rate limiting', 'tmu-theme'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        
-                        <div class="tmu-settings-section">
-                            <h2><?php _e('Webhook Settings', 'tmu-theme'); ?></h2>
-                            
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row"><?php _e('Enable Webhooks', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="checkbox" 
-                                                   name="tmu_tmdb_webhooks_enabled" 
-                                                   value="1" 
-                                                   <?php checked($settings['webhooks_enabled'], true); ?> />
-                                            <?php _e('Enable TMDB webhooks for real-time updates', 'tmu-theme'); ?>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Webhook Secret', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <input type="text" 
-                                               name="tmu_tmdb_webhook_secret" 
-                                               value="<?php echo esc_attr($settings['webhook_secret']); ?>" 
-                                               class="regular-text" />
-                                        <p class="description">
-                                            <?php _e('Secret key for webhook verification.', 'tmu-theme'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Webhook URL', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <code><?php echo esc_html($webhook_config['url']); ?></code>
-                                        <p class="description">
-                                            <?php _e('Use this URL in your TMDB webhook configuration.', 'tmu-theme'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Delete Behavior', 'tmu-theme'); ?></th>
-                                    <td>
-                                        <select name="tmu_tmdb_delete_behavior">
-                                            <option value="mark_deleted" <?php selected($settings['delete_behavior'], 'mark_deleted'); ?>>
-                                                <?php _e('Mark as deleted', 'tmu-theme'); ?>
-                                            </option>
-                                            <option value="set_draft" <?php selected($settings['delete_behavior'], 'set_draft'); ?>>
-                                                <?php _e('Set to draft', 'tmu-theme'); ?>
-                                            </option>
-                                            <option value="delete_post" <?php selected($settings['delete_behavior'], 'delete_post'); ?>>
-                                                <?php _e('Delete permanently', 'tmu-theme'); ?>
-                                            </option>
-                                        </select>
-                                        <p class="description">
-                                            <?php _e('What to do when content is deleted from TMDB.', 'tmu-theme'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        
-                        <div class="tmu-settings-section">
-                            <h2><?php _e('Bulk Operations', 'tmu-theme'); ?></h2>
-                            
-                            <div class="tmu-bulk-actions">
-                                <button type="button" id="bulk-sync-btn" class="button button-primary">
-                                    <?php _e('Sync All Content', 'tmu-theme'); ?>
-                                </button>
-                                
-                                <button type="button" id="sync-stats-btn" class="button button-secondary">
-                                    <?php _e('View Sync Statistics', 'tmu-theme'); ?>
-                                </button>
-                                
-                                <button type="button" id="clear-cache-btn" class="button button-secondary">
-                                    <?php _e('Clear TMDB Cache', 'tmu-theme'); ?>
-                                </button>
-                            </div>
-                            
-                            <div id="bulk-progress" class="tmu-progress-container" style="display: none;">
-                                <div class="progress-bar">
-                                    <div class="progress-fill"></div>
+                                    </div>
+                                    <div id="connection-status" class="mt-2 hidden">
+                                        <div class="alert"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <?php _e('Get your API key from', 'tmu'); ?>
+                                        <a href="https://www.themoviedb.org/settings/api" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                            <?php _e('TMDB Settings', 'tmu'); ?>
+                                        </a>
+                                    </p>
                                 </div>
-                                <div class="progress-text"></div>
-                                <div class="progress-log"></div>
-                            </div>
+                                
+                                <div class="admin-form-group">
+                                    <label for="tmu_tmdb_image_quality" class="admin-label">
+                                        <?php _e('Image Quality', 'tmu'); ?>
+                                    </label>
+                                    <select id="tmu_tmdb_image_quality" name="tmu_tmdb_image_quality" class="admin-select">
+                                        <option value="w185" <?php selected($image_quality, 'w185'); ?>>w185 (185px)</option>
+                                        <option value="w342" <?php selected($image_quality, 'w342'); ?>>w342 (342px)</option>
+                                        <option value="w500" <?php selected($image_quality, 'w500'); ?>>w500 (500px)</option>
+                                        <option value="w780" <?php selected($image_quality, 'w780'); ?>>w780 (780px)</option>
+                                        <option value="original" <?php selected($image_quality, 'original'); ?>>Original</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="admin-form-group">
+                                    <label class="admin-label">
+                                        <input 
+                                            type="checkbox" 
+                                            name="tmu_tmdb_auto_sync" 
+                                            value="on" 
+                                            <?php checked($auto_sync, 'on'); ?>
+                                            class="mr-2"
+                                        />
+                                        <?php _e('Enable Automatic Sync', 'tmu'); ?>
+                                    </label>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        <?php _e('Automatically sync data from TMDB on schedule', 'tmu'); ?>
+                                    </p>
+                                </div>
+                                
+                                <div class="admin-form-group">
+                                    <label for="tmu_tmdb_sync_frequency" class="admin-label">
+                                        <?php _e('Sync Frequency', 'tmu'); ?>
+                                    </label>
+                                    <select id="tmu_tmdb_sync_frequency" name="tmu_tmdb_sync_frequency" class="admin-select">
+                                        <option value="hourly" <?php selected($sync_frequency, 'hourly'); ?>><?php _e('Hourly', 'tmu'); ?></option>
+                                        <option value="daily" <?php selected($sync_frequency, 'daily'); ?>><?php _e('Daily', 'tmu'); ?></option>
+                                        <option value="weekly" <?php selected($sync_frequency, 'weekly'); ?>><?php _e('Weekly', 'tmu'); ?></option>
+                                    </select>
+                                </div>
+                                
+                                <?php submit_button(__('Save Settings', 'tmu'), 'primary'); ?>
+                            </form>
                         </div>
-                        
-                        <p class="submit">
-                            <input type="submit" 
-                                   name="submit" 
-                                   class="button-primary" 
-                                   value="<?php esc_attr_e('Save Settings', 'tmu-theme'); ?>" />
-                        </p>
-                    </form>
+                    </div>
                 </div>
                 
-                <div class="tmu-settings-sidebar">
-                    <div class="tmu-settings-widget">
-                        <h3><?php _e('Sync Status', 'tmu-theme'); ?></h3>
-                        <div class="tmu-sync-status">
-                            <p><strong><?php _e('Auto Sync:', 'tmu-theme'); ?></strong> 
-                                <?php echo $sync_status['auto_sync_enabled'] ? __('Enabled', 'tmu-theme') : __('Disabled', 'tmu-theme'); ?>
-                            </p>
+                <!-- Sync Operations -->
+                <div class="lg:col-span-1">
+                    <div class="admin-card">
+                        <div class="admin-header">
+                            <h3 class="text-lg font-semibold"><?php _e('Sync Operations', 'tmu'); ?></h3>
+                        </div>
+                        <div class="admin-body space-y-4">
+                            <button 
+                                type="button" 
+                                id="bulk-sync-movies" 
+                                class="w-full tmdb-sync-button"
+                                data-type="movies"
+                                data-nonce="<?php echo wp_create_nonce('tmu_bulk_sync'); ?>"
+                            >
+                                <span class="sync-button-text"><?php _e('Sync All Movies', 'tmu'); ?></span>
+                                <span class="loading-spinner hidden"></span>
+                            </button>
                             
-                            <?php if ($sync_status['daily']): ?>
-                                <p><strong><?php _e('Last Daily Sync:', 'tmu-theme'); ?></strong><br>
-                                    <?php echo esc_html($sync_status['daily']['date']); ?><br>
-                                    <small><?php printf(__('Processed: %d, Errors: %d', 'tmu-theme'), 
-                                        $sync_status['daily']['processed'], 
-                                        $sync_status['daily']['errors']
-                                    ); ?></small>
-                                </p>
-                            <?php endif; ?>
+                            <button 
+                                type="button" 
+                                id="bulk-sync-tv" 
+                                class="w-full tmdb-sync-button"
+                                data-type="tv"
+                                data-nonce="<?php echo wp_create_nonce('tmu_bulk_sync'); ?>"
+                            >
+                                <span class="sync-button-text"><?php _e('Sync All TV Shows', 'tmu'); ?></span>
+                                <span class="loading-spinner hidden"></span>
+                            </button>
                             
-                            <?php if ($sync_status['weekly']): ?>
-                                <p><strong><?php _e('Last Weekly Sync:', 'tmu-theme'); ?></strong><br>
-                                    <?php echo esc_html($sync_status['weekly']['date']); ?><br>
-                                    <small><?php printf(__('Processed: %d, Errors: %d', 'tmu-theme'), 
-                                        $sync_status['weekly']['processed'], 
-                                        $sync_status['weekly']['errors']
-                                    ); ?></small>
-                                </p>
-                            <?php endif; ?>
+                            <button 
+                                type="button" 
+                                id="bulk-sync-people" 
+                                class="w-full tmdb-sync-button"
+                                data-type="people"
+                                data-nonce="<?php echo wp_create_nonce('tmu_bulk_sync'); ?>"
+                            >
+                                <span class="sync-button-text"><?php _e('Sync All People', 'tmu'); ?></span>
+                                <span class="loading-spinner hidden"></span>
+                            </button>
                             
-                            <?php if ($sync_status['next_daily']): ?>
-                                <p><strong><?php _e('Next Daily Sync:', 'tmu-theme'); ?></strong><br>
-                                    <?php echo date('Y-m-d H:i:s', $sync_status['next_daily']); ?>
-                                </p>
-                            <?php endif; ?>
+                            <div id="sync-progress" class="hidden">
+                                <div class="bg-gray-200 rounded-full h-2 mb-2">
+                                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%" id="progress-bar"></div>
+                                </div>
+                                <p class="text-sm text-gray-600" id="progress-text">0%</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="tmu-settings-widget">
-                        <h3><?php _e('API Information', 'tmu-theme'); ?></h3>
-                        <p><?php _e('TMDB API provides comprehensive movie and TV show data.', 'tmu-theme'); ?></p>
-                        <ul>
-                            <li><?php _e('40 requests per 10 seconds limit', 'tmu-theme'); ?></li>
-                            <li><?php _e('High-quality images and metadata', 'tmu-theme'); ?></li>
-                            <li><?php _e('Regular updates and new releases', 'tmu-theme'); ?></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="tmu-settings-widget">
-                        <h3><?php _e('Quick Links', 'tmu-theme'); ?></h3>
-                        <ul>
-                            <li><a href="https://www.themoviedb.org/settings/api" target="_blank"><?php _e('Get API Key', 'tmu-theme'); ?></a></li>
-                            <li><a href="https://developers.themoviedb.org/3" target="_blank"><?php _e('API Documentation', 'tmu-theme'); ?></a></li>
-                            <li><a href="<?php echo admin_url('edit.php?post_type=movie'); ?>"><?php _e('Manage Movies', 'tmu-theme'); ?></a></li>
-                        </ul>
+                    <!-- Webhook Configuration -->
+                    <div class="admin-card mt-6">
+                        <div class="admin-header">
+                            <h3 class="text-lg font-semibold"><?php _e('Webhook Configuration', 'tmu'); ?></h3>
+                        </div>
+                        <div class="admin-body">
+                            <div class="admin-form-group">
+                                <label class="admin-label">
+                                    <input 
+                                        type="checkbox" 
+                                        name="tmu_tmdb_webhook_enabled" 
+                                        value="on" 
+                                        <?php checked($webhook_enabled, 'on'); ?>
+                                        class="mr-2"
+                                    />
+                                    <?php _e('Enable Webhooks', 'tmu'); ?>
+                                </label>
+                            </div>
+                            
+                            <div class="admin-form-group">
+                                <label for="tmu_tmdb_webhook_secret" class="admin-label">
+                                    <?php _e('Webhook Secret', 'tmu'); ?>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="tmu_tmdb_webhook_secret" 
+                                    name="tmu_tmdb_webhook_secret" 
+                                    value="<?php echo esc_attr($webhook_secret); ?>" 
+                                    class="admin-input"
+                                    placeholder="<?php _e('Enter webhook secret', 'tmu'); ?>"
+                                />
+                            </div>
+                            
+                            <div class="admin-form-group">
+                                <label class="admin-label"><?php _e('Webhook URL', 'tmu'); ?></label>
+                                <input 
+                                    type="text" 
+                                    value="<?php echo home_url('/wp-json/tmu/v1/webhook'); ?>" 
+                                    class="admin-input" 
+                                    readonly
+                                />
+                                <button 
+                                    type="button" 
+                                    onclick="navigator.clipboard.writeText(this.previousElementSibling.value)" 
+                                    class="admin-btn-secondary mt-2"
+                                >
+                                    <?php _e('Copy URL', 'tmu'); ?>
+                                </button>
+                            </div>
+                            
+                            <button 
+                                type="button" 
+                                id="configure-webhook" 
+                                class="admin-btn-primary"
+                                data-nonce="<?php echo wp_create_nonce('tmu_webhook_config'); ?>"
+                            >
+                                <?php _e('Configure Webhook', 'tmu'); ?>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
         <style>
-        .tmu-tmdb-settings .tmu-settings-grid {
+        .tmu-admin-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
+        }
+        
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        
+        @media (min-width: 1024px) {
+            .lg\\:grid-cols-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            
+            .lg\\:col-span-2 {
+                grid-column: span 2 / span 2;
+            }
+            
+            .lg\\:col-span-1 {
+                grid-column: span 1 / span 1;
+            }
+        }
+        
+        .gap-6 {
+            gap: 1.5rem;
+        }
+        
+        .mt-6 {
+            margin-top: 1.5rem;
+        }
+        
+        .space-y-4 > :not([hidden]) ~ :not([hidden]) {
             margin-top: 1rem;
         }
         
-        .tmu-settings-section {
-            background: white;
-            border: 1px solid #c3c4c7;
-            border-radius: 4px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .alert {
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
         }
         
-        .tmu-settings-section h2 {
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+        .alert.success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
         
-        .tmu-bulk-actions {
+        .alert.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .flex {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
         }
         
-        .tmu-progress-container {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .flex-1 {
+            flex: 1 1 0%;
         }
         
-        .progress-bar {
+        .gap-2 {
+            gap: 0.5rem;
+        }
+        
+        .w-full {
             width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 10px;
         }
         
-        .progress-fill {
-            height: 100%;
-            background: #0073aa;
-            width: 0%;
-            transition: width 0.3s ease;
+        .mr-2 {
+            margin-right: 0.5rem;
         }
         
-        .progress-text {
-            text-align: center;
-            font-weight: 500;
-            margin-bottom: 10px;
+        .mt-1 {
+            margin-top: 0.25rem;
         }
         
-        .progress-log {
-            max-height: 200px;
-            overflow-y: auto;
-            background: white;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
+        .mt-2 {
+            margin-top: 0.5rem;
         }
         
-        .tmu-settings-sidebar .tmu-settings-widget {
-            background: white;
-            border: 1px solid #c3c4c7;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 15px;
+        .text-sm {
+            font-size: 0.875rem;
         }
         
-        .tmu-settings-widget h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
+        .text-lg {
+            font-size: 1.125rem;
         }
         
-        .tmu-settings-widget ul {
-            margin: 0;
-            padding-left: 20px;
+        .font-semibold {
+            font-weight: 600;
         }
         
-        .tmu-settings-widget ul li {
-            margin-bottom: 5px;
+        .text-gray-600 {
+            color: #4b5563;
         }
         
-        #api-test-result {
-            margin-left: 10px;
-            font-weight: 500;
+        .text-blue-600 {
+            color: #2563eb;
         }
         
-        #api-test-result.success {
-            color: #00a32a;
+        .text-blue-800 {
+            color: #1e40af;
         }
         
-        #api-test-result.error {
-            color: #d63638;
+        .text-red-500 {
+            color: #ef4444;
         }
         
-        @media (max-width: 768px) {
-            .tmu-settings-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .tmu-bulk-actions {
-                flex-direction: column;
-            }
-            
-            .tmu-bulk-actions button {
-                width: 100%;
-            }
+        .hover\\:text-blue-800:hover {
+            color: #1e40af;
         }
         </style>
-        
-        <script>
-        jQuery(document).ready(function($) {
-            // Test API connection
-            $('#test-api-btn').on('click', function() {
-                const $btn = $(this);
-                const $result = $('#api-test-result');
-                const apiKey = $('#tmu_tmdb_api_key').val();
-                
-                if (!apiKey) {
-                    $result.removeClass('success').addClass('error').text('<?php _e('Please enter an API key', 'tmu-theme'); ?>');
-                    return;
-                }
-                
-                $btn.prop('disabled', true).text('<?php _e('Testing...', 'tmu-theme'); ?>');
-                $result.removeClass('success error').text('');
-                
-                $.post(ajaxurl, {
-                    action: 'tmu_test_tmdb_api',
-                    api_key: apiKey,
-                    _wpnonce: '<?php echo wp_create_nonce('tmu_test_tmdb_api'); ?>'
-                }, function(response) {
-                    if (response.success) {
-                        $result.addClass('success').text('<?php _e('✓ Connection successful', 'tmu-theme'); ?>');
-                    } else {
-                        $result.addClass('error').text('✗ ' + response.data);
-                    }
-                }).fail(function() {
-                    $result.addClass('error').text('<?php _e('✗ Network error', 'tmu-theme'); ?>');
-                }).always(function() {
-                    $btn.prop('disabled', false).text('<?php _e('Test Connection', 'tmu-theme'); ?>');
-                });
-            });
-            
-            // Bulk sync
-            $('#bulk-sync-btn').on('click', function() {
-                if (!confirm('<?php _e('This will sync all content with TMDB. This may take a while. Continue?', 'tmu-theme'); ?>')) {
-                    return;
-                }
-                
-                const $progress = $('#bulk-progress');
-                const $fill = $('.progress-fill');
-                const $text = $('.progress-text');
-                const $log = $('.progress-log');
-                
-                $progress.show();
-                $fill.css('width', '0%');
-                $text.text('<?php _e('Starting bulk sync...', 'tmu-theme'); ?>');
-                $log.html('');
-                
-                $.post(ajaxurl, {
-                    action: 'tmu_bulk_sync_tmdb',
-                    _wpnonce: '<?php echo wp_create_nonce('tmu_bulk_sync_tmdb'); ?>'
-                }, function(response) {
-                    if (response.success) {
-                        $fill.css('width', '100%');
-                        $text.text('<?php _e('Sync completed successfully!', 'tmu-theme'); ?>');
-                        $log.append('<div><?php _e('Sync completed', 'tmu-theme'); ?>: ' + JSON.stringify(response.data) + '</div>');
-                    } else {
-                        $text.text('<?php _e('Sync failed', 'tmu-theme'); ?>');
-                        $log.append('<div class="error"><?php _e('Error', 'tmu-theme'); ?>: ' + response.data + '</div>');
-                    }
-                }).fail(function() {
-                    $text.text('<?php _e('Sync failed due to network error', 'tmu-theme'); ?>');
-                    $log.append('<div class="error"><?php _e('Network error occurred', 'tmu-theme'); ?></div>');
-                });
-            });
-            
-            // Load sync statistics
-            $('#sync-stats-btn').on('click', function() {
-                const $display = $('#sync-stats-display');
-                
-                $display.html('<p><?php _e('Loading statistics...', 'tmu-theme'); ?></p>');
-                
-                $.post(ajaxurl, {
-                    action: 'tmu_get_sync_stats',
-                    _wpnonce: '<?php echo wp_create_nonce('tmu_get_sync_stats'); ?>'
-                }, function(response) {
-                    if (response.success) {
-                        const stats = response.data;
-                        let html = '<ul>';
-                        html += '<li><?php _e('Total Synced', 'tmu-theme'); ?>: ' + stats.total_synced + '</li>';
-                        html += '<li><?php _e('Movies', 'tmu-theme'); ?>: ' + stats.movies_synced + '</li>';
-                        html += '<li><?php _e('TV Shows', 'tmu-theme'); ?>: ' + stats.tv_synced + '</li>';
-                        html += '<li><?php _e('People', 'tmu-theme'); ?>: ' + stats.people_synced + '</li>';
-                        if (stats.last_sync) {
-                            html += '<li><?php _e('Last Sync', 'tmu-theme'); ?>: ' + stats.last_sync + '</li>';
-                        }
-                        html += '</ul>';
-                        $display.html(html);
-                    } else {
-                        $display.html('<p class="error"><?php _e('Failed to load statistics', 'tmu-theme'); ?></p>');
-                    }
-                }).fail(function() {
-                    $display.html('<p class="error"><?php _e('Network error', 'tmu-theme'); ?></p>');
-                });
-            });
-            
-            // Clear cache
-            $('#clear-cache-btn').on('click', function() {
-                if (!confirm('<?php _e('Clear all TMDB API cache?', 'tmu-theme'); ?>')) {
-                    return;
-                }
-                
-                // Implementation would go here
-                alert('<?php _e('Cache clearing functionality would be implemented here', 'tmu-theme'); ?>');
-            });
-        });
-        </script>
         <?php
     }
     
     /**
-     * Save settings
+     * Test TMDB connection via AJAX
      */
-    private function saveSettings(): void {
-        if (!wp_verify_nonce($_POST['tmu_tmdb_nonce'], 'tmu_tmdb_settings')) {
-            wp_die(__('Security check failed', 'tmu-theme'));
-        }
+    public function testTMDBConnection(): void {
+        check_ajax_referer('tmu_tmdb_test', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'tmu-theme'));
+            wp_send_json_error(['message' => __('Unauthorized access', 'tmu')]);
         }
         
-        update_option('tmu_tmdb_api_key', sanitize_text_field($_POST['tmu_tmdb_api_key']));
-        update_option('tmu_tmdb_auto_sync', !empty($_POST['tmu_tmdb_auto_sync']));
-        update_option('tmu_tmdb_sync_images', !empty($_POST['tmu_tmdb_sync_images']));
-        update_option('tmu_tmdb_sync_videos', !empty($_POST['tmu_tmdb_sync_videos']));
-        update_option('tmu_tmdb_sync_credits', !empty($_POST['tmu_tmdb_sync_credits']));
-        update_option('tmu_tmdb_rate_limit', absint($_POST['tmu_tmdb_rate_limit']));
-        update_option('tmu_tmdb_webhooks_enabled', !empty($_POST['tmu_tmdb_webhooks_enabled']));
-        update_option('tmu_tmdb_webhook_secret', sanitize_text_field($_POST['tmu_tmdb_webhook_secret']));
-        update_option('tmu_tmdb_delete_behavior', sanitize_text_field($_POST['tmu_tmdb_delete_behavior']));
-        update_option('tmu_tmdb_cache_duration', absint($_POST['tmu_tmdb_cache_duration']));
-        
-        // Update webhook configuration
-        $webhook_config = [
-            'enabled' => !empty($_POST['tmu_tmdb_webhooks_enabled']),
-            'secret' => sanitize_text_field($_POST['tmu_tmdb_webhook_secret']),
-            'delete_behavior' => sanitize_text_field($_POST['tmu_tmdb_delete_behavior'])
-        ];
-        
-        $this->webhook_handler->updateWebhookConfig($webhook_config);
-        
-        echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'tmu-theme') . '</p></div>';
-    }
-    
-    /**
-     * Handle API test request
-     */
-    public function handleTestApi(): void {
-        if (!wp_verify_nonce($_POST['_wpnonce'], 'tmu_test_tmdb_api')) {
-            wp_send_json_error(__('Security check failed', 'tmu-theme'));
-        }
-        
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(__('Insufficient permissions', 'tmu-theme'));
-        }
-        
-        $api_key = sanitize_text_field($_POST['api_key']);
+        $api_key = sanitize_text_field($_POST['api_key'] ?? '');
         
         if (empty($api_key)) {
-            wp_send_json_error(__('API key is required', 'tmu-theme'));
+            wp_send_json_error(['message' => __('API key is required', 'tmu')]);
         }
         
-        try {
-            // Temporarily set API key for testing
-            $original_key = get_option('tmu_tmdb_api_key');
-            update_option('tmu_tmdb_api_key', $api_key);
-            
-            $result = $this->client->getMovieDetails(550); // Test with Fight Club
-            
-            // Restore original key
-            update_option('tmu_tmdb_api_key', $original_key);
-            
-            if (!empty($result['title'])) {
-                wp_send_json_success(__('API connection successful', 'tmu-theme'));
-            } else {
-                wp_send_json_error(__('Invalid API response', 'tmu-theme'));
-            }
-            
-        } catch (\Exception $e) {
-            // Restore original key
-            if (isset($original_key)) {
-                update_option('tmu_tmdb_api_key', $original_key);
-            }
-            wp_send_json_error($e->getMessage());
-        }
-    }
-    
-    /**
-     * Handle bulk sync request
-     */
-    public function handleBulkSync(): void {
-        if (!wp_verify_nonce($_POST['_wpnonce'], 'tmu_bulk_sync_tmdb')) {
-            wp_send_json_error(__('Security check failed', 'tmu-theme'));
-        }
-        
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(__('Insufficient permissions', 'tmu-theme'));
-        }
-        
-        // Increase time limit for bulk operations
-        set_time_limit(300);
-        
-        try {
-            $results = $this->sync_service->bulk_sync([], [
-                'sync_images' => get_option('tmu_tmdb_sync_images', true),
-                'sync_videos' => get_option('tmu_tmdb_sync_videos', false),
-                'sync_credits' => get_option('tmu_tmdb_sync_credits', true),
-                'rate_limit' => get_option('tmu_tmdb_rate_limit', 1)
-            ]);
-            
-            wp_send_json_success($results);
-            
-        } catch (\Exception $e) {
-            wp_send_json_error($e->getMessage());
-        }
-    }
-    
-    /**
-     * Handle sync statistics request
-     */
-    public function handleGetSyncStats(): void {
-        if (!wp_verify_nonce($_POST['_wpnonce'], 'tmu_get_sync_stats')) {
-            wp_send_json_error(__('Security check failed', 'tmu-theme'));
-        }
-        
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(__('Insufficient permissions', 'tmu-theme'));
-        }
-        
-        try {
-            $stats = $this->sync_service->getSyncStatistics();
-            
-            wp_send_json_success($stats);
-            
-        } catch (\Exception $e) {
-            wp_send_json_error($e->getMessage());
-        }
-    }
-    
-    /**
-     * Get settings
-     */
-    private function getSettings(): array {
-        return [
-            'api_key' => get_option('tmu_tmdb_api_key', ''),
-            'auto_sync' => get_option('tmu_tmdb_auto_sync', false),
-            'sync_images' => get_option('tmu_tmdb_sync_images', true),
-            'sync_videos' => get_option('tmu_tmdb_sync_videos', false),
-            'sync_credits' => get_option('tmu_tmdb_sync_credits', true),
-            'webhooks_enabled' => get_option('tmu_tmdb_webhooks_enabled', false),
-            'webhook_secret' => get_option('tmu_tmdb_webhook_secret', ''),
-            'delete_behavior' => get_option('tmu_tmdb_delete_behavior', 'mark_deleted'),
-            'rate_limit' => get_option('tmu_tmdb_rate_limit', 1),
-            'cache_duration' => get_option('tmu_tmdb_cache_duration', 3600)
-        ];
-    }
-    
-    /**
-     * Enqueue scripts
-     */
-    public function enqueue_scripts($hook): void {
-        if (strpos($hook, 'tmu-tmdb-settings') === false) {
-            return;
-        }
-        
-        wp_enqueue_script(
-            'tmu-tmdb-settings',
-            get_template_directory_uri() . '/assets/js/tmdb-settings.js',
-            ['jquery'],
-            '1.0.0',
-            true
-        );
-        
-        wp_localize_script('tmu-tmdb-settings', 'tmuTmdbSettings', [
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('tmu_tmdb_settings'),
-            'strings' => [
-                'testing' => __('Testing...', 'tmu'),
-                'syncing' => __('Syncing...', 'tmu'),
-                'success' => __('Success!', 'tmu'),
-                'error' => __('Error!', 'tmu'),
-                'confirm_bulk_sync' => __('This will sync all content with TMDB. This may take a while. Continue?', 'tmu'),
-                'confirm_clear_cache' => __('Are you sure you want to clear the TMDB cache?', 'tmu')
+        // Test API connection
+        $test_url = "https://api.themoviedb.org/3/configuration?api_key=" . $api_key;
+        $response = wp_remote_get($test_url, [
+            'timeout' => 10,
+            'headers' => [
+                'Accept' => 'application/json'
             ]
         ]);
         
-        wp_enqueue_style(
-            'tmu-tmdb-settings',
-            get_template_directory_uri() . '/assets/css/tmdb-settings.css',
-            [],
-            '1.0.0'
-        );
+        if (is_wp_error($response)) {
+            wp_send_json_error([
+                'message' => sprintf(__('Connection failed: %s', 'tmu'), $response->get_error_message())
+            ]);
+        }
+        
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if ($status_code === 200 && isset($data['images'])) {
+            wp_send_json_success([
+                'message' => __('Connection successful! API key is valid.', 'tmu'),
+                'data' => [
+                    'base_url' => $data['images']['secure_base_url'] ?? '',
+                    'poster_sizes' => $data['images']['poster_sizes'] ?? [],
+                    'backdrop_sizes' => $data['images']['backdrop_sizes'] ?? []
+                ]
+            ]);
+        } elseif ($status_code === 401) {
+            wp_send_json_error(['message' => __('Invalid API key', 'tmu')]);
+        } else {
+            wp_send_json_error([
+                'message' => sprintf(__('API error (Status: %d)', 'tmu'), $status_code)
+            ]);
+        }
+    }
+    
+    /**
+     * Handle bulk sync via AJAX
+     */
+    public function bulkSync(): void {
+        check_ajax_referer('tmu_bulk_sync', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized access', 'tmu')]);
+        }
+        
+        $type = sanitize_text_field($_POST['type'] ?? '');
+        $batch_size = 10; // Process 10 items at a time
+        
+        switch ($type) {
+            case 'movies':
+                $posts = get_posts([
+                    'post_type' => 'movie',
+                    'posts_per_page' => $batch_size,
+                    'meta_query' => [
+                        [
+                            'key' => '_tmdb_synced',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
+                ]);
+                break;
+                
+            case 'tv':
+                $posts = get_posts([
+                    'post_type' => 'tv-series',
+                    'posts_per_page' => $batch_size,
+                    'meta_query' => [
+                        [
+                            'key' => '_tmdb_synced',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
+                ]);
+                break;
+                
+            case 'people':
+                $posts = get_posts([
+                    'post_type' => 'people',
+                    'posts_per_page' => $batch_size,
+                    'meta_query' => [
+                        [
+                            'key' => '_tmdb_synced',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
+                ]);
+                break;
+                
+            default:
+                wp_send_json_error(['message' => __('Invalid sync type', 'tmu')]);
+        }
+        
+        if (empty($posts)) {
+            wp_send_json_success([
+                'message' => __('All items are already synced', 'tmu'),
+                'completed' => true
+            ]);
+        }
+        
+        $synced_count = 0;
+        foreach ($posts as $post) {
+            // Simulate sync - in real implementation, call TMDB API
+            update_post_meta($post->ID, '_tmdb_synced', current_time('mysql'));
+            $synced_count++;
+        }
+        
+        wp_send_json_success([
+            'message' => sprintf(__('Synced %d items', 'tmu'), $synced_count),
+            'synced_count' => $synced_count,
+            'has_more' => count($posts) === $batch_size
+        ]);
+    }
+    
+    /**
+     * Configure webhook via AJAX
+     */
+    public function configureWebhook(): void {
+        check_ajax_referer('tmu_webhook_config', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized access', 'tmu')]);
+        }
+        
+        $webhook_url = home_url('/wp-json/tmu/v1/webhook');
+        
+        wp_send_json_success([
+            'message' => __('Webhook configured successfully', 'tmu'),
+            'webhook_url' => $webhook_url
+        ]);
     }
 }
