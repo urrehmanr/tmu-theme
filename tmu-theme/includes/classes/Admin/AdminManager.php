@@ -106,9 +106,28 @@ class AdminManager {
             $this->components['relationship_box'] = new MetaBoxes\RelationshipBox();
         }
         
+        // Load data import tools
+        if (class_exists('TMU\Admin\Actions\DataImport')) {
+            $this->components['data_import'] = new Actions\DataImport();
+        }
+        
+        // Load additional meta boxes
+        if (class_exists('TMU\Admin\MetaBoxes\QuickActions')) {
+            $this->components['quick_actions'] = new MetaBoxes\QuickActions();
+        }
+        
+        // Load additional dashboard components
+        if (class_exists('TMU\Admin\Dashboard\QuickStats')) {
+            $this->components['quick_stats'] = new Dashboard\QuickStats();
+        }
+        
         // Load navigation enhancements
         if (class_exists('TMU\Admin\Navigation\MenuManager')) {
             $this->components['menu_manager'] = new Navigation\MenuManager();
+        }
+        
+        if (class_exists('TMU\Admin\Navigation\SubMenus')) {
+            $this->components['sub_menus'] = new Navigation\SubMenus();
         }
         
         // Load TMDB settings
