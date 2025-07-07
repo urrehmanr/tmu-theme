@@ -13,37 +13,14 @@
         <testsuite name="TMU Theme Test Suite">
             <directory>./tests/</directory>
         </testsuite>
-        <testsuite name="Unit Tests">
-            <directory>./tests/Unit/</directory>
-        </testsuite>
-        <testsuite name="Integration Tests">
-            <directory>./tests/Integration/</directory>
-        </testsuite>
-        <testsuite name="Performance Tests">
-            <directory>./tests/Performance/</directory>
-        </testsuite>
-        <testsuite name="Security Tests">
-            <directory>./tests/Security/</directory>
-        </testsuite>
-        <testsuite name="Accessibility Tests">
-            <directory>./tests/Accessibility/</directory>
-        </testsuite>
-        <testsuite name="Production Tests">
-            <directory>./tests/Unit/</directory>
-            <directory>./tests/Integration/</directory>
-            <directory>./tests/Security/</directory>
-        </testsuite>
     </testsuites>
     
     <filter>
         <whitelist>
             <directory suffix=".php">./src/</directory>
-            <directory suffix=".php">./includes/</directory>
             <exclude>
                 <directory>./vendor/</directory>
                 <directory>./tests/</directory>
-                <directory>./node_modules/</directory>
-                <file>./includes/bootstrap.php</file>
             </exclude>
         </whitelist>
     </filter>
@@ -51,17 +28,5 @@
     <logging>
         <log type="coverage-html" target="./coverage"/>
         <log type="coverage-text" target="php://stdout" showUncoveredFiles="true"/>
-        <log type="coverage-clover" target="./coverage/clover.xml"/>
-        <log type="junit" target="./coverage/junit.xml"/>
     </logging>
-    
-    <php>
-        <env name="WP_TESTS_DIR" value="/tmp/wordpress-tests-lib"/>
-        <env name="WP_CORE_DIR" value="/tmp/wordpress"/>
-        <const name="WP_DEBUG" value="true"/>
-        <const name="WP_DEBUG_LOG" value="true"/>
-        <const name="WP_DEBUG_DISPLAY" value="false"/>
-        <const name="TMU_TESTING" value="true"/>
-        <const name="TMU_TEST_MODE" value="true"/>
-    </php>
 </phpunit>
