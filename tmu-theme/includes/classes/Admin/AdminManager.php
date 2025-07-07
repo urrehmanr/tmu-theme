@@ -210,9 +210,9 @@ class AdminManager {
             
             wp_enqueue_style(
                 'tmu-admin',
-                get_template_directory_uri() . '/assets/build/css/admin.css',
+                get_template_directory_uri() . '/assets/build/css/admin-styles.css',
                 [],
-                get_theme_file_version('assets/build/css/admin.css')
+                get_theme_file_version('assets/build/css/admin-styles.css')
             );
             
             wp_enqueue_script(

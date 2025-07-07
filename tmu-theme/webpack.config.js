@@ -7,7 +7,8 @@ module.exports = (env, argv) => {
   return {
     entry: {
       main: './assets/src/js/main.js',
-      admin: './assets/src/js/admin.js'
+      admin: './assets/src/js/admin.js',
+      'admin-styles': './assets/src/scss/admin.scss'
     },
     output: {
       path: path.resolve(__dirname, 'assets/build'),
@@ -27,7 +28,7 @@ module.exports = (env, argv) => {
           }
         },
         {
-          test: /\.css$/,
+          test: /\.(css|scss)$/,
           use: [
             MiniCssExtractPlugin.loader,
             'css-loader',
@@ -39,6 +40,15 @@ module.exports = (env, argv) => {
                     require('tailwindcss'),
                     require('autoprefixer'),
                   ]
+                }
+              }
+            },
+            {
+              loader: 'sass-loader',
+              options: {
+                api: 'modern',
+                sassOptions: {
+                  silenceDeprecations: ['legacy-js-api']
                 }
               }
             }
