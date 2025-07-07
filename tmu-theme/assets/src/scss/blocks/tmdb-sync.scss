@@ -1,0 +1,315 @@
+/**
+ * TMDB Sync Block Styles
+ * 
+ * Styles for the TMDB synchronization block component
+ * with progress indicators and status displays.
+ * 
+ * @package TMU\Blocks
+ * @since 1.0.0
+ */
+
+.tmu-tmdb-sync-block {
+  @apply bg-white border border-gray-200 rounded-lg p-6;
+  
+  .sync-header {
+    @apply text-center mb-6;
+    
+    .sync-icon {
+      @apply inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4;
+      
+      svg {
+        @apply w-8 h-8 text-blue-600;
+        transition: transform 0.3s ease;
+      }
+      
+      &.syncing svg {
+        animation: spin 2s linear infinite;
+      }
+    }
+    
+    h3 {
+      @apply text-xl font-bold text-gray-900 mb-2;
+    }
+    
+    p {
+      @apply text-gray-600 mb-4;
+    }
+  }
+  
+  .sync-progress {
+    @apply mb-4;
+    
+    .progress-label {
+      @apply text-sm text-gray-600 mb-2 text-center;
+    }
+    
+    .progress-bar {
+      @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+      
+      .progress-fill {
+        @apply bg-blue-600 h-full rounded-full transition-all duration-300;
+        
+        &.success {
+          @apply bg-green-600;
+        }
+        
+        &.error {
+          @apply bg-red-600;
+        }
+      }
+    }
+  }
+  
+  .sync-config {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4 mb-4;
+    
+    .config-item {
+      @apply p-4 bg-gray-50 rounded-lg;
+      
+      .config-value {
+        @apply text-lg font-semibold text-gray-900;
+      }
+      
+      .config-label {
+        @apply text-sm text-gray-600;
+      }
+    }
+  }
+  
+  .sync-results {
+    @apply mt-4 p-4 rounded-lg;
+    
+    &.success {
+      @apply bg-green-50;
+      
+      h4 {
+        @apply font-semibold text-green-900 mb-2;
+      }
+      
+      .result-text {
+        @apply text-sm text-green-800;
+      }
+    }
+    
+    &.error {
+      @apply bg-red-50;
+      
+      h4 {
+        @apply font-semibold text-red-900 mb-2;
+      }
+      
+      .result-text {
+        @apply text-sm text-red-800;
+      }
+    }
+    
+    &.warning {
+      @apply bg-yellow-50;
+      
+      h4 {
+        @apply font-semibold text-yellow-900 mb-2;
+      }
+      
+      .result-text {
+        @apply text-sm text-yellow-800;
+      }
+    }
+    
+    .result-stats {
+      @apply grid grid-cols-2 md:grid-cols-3 gap-2 mt-2;
+      
+      .stat-item {
+        @apply text-center p-2 bg-white bg-opacity-50 rounded;
+        
+        .stat-number {
+          @apply text-lg font-bold;
+        }
+        
+        .stat-label {
+          @apply text-xs;
+        }
+      }
+    }
+  }
+  
+  .sync-actions {
+    @apply text-center;
+    
+    .sync-button {
+      @apply px-6 py-3 bg-blue-600 text-white rounded-lg font-medium;
+      @apply hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed;
+      @apply transition-all duration-200;
+      
+      &.loading {
+        @apply bg-blue-500;
+        
+        &::after {
+          content: '';
+          @apply inline-block w-4 h-4 ml-2 border-2 border-white border-t-transparent rounded-full;
+          animation: spin 1s linear infinite;
+        }
+      }
+      
+      &.success {
+        @apply bg-green-600 hover:bg-green-700;
+      }
+      
+      &.error {
+        @apply bg-red-600 hover:bg-red-700;
+      }
+    }
+  }
+  
+  .loading-spinner {
+    @apply flex items-center justify-center mt-4;
+    
+    .spinner {
+      @apply w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+      @apply ml-2 text-gray-600;
+    }
+  }
+  
+  .sync-notice {
+    @apply mb-4 p-4 rounded-lg border-l-4;
+    
+    &.success {
+      @apply bg-green-50 border-green-400 text-green-800;
+    }
+    
+    &.error {
+      @apply bg-red-50 border-red-400 text-red-800;
+    }
+    
+    &.warning {
+      @apply bg-yellow-50 border-yellow-400 text-yellow-800;
+    }
+    
+    &.info {
+      @apply bg-blue-50 border-blue-400 text-blue-800;
+    }
+    
+    .notice-title {
+      @apply font-semibold mb-1;
+    }
+    
+    .notice-message {
+      @apply text-sm;
+    }
+    
+    .notice-dismiss {
+      @apply float-right text-xl leading-none cursor-pointer opacity-70;
+      @apply hover:opacity-100 transition-opacity duration-200;
+      
+      &:hover {
+        @apply opacity-100;
+      }
+    }
+  }
+  
+  .sync-status {
+    @apply mt-4 p-3 bg-gray-50 rounded-lg;
+    
+    .status-row {
+      @apply flex justify-between items-center mb-2;
+      
+      &:last-child {
+        @apply mb-0;
+      }
+      
+      .status-label {
+        @apply font-medium text-gray-700;
+      }
+      
+      .status-value {
+        @apply text-gray-900;
+        
+        &.success {
+          @apply text-green-600;
+        }
+        
+        &.error {
+          @apply text-red-600;
+        }
+        
+        &.pending {
+          @apply text-yellow-600;
+        }
+      }
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Inspector controls specific styles
+.components-panel__body {
+  .tmu-sync-panel {
+    .components-base-control {
+      @apply mb-4;
+      
+      &:last-child {
+        @apply mb-0;
+      }
+    }
+    
+    .sync-action-button {
+      @apply w-full mb-3;
+      
+      &:last-child {
+        @apply mb-0;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .tmu-tmdb-sync-block {
+    @apply p-4;
+    
+    .sync-config {
+      @apply grid-cols-1 gap-2;
+    }
+    
+    .sync-results .result-stats {
+      @apply grid-cols-1 gap-1;
+    }
+  }
+}
+
+// Dark mode support (if theme supports it)
+@media (prefers-color-scheme: dark) {
+  .tmu-tmdb-sync-block {
+    .sync-icon {
+      @apply bg-blue-900;
+      
+      svg {
+        @apply text-blue-400;
+      }
+    }
+    
+    .config-item {
+      @apply bg-gray-800;
+      
+      .config-value {
+        @apply text-gray-100;
+      }
+      
+      .config-label {
+        @apply text-gray-400;
+      }
+    }
+  }
+}

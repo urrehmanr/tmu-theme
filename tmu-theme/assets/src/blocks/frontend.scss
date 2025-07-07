@@ -1,0 +1,263 @@
+/**
+ * TMU Blocks Frontend Styles
+ * 
+ * Styles for TMU blocks on the frontend/public-facing website.
+ * These styles are loaded for site visitors.
+ */
+
+/* Frontend Block Styles */
+.tmu-movie-metadata,
+.tmu-tv-series-metadata,
+.tmu-drama-metadata,
+.tmu-people-metadata,
+.tmu-tv-episode-metadata {
+  margin-bottom: 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+/* Movie Block Frontend */
+.tmu-movie-metadata {
+  .movie-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #3b82f6;
+    }
+  }
+  
+  .movie-poster img {
+    width: 120px;
+    height: auto;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    
+    &.loaded {
+      opacity: 1;
+    }
+  }
+  
+  .movie-overview {
+    color: #6b7280;
+    line-height: 1.6;
+    margin-top: 1rem;
+  }
+}
+
+/* TV Series Block Frontend */
+.tmu-tv-series-metadata {
+  .tv-series-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #3b82f6;
+    }
+  }
+  
+  .series-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    
+    .info-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      
+      &.seasons {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+      
+      &.episodes {
+        background-color: #f3e8ff;
+        color: #7c3aed;
+      }
+      
+      &.status {
+        background-color: #f3f4f6;
+        color: #374151;
+        
+        &.returning {
+          background-color: #d1fae5;
+          color: #065f46;
+        }
+        
+        &.ended {
+          background-color: #fee2e2;
+          color: #991b1b;
+        }
+      }
+    }
+  }
+}
+
+/* Episode Block Frontend */
+.tmu-tv-episode-metadata {
+  .episode-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #3b82f6;
+    }
+  }
+  
+  .episode-still img {
+    width: 160px;
+    height: auto;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    
+    &.loaded {
+      opacity: 1;
+    }
+  }
+  
+  .episode-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    
+    .episode-number {
+      font-size: 0.75rem;
+      background-color: #dbeafe;
+      color: #1e40af;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+  }
+}
+
+/* People Block Frontend */
+.tmu-people-metadata {
+  .people-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #3b82f6;
+    }
+  }
+  
+  .person-profile img {
+    width: 120px;
+    height: auto;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .person-department {
+    font-size: 0.875rem;
+    color: #3b82f6;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Drama Block Frontend */
+.tmu-drama-metadata {
+  .drama-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+  
+  .channel-info {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+}
+
+/* Common Metadata Grid */
+.tmu-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+  
+  .tmu-meta-item {
+    display: flex;
+    flex-direction: column;
+    
+    .tmu-meta-label {
+      font-weight: 600;
+      color: #6b7280;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .tmu-meta-value {
+      color: #1f2937;
+      margin-top: 0.25rem;
+    }
+  }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.tmu-loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tmu-movie-metadata,
+  .tmu-tv-series-metadata,
+  .tmu-drama-metadata,
+  .tmu-people-metadata,
+  .tmu-tv-episode-metadata {
+    padding: 1rem;
+  }
+}

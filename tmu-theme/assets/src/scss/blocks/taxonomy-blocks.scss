@@ -1,0 +1,534 @@
+/**
+ * Taxonomy Blocks Styles
+ * 
+ * Consolidated SCSS for all taxonomy-related blocks.
+ * Contains styles for TaxonomyImageBlock, TaxonomyFaqsBlock, and NetworkManagementBlock.
+ * 
+ * @package TMU\Blocks
+ * @since 1.0.0
+ */
+
+// Taxonomy Image Block
+.tmu-taxonomy-image-block {
+  .taxonomy-image-preview {
+    text-align: center;
+    padding: 20px;
+    
+    .taxonomy-image {
+      max-width: 200px;
+      height: auto;
+      border-radius: var(--tmu-border-radius);
+      box-shadow: var(--tmu-shadow);
+      margin-bottom: 16px;
+    }
+    
+    .image-meta {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      
+      .image-type-badge,
+      .taxonomy-type {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .image-type-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+      
+      .taxonomy-type {
+        background: #f1f8e9;
+        color: #689f38;
+      }
+    }
+  }
+  
+  .components-placeholder {
+    min-height: 200px;
+    
+    .components-placeholder__label {
+      font-weight: 600;
+      color: var(--tmu-text-dark);
+    }
+    
+    .components-placeholder__instructions {
+      color: var(--tmu-text-medium);
+      margin-bottom: 20px;
+    }
+  }
+}
+
+// Frontend taxonomy image styles
+.tmu-taxonomy-image {
+  .taxonomy-image-container {
+    position: relative;
+    display: inline-block;
+    
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--tmu-border-radius);
+    }
+    
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      color: white;
+      padding: 12px;
+      border-radius: 0 0 var(--tmu-border-radius) var(--tmu-border-radius);
+      
+      .image-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+      }
+      
+      .image-type {
+        font-size: 12px;
+        opacity: 0.9;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Taxonomy FAQs Block
+.tmu-taxonomy-faqs-block {
+  .faq-list {
+    .faq-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--tmu-border-color);
+      
+      h3 {
+        margin: 0;
+        color: var(--tmu-text-dark);
+        font-size: 18px;
+        font-weight: 600;
+      }
+      
+      .faq-count {
+        background: var(--tmu-primary-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+    
+    .faq-item {
+      border: 1px solid var(--tmu-border-color);
+      border-radius: var(--tmu-border-radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: var(--tmu-transition);
+      
+      &:hover {
+        border-color: var(--tmu-primary-color);
+        box-shadow: var(--tmu-shadow);
+      }
+      
+      .faq-controls {
+        display: flex;
+        gap: 6px;
+        padding: 8px 12px;
+        background: var(--tmu-background-light);
+        border-bottom: 1px solid var(--tmu-border-color);
+        
+        .components-button {
+          font-size: 12px;
+          height: 24px;
+          min-width: 24px;
+          
+          &:disabled {
+            opacity: 0.5;
+          }
+        }
+      }
+      
+      .components-base-control {
+        margin: 0;
+        padding: 12px;
+        
+        &:not(:last-child) {
+          border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .components-base-control__label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--tmu-text-dark);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 6px;
+        }
+        
+        .components-text-control__input,
+        .components-textarea-control__input {
+          border: 1px solid var(--tmu-border-color);
+          border-radius: var(--tmu-border-radius);
+          padding: 8px 12px;
+          font-size: 14px;
+          
+          &:focus {
+            border-color: var(--tmu-primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+          }
+        }
+      }
+      
+      .faq-meta {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        padding: 12px;
+        background: #fbfbfb;
+      }
+    }
+  }
+  
+  .add-faq-button {
+    width: 100%;
+    justify-content: center;
+    margin-top: 16px;
+  }
+}
+
+// Frontend FAQ styles
+.tmu-taxonomy-faqs {
+  .faq-container {
+    .faq-search {
+      margin-bottom: 24px;
+      
+      .search-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--tmu-border-color);
+        border-radius: var(--tmu-border-radius);
+        font-size: 16px;
+        
+        &:focus {
+          border-color: var(--tmu-primary-color);
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+        }
+      }
+    }
+    
+    .faq-accordion {
+      .faq-item {
+        border: 1px solid var(--tmu-border-color);
+        border-radius: var(--tmu-border-radius);
+        margin-bottom: 8px;
+        overflow: hidden;
+        
+        .faq-question {
+          width: 100%;
+          padding: 16px 20px;
+          background: white;
+          border: none;
+          text-align: left;
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--tmu-text-dark);
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          transition: var(--tmu-transition);
+          
+          &:hover {
+            background: var(--tmu-background-light);
+          }
+          
+          .faq-icon {
+            transition: transform 0.3s ease;
+            font-size: 20px;
+            color: var(--tmu-primary-color);
+          }
+          
+          &.expanded .faq-icon {
+            transform: rotate(45deg);
+          }
+        }
+        
+        .faq-answer {
+          padding: 0 20px;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.3s ease, padding 0.3s ease;
+          
+          &.expanded {
+            max-height: 500px;
+            padding: 16px 20px;
+          }
+          
+          p {
+            margin: 0;
+            line-height: 1.6;
+            color: var(--tmu-text-dark);
+          }
+        }
+        
+        .faq-category {
+          display: inline-block;
+          padding: 2px 6px;
+          background: var(--tmu-background-light);
+          border-radius: 3px;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          color: var(--tmu-text-medium);
+          margin-top: 8px;
+        }
+      }
+    }
+    
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      
+      .faq-item {
+        background: white;
+        border: 1px solid var(--tmu-border-color);
+        border-radius: var(--tmu-border-radius);
+        padding: 20px;
+        transition: var(--tmu-transition);
+        
+        &:hover {
+          box-shadow: var(--tmu-shadow-hover);
+          border-color: var(--tmu-primary-color);
+        }
+        
+        .faq-question {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--tmu-text-dark);
+          margin-bottom: 12px;
+        }
+        
+        .faq-answer {
+          color: var(--tmu-text-dark);
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+}
+
+// Network Management Block
+.tmu-network-management-block {
+  .network-preview {
+    .network-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--tmu-border-color);
+      
+      h3 {
+        margin: 0;
+        color: var(--tmu-text-dark);
+        font-size: 20px;
+        font-weight: 600;
+      }
+      
+      .network-type-badge {
+        padding: 6px 12px;
+        background: var(--tmu-primary-color);
+        color: white;
+        border-radius: var(--tmu-border-radius);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+    
+    .network-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+      
+      p {
+        margin: 0;
+        padding: 12px;
+        background: var(--tmu-background-light);
+        border-radius: var(--tmu-border-radius);
+        
+        strong {
+          color: var(--tmu-text-medium);
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: block;
+          margin-bottom: 4px;
+        }
+      }
+    }
+    
+    .channels-list {
+      h4 {
+        margin: 0 0 12px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--tmu-text-dark);
+      }
+      
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        
+        li {
+          padding: 8px 12px;
+          background: white;
+          border: 1px solid var(--tmu-border-color);
+          border-radius: var(--tmu-border-radius);
+          margin-bottom: 6px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          
+          .channel-type {
+            font-size: 12px;
+            color: var(--tmu-text-medium);
+            background: var(--tmu-background-light);
+            padding: 2px 6px;
+            border-radius: 3px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Inspector panel styles for taxonomy blocks
+.components-panel__body {
+  .components-panel__body-title {
+    .components-button {
+      font-weight: 600;
+    }
+  }
+  
+  .content-types-selection {
+    p {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+    }
+    
+    .components-toggle-control {
+      margin-bottom: 8px;
+      
+      .components-toggle-control__label {
+        font-size: 14px;
+      }
+    }
+  }
+  
+  .channel-item {
+    border: 1px solid var(--tmu-border-color);
+    border-radius: var(--tmu-border-radius);
+    padding: 12px;
+    margin-bottom: 12px;
+    
+    .components-base-control:not(:last-child) {
+      margin-bottom: 12px;
+    }
+    
+    .components-button.is-destructive {
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// Responsive design for taxonomy blocks
+@media (max-width: 768px) {
+  .tmu-taxonomy-image-block {
+    .taxonomy-image-preview {
+      .taxonomy-image {
+        max-width: 150px;
+      }
+      
+      .image-meta {
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+  }
+  
+  .tmu-taxonomy-faqs-block {
+    .faq-item .faq-meta {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .tmu-network-management-block {
+    .network-preview {
+      .network-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      
+      .network-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+  
+  .tmu-taxonomy-faqs {
+    .faq-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .tmu-taxonomy-image,
+  .tmu-taxonomy-faqs,
+  .tmu-network-management {
+    .components-placeholder {
+      background: #1e1e1e;
+      border-color: #333;
+      
+      .components-placeholder__label,
+      .components-placeholder__instructions {
+        color: #e0e0e0;
+      }
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .tmu-taxonomy-faqs {
+    .faq-accordion .faq-item {
+      .faq-answer {
+        max-height: none !important;
+        padding: 16px 20px !important;
+      }
+    }
+  }
+}

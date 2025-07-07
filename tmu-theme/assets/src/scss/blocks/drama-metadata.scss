@@ -1,0 +1,35 @@
+/**
+ * Drama Metadata Block Styles
+ */
+
+.tmu-drama-metadata-block {
+  .tmu-metadata-preview {
+    .drama-info {
+      @apply mt-2;
+      
+      .channel-info {
+        @apply inline-flex items-center px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium;
+      }
+      
+      .broadcast-day {
+        @apply ml-2 text-xs text-gray-600;
+      }
+    }
+  }
+}
+
+.wp-block-tmu-drama-metadata {
+  @apply border border-gray-200 rounded-lg p-6 bg-white shadow-sm;
+  
+  .drama-header {
+    @apply mb-6;
+    
+    .drama-title {
+      @apply text-2xl font-bold text-gray-900 mb-2;
+    }
+    
+    .drama-channel {
+      @apply inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium;
+    }
+  }
+}

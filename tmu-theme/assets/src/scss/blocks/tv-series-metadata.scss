@@ -1,0 +1,77 @@
+/**
+ * TV Series Metadata Block Styles
+ */
+
+.tmu-tv-series-metadata-block {
+  .tmu-metadata-preview {
+    .series-info {
+      @apply flex flex-wrap gap-2 mt-2;
+      
+      .info-badge {
+        @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+        
+        &.seasons {
+          @apply bg-blue-100 text-blue-800;
+        }
+        
+        &.episodes {
+          @apply bg-purple-100 text-purple-800;
+        }
+        
+        &.status {
+          @apply bg-gray-100 text-gray-800;
+          
+          &.returning {
+            @apply bg-green-100 text-green-800;
+          }
+          
+          &.ended {
+            @apply bg-red-100 text-red-800;
+          }
+        }
+      }
+    }
+  }
+}
+
+.wp-block-tmu-tv-series-metadata {
+  @apply border border-gray-200 rounded-lg p-6 bg-white shadow-sm;
+  
+  .series-header {
+    @apply flex gap-6 mb-6;
+    
+    @media (max-width: 768px) {
+      @apply flex-col;
+    }
+    
+    .series-poster {
+      @apply flex-shrink-0;
+      
+      img {
+        @apply w-48 h-auto rounded-lg shadow-md;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+      }
+    }
+    
+    .series-details {
+      @apply flex-1;
+      
+      h1 {
+        @apply text-3xl font-bold text-gray-900 mb-3;
+      }
+      
+      .series-tagline {
+        @apply text-lg text-blue-600 italic mb-4;
+      }
+      
+      .series-overview {
+        @apply text-gray-700 leading-relaxed mb-4;
+      }
+      
+      .series-badges {
+        @apply flex flex-wrap gap-2;
+      }
+    }
+  }
+}

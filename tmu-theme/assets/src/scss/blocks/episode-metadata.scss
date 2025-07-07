@@ -1,0 +1,125 @@
+/**
+ * Episode Metadata Block Styles
+ */
+
+.tmu-tv-episode-metadata-block {
+  .tmu-metadata-preview {
+    .episode-badges {
+      @apply flex items-center gap-2 mb-2;
+      
+      .episode-number {
+        @apply text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-mono;
+      }
+      
+      .episode-type {
+        @apply text-xs bg-green-100 text-green-800 px-2 py-1 rounded capitalize;
+      }
+    }
+    
+    .episode-still {
+      @apply flex-shrink-0;
+      
+      img {
+        @apply w-32 h-auto rounded shadow-lg;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+      }
+    }
+    
+    .guest-stars {
+      @apply mt-2;
+      
+      .guest-stars-label {
+        @apply text-xs font-semibold text-gray-700;
+      }
+      
+      .guest-stars-list {
+        @apply text-xs text-gray-600;
+      }
+    }
+  }
+}
+
+.wp-block-tmu-tv-episode-metadata {
+  @apply border border-gray-200 rounded-lg p-6 bg-white shadow-sm;
+  
+  .episode-header {
+    @apply flex gap-6 mb-6;
+    
+    @media (max-width: 768px) {
+      @apply flex-col;
+    }
+    
+    .episode-still {
+      @apply flex-shrink-0;
+      
+      img {
+        @apply w-64 h-auto rounded-lg shadow-md;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+      }
+    }
+    
+    .episode-info {
+      @apply flex-1;
+      
+      .episode-badges {
+        @apply flex items-center gap-3 mb-3;
+        
+        .season-episode {
+          @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-mono;
+        }
+        
+        .episode-type-badge {
+          @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm capitalize;
+        }
+      }
+      
+      h1 {
+        @apply text-2xl font-bold text-gray-900 mb-3;
+      }
+      
+      .episode-overview {
+        @apply text-gray-700 leading-relaxed mb-4;
+      }
+      
+      .episode-meta {
+        @apply grid gap-3;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        
+        .meta-item {
+          @apply flex flex-col;
+          
+          .label {
+            @apply text-xs font-semibold text-gray-600 uppercase tracking-wide;
+          }
+          
+          .value {
+            @apply text-gray-900 mt-1;
+          }
+        }
+      }
+    }
+  }
+  
+  .episode-cast {
+    @apply mt-6 p-4 bg-purple-50 rounded border border-purple-200;
+    
+    h3 {
+      @apply text-lg font-semibold text-purple-900 mb-3;
+    }
+    
+    .guest-stars-grid {
+      @apply grid gap-2;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      
+      .guest-star {
+        @apply text-purple-800 text-sm;
+        
+        .character {
+          @apply text-purple-600 text-xs;
+        }
+      }
+    }
+  }
+}

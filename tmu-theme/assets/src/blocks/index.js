@@ -1,53 +1,84 @@
 /**
  * TMU Blocks Registration Entry Point
  * 
- * This file registers all TMU Gutenberg blocks and imports
- * the necessary React components for the block editor.
+ * This file imports all TMU Gutenberg blocks which self-register
+ * using the WordPress block registration API.
+ * 
+ * @package TMU\Blocks
+ * @since 1.0.0
  */
 
 // Import WordPress dependencies
-import { registerBlockType } from '@wordpress/blocks';
+import { addFilter } from '@wordpress/hooks';
+import { __ } from '@wordpress/i18n';
 
 // Import block styles
-import './editor.scss';
+import '../scss/blocks/editor.scss';
 
-// Import individual block components
-import MovieMetadataBlock from './components/MovieMetadataBlock';
-import TvSeriesMetadataBlock from './components/TvSeriesMetadataBlock';
-import DramaMetadataBlock from './components/DramaMetadataBlock';
-import PeopleMetadataBlock from './components/PeopleMetadataBlock';
-import TvEpisodeMetadataBlock from './components/TvEpisodeMetadataBlock';
+// Import individual metadata blocks (self-registering)
+import './MovieMetadataBlock.jsx';
+import './TvSeriesMetadataBlock.jsx';
+import './DramaMetadataBlock.jsx';
+import './PeopleMetadataBlock.jsx';
 
-// Block configurations
-const blocks = [
-    {
-        name: 'tmu/movie-metadata',
-        settings: MovieMetadataBlock
-    },
-    {
-        name: 'tmu/tv-series-metadata',
-        settings: TvSeriesMetadataBlock
-    },
-    {
-        name: 'tmu/drama-metadata',
-        settings: DramaMetadataBlock
-    },
-    {
-        name: 'tmu/people-metadata',
-        settings: PeopleMetadataBlock
-    },
-    {
-        name: 'tmu/tv-episode-metadata',
-        settings: TvEpisodeMetadataBlock
+// Import universal episode block (self-registering)
+import './EpisodeMetadataBlock.jsx';
+
+// Import consolidated block files (self-registering)
+import './TaxonomyBlocks.jsx';
+import './ContentBlocks.jsx';
+
+// Import specialized blocks (self-registering)
+import './SeasonMetadataBlock.jsx';
+import './VideoMetadataBlock.jsx';
+import './TmdbSyncBlock.jsx';
+
+// Register custom block category
+addFilter(
+    'blocks.registerBlockType',
+    'tmu/blocks-category',
+    (settings, name) => {
+        if (name && name.startsWith('tmu/')) {
+            return {
+                ...settings,
+                category: 'tmu-blocks',
+            };
+        }
+        return settings;
     }
-];
+);
 
-// Register all blocks
-blocks.forEach(({ name, settings }) => {
-    registerBlockType(name, settings);
-});
+// Register block categories
+const registerBlockCategories = (categories) => {
+    return [
+        ...categories,
+        {
+            slug: 'tmu-blocks',
+            title: __('TMU Blocks', 'tmu-theme'),
+            icon: 'video-alt3',
+        },
+    ];
+};
 
-// Log registration for debugging
+// Add block category filter
+addFilter(
+    'blocks.getBlockTypes',
+    'tmu/block-categories',
+    registerBlockCategories
+);
+
+// Development logging
 if (process.env.NODE_ENV === 'development') {
-    console.log('TMU Blocks registered:', blocks.map(block => block.name));
+    console.log('TMU Blocks system initialized');
+    
+    // Log available blocks after registration
+    setTimeout(() => {
+        const { getBlockTypes } = wp.data.select('core/blocks');
+        const tmuBlocks = getBlockTypes().filter(block => block.name.startsWith('tmu/'));
+        console.log('Registered TMU Blocks:', tmuBlocks.map(block => ({
+            name: block.name,
+            title: block.title,
+            category: block.category
+        })));
+    }, 1000);
 }

@@ -1,0 +1,89 @@
+/**
+ * People Metadata Block Styles
+ */
+
+.tmu-people-metadata-block {
+  .tmu-metadata-preview {
+    .person-profile {
+      @apply flex-shrink-0;
+      
+      img {
+        @apply w-24 h-auto rounded shadow-lg;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+      }
+    }
+    
+    .person-department {
+      @apply text-sm text-blue-600 mb-2 font-medium;
+    }
+    
+    .person-age {
+      @apply text-xs text-gray-600 ml-1;
+    }
+  }
+}
+
+.wp-block-tmu-people-metadata {
+  @apply border border-gray-200 rounded-lg p-6 bg-white shadow-sm;
+  
+  .person-header {
+    @apply flex gap-6 mb-6;
+    
+    @media (max-width: 768px) {
+      @apply flex-col;
+    }
+    
+    .person-photo {
+      @apply flex-shrink-0;
+      
+      img {
+        @apply w-48 h-auto rounded-lg shadow-md;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+      }
+    }
+    
+    .person-info {
+      @apply flex-1;
+      
+      h1 {
+        @apply text-3xl font-bold text-gray-900 mb-2;
+      }
+      
+      .person-profession {
+        @apply text-lg text-blue-600 font-medium mb-4;
+      }
+      
+      .person-details {
+        @apply grid gap-3;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        
+        .detail-item {
+          @apply flex flex-col;
+          
+          .label {
+            @apply text-xs font-semibold text-gray-600 uppercase tracking-wide;
+          }
+          
+          .value {
+            @apply text-gray-900 mt-1;
+          }
+        }
+      }
+    }
+  }
+  
+  .person-biography {
+    @apply mt-6 p-4 bg-gray-50 rounded border-l-4;
+    border-left-color: theme('colors.blue.400');
+    
+    h3 {
+      @apply text-lg font-semibold text-gray-900 mb-3;
+    }
+    
+    p {
+      @apply text-gray-700 leading-relaxed;
+    }
+  }
+}
