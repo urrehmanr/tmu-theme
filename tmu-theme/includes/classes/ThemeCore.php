@@ -154,6 +154,13 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/SEO/BreadcrumbManager.php';
         require_once TMU_INCLUDES_DIR . '/classes/SEO/Analytics.php';
         
+        // Load individual Schema classes
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/MovieSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/TVShowSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/PersonSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/EpisodeSchema.php';
+        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/SeasonSchema.php';
+        
         // Load placeholder classes - will be created in future steps
         // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
         // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
