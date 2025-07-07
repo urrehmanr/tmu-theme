@@ -1,0 +1,184 @@
+# .github/workflows/ci-cd.yml
+name: TMU Theme CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, intl, gd, xml, zip, mysql
+        tools: composer, phpunit
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install PHP dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Install Node dependencies
+      run: npm ci
+    
+    - name: Run PHP Code Sniffer
+      run: ./vendor/bin/phpcs
+    
+    - name: Run PHPStan
+      run: ./vendor/bin/phpstan analyse
+    
+    - name: Build assets
+      run: npm run build
+    
+    - name: Setup WordPress test environment
+      run: |
+        bash bin/install-wp-tests.sh wordpress_test root password 127.0.0.1 latest
+    
+    - name: Run PHPUnit tests
+      run: ./vendor/bin/phpunit
+    
+    - name: Run JavaScript tests
+      run: npm test
+    
+    - name: Run accessibility tests
+      run: npm run test:a11y
+    
+    - name: Generate coverage report
+      run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run security scan
+      uses: securecodewarrior/github-action-add-sarif@v1
+      with:
+        sarif-file: security-scan-results.sarif
+    
+    - name: PHP Security Checker
+      run: |
+        curl -L https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64 -o local-php-security-checker
+        chmod +x local-php-security-checker
+        ./local-php-security-checker
+
+  deploy-staging:
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies and build
+      run: |
+        npm ci
+        npm run build:staging
+    
+    - name: Deploy to staging
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        ARGS: "-rlgoDzvc -i --delete"
+        SOURCE: "./"
+        REMOTE_HOST: ${{ secrets.STAGING_HOST }}
+        REMOTE_USER: ${{ secrets.STAGING_USER }}
+        TARGET: ${{ secrets.STAGING_PATH }}
+        EXCLUDE: "/node_modules/, /.git/, /.github/, /tests/, /docs/"
+    
+    - name: Run staging tests
+      run: |
+        curl -f ${{ secrets.STAGING_URL }}/wp-json/tmu/v1/health || exit 1
+
+  deploy-production:
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies and build
+      run: |
+        npm ci
+        npm run build:production
+    
+    - name: Create deployment package
+      run: |
+        zip -r tmu-theme-${{ github.event.release.tag_name }}.zip . \
+          -x "node_modules/*" ".git/*" ".github/*" "tests/*" "docs/*" \
+          "*.md" "package*.json" "webpack.config.js" "composer.json" "composer.lock"
+    
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./tmu-theme-${{ github.event.release.tag_name }}.zip
+        asset_name: tmu-theme-${{ github.event.release.tag_name }}.zip
+        asset_content_type: application/zip
+    
+    - name: Deploy to production
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+        ARGS: "-rlgoDzvc -i --delete"
+        SOURCE: "./"
+        REMOTE_HOST: ${{ secrets.PRODUCTION_HOST }}
+        REMOTE_USER: ${{ secrets.PRODUCTION_USER }}
+        TARGET: ${{ secrets.PRODUCTION_PATH }}
+        EXCLUDE: "/node_modules/, /.git/, /.github/, /tests/, /docs/"
+    
+    - name: Verify production deployment
+      run: |
+        curl -f ${{ secrets.PRODUCTION_URL }}/wp-json/tmu/v1/health || exit 1
+    
+    - name: Notify deployment success
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: "TMU Theme ${{ github.event.release.tag_name }} deployed successfully to production!"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

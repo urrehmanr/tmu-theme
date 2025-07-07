@@ -1,5 +1,5 @@
 #!/bin/bash
-# deploy.sh
+# deploy.sh - Enhanced Automated Deployment Script
 
 set -e
 
