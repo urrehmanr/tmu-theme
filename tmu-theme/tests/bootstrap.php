@@ -1,12 +1,9 @@
 <?php
 /**
- * TMU Theme Test Bootstrap
- *
- * @package TMU\Tests
- * @version 1.0.0
+ * Bootstrap file for PHPUnit tests
  */
 
-// Load WordPress test environment
+// Set up WordPress test environment
 $_tests_dir = getenv('WP_TESTS_DIR');
 if (!$_tests_dir) {
     $_tests_dir = '/tmp/wordpress-tests-lib';
@@ -17,18 +14,25 @@ if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
     require_once dirname(__DIR__) . '/vendor/autoload.php';
 }
 
-// WordPress test functions
 require_once $_tests_dir . '/includes/functions.php';
 
-/**
- * Manually load the theme for testing
- */
 function _manually_load_theme() {
-    // Switch to our theme
-    switch_theme('tmu');
+    switch_theme('tmu-theme');
     
-    // Load theme bootstrap
-    require_once dirname(__DIR__) . '/includes/bootstrap.php';
+    // Load theme files
+    require_once get_template_directory() . '/functions.php';
+    
+    // Initialize theme components
+    if (class_exists('TMU\ThemeInitializer')) {
+        $theme = new TMU\ThemeInitializer();
+        $theme->init();
+    }
+    
+    // Load theme bootstrap if it exists
+    $bootstrap_file = get_template_directory() . '/includes/bootstrap.php';
+    if (file_exists($bootstrap_file)) {
+        require_once $bootstrap_file;
+    }
     
     // Initialize theme core
     if (class_exists('TMU\\ThemeCore')) {
@@ -36,7 +40,6 @@ function _manually_load_theme() {
     }
 }
 
-// Add filter to load our theme
 tests_add_filter('muplugins_loaded', '_manually_load_theme');
 
 // Set up WordPress test environment constants
@@ -61,9 +64,18 @@ if (!defined('WP_TESTS_CONFIG_FILE_PATH')) {
     define('WP_TESTS_CONFIG_FILE_PATH', $_tests_dir . '/wp-tests-config.php');
 }
 
-// Start up the WP testing environment
 require $_tests_dir . '/includes/bootstrap.php';
 
-// Add custom test utilities
-require_once __DIR__ . '/includes/TestCase.php';
-require_once __DIR__ . '/includes/FactoryHelper.php';
+// Additional test utilities
+require_once __DIR__ . '/utilities/TestHelper.php';
+require_once __DIR__ . '/utilities/TMDBMock.php';
+require_once __DIR__ . '/utilities/DatabaseTestCase.php';
+
+// Legacy support for existing includes
+if (file_exists(__DIR__ . '/includes/TestCase.php')) {
+    require_once __DIR__ . '/includes/TestCase.php';
+}
+
+if (file_exists(__DIR__ . '/includes/FactoryHelper.php')) {
+    require_once __DIR__ . '/includes/FactoryHelper.php';
+}

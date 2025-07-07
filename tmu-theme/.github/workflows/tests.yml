@@ -1,0 +1,330 @@
+name: TMU Theme Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * 1' # Weekly on Mondays at 2 AM
+
+jobs:
+  php-tests:
+    name: PHP Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.0', '8.1', '8.2']
+        wordpress-version: ['5.9', '6.0', '6.1', '6.2', 'latest']
+    
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, mysql, mysqli, pdo_mysql
+        coverage: xdebug
+    
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Setup WordPress test environment
+      run: |
+        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 ${{ matrix.wordpress-version }}
+    
+    - name: Run PHPUnit tests
+      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+    
+    - name: Run security tests
+      run: vendor/bin/phpunit --testsuite="Security Tests"
+    
+    - name: Run accessibility tests  
+      run: vendor/bin/phpunit --testsuite="Accessibility Tests"
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: php
+        name: php-${{ matrix.php-version }}-wp-${{ matrix.wordpress-version }}
+
+  javascript-tests:
+    name: JavaScript Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run ESLint
+      run: npm run lint:js
+    
+    - name: Run Stylelint
+      run: npm run lint:css
+    
+    - name: Run Jest tests
+      run: npm run test:js
+    
+    - name: Run browser tests
+      run: npm run test:browser
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/js/lcov.info
+        flags: javascript
+        name: node-${{ matrix.node-version }}
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Run PHPCS
+      run: vendor/bin/phpcs --standard=phpcs.xml
+    
+    - name: Run PHPStan
+      run: vendor/bin/phpstan analyse --configuration=phpstan.neon
+    
+    - name: Run PHPMD
+      run: vendor/bin/phpmd includes text cleancode,codesize,controversial,design,naming,unusedcode
+    
+    - name: Security analysis
+      run: |
+        composer audit
+        vendor/bin/security-checker security:check
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip, mysql, mysqli, pdo_mysql
+    
+    - name: Setup MySQL
+      uses: mirromutth/mysql-action@v1.1
+      with:
+        mysql version: '5.7'
+        mysql database: 'wordpress_test'
+        mysql root password: 'root'
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Setup WordPress
+      run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 latest
+    
+    - name: Run performance tests
+      run: vendor/bin/phpunit --testsuite="Performance Tests"
+
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        composer install --prefer-dist --no-progress
+        npm ci
+    
+    - name: Install Playwright
+      run: npx playwright install
+    
+    - name: Run accessibility tests
+      run: |
+        vendor/bin/phpunit --testsuite="Accessibility Tests"
+        npm run test:accessibility
+
+  browser-compatibility:
+    name: Browser Compatibility
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright
+      run: npx playwright install
+    
+    - name: Build assets
+      run: npm run build
+    
+    - name: Start test server
+      run: |
+        npm run serve:test &
+        sleep 10
+    
+    - name: Run browser tests
+      run: npx playwright test
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: playwright-results
+        path: test-results/
+
+  deployment-test:
+    name: Deployment Test
+    runs-on: ubuntu-latest
+    needs: [php-tests, javascript-tests, code-quality]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        composer install --no-dev --optimize-autoloader
+        npm ci --production
+    
+    - name: Build assets
+      run: npm run build:production
+    
+    - name: Create deployment package
+      run: |
+        mkdir -p build
+        rsync -av --exclude-from='.deployignore' . build/
+        cd build
+        zip -r ../tmu-theme-${{ github.sha }}.zip .
+    
+    - name: Upload deployment artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: theme-package
+        path: tmu-theme-${{ github.sha }}.zip
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run CodeQL analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        languages: 'javascript'
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [php-tests, javascript-tests, code-quality, performance-tests, accessibility-tests, browser-compatibility]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "✅ All tests passed successfully!"
+        # Add Slack/Discord notification here if needed
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Some tests failed!"
+        # Add Slack/Discord notification here if needed
