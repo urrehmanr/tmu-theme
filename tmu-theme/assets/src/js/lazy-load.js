@@ -109,7 +109,7 @@ class TMULazyLoader {
      * Observe images for lazy loading
      */
     observeImages() {
-        const lazyImages = document.querySelectorAll('img[data-src], img.tmu-lazy-image');
+        const lazyImages = document.querySelectorAll('img[data-src], img.lazy-load');
         
         lazyImages.forEach(img => {
             if (!this.loadedImages.has(img)) {
@@ -534,7 +534,7 @@ class TMULazyLoader {
      * Get loading statistics
      */
     getStats() {
-        const totalImages = document.querySelectorAll('img[data-src], img.tmu-lazy-image').length;
+        const totalImages = document.querySelectorAll('img[data-src], img.lazy-load').length;
         const loadedImages = this.loadedImages.size;
         const loadingImages = this.loadingImages.size;
         

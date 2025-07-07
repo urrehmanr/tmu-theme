@@ -96,7 +96,7 @@ class LazyLoader {
         // Enqueue the main lazy loading script
         wp_enqueue_script(
             'tmu-lazy-load',
-            get_template_directory_uri() . '/assets/dist/js/lazy-load.js',
+            get_template_directory_uri() . '/assets/js/lazy-load.js',
             [],
             '1.0.0',
             true
@@ -112,13 +112,7 @@ class LazyLoader {
             'criticalThreshold' => $this->settings['critical_threshold']
         ]);
         
-        // Enqueue lazy loading styles
-        wp_enqueue_style(
-            'tmu-lazy-load',
-            get_template_directory_uri() . '/assets/dist/css/lazy-load.css',
-            [],
-            '1.0.0'
-        );
+
     }
     
     /**
@@ -215,11 +209,11 @@ class LazyLoader {
             if (strpos($attributes, 'class=') !== false) {
                 $attributes = preg_replace(
                     '/class=["\']([^"\']*)["\']/',
-                    'class="$1 tmu-lazy-image"',
+                    'class="$1 lazy-load"',
                     $attributes
                 );
             } else {
-                $attributes .= ' class="tmu-lazy-image"';
+                $attributes .= ' class="lazy-load"';
             }
             
             // Add loading attribute
@@ -301,7 +295,7 @@ class LazyLoader {
                 $new_style = '';
             }
             
-            return $new_style . ' data-bg-src="' . $bg_url . '" class="tmu-lazy-background"';
+            return $new_style . ' data-bg-src="' . $bg_url . '" class="lazy-background"';
         }
         
         return $style_attr;
@@ -371,17 +365,17 @@ class LazyLoader {
         }
         
         echo '<style>
-            .tmu-lazy-background {
+            .lazy-background {
                 background-color: ' . $this->settings['placeholder_color'] . ';
                 transition: opacity 0.3s ease-in-out;
             }
-            .tmu-lazy-image {
+            .lazy-load {
                 transition: opacity 0.3s ease-in-out;
             }
-            .tmu-lazy-loading {
+            .lazy-loading {
                 opacity: 0.6;
             }
-            .tmu-lazy-loaded {
+            .lazy-loaded {
                 opacity: 1;
             }
         </style>';

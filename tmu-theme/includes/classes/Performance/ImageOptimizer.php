@@ -309,7 +309,7 @@ class ImageOptimizer {
         }
         
         // Add lazy loading class
-        $attr['class'] = ($attr['class'] ?? '') . ' tmu-lazy-image';
+        $attr['class'] = ($attr['class'] ?? '') . ' lazy-load';
         
         return $attr;
     }
@@ -372,9 +372,9 @@ class ImageOptimizer {
             
             // Add lazy loading class
             if (strpos($attributes, 'class=') !== false) {
-                $attributes = preg_replace('/class=["\']([^"\']*)["\']/', 'class="$1 tmu-lazy-image"', $attributes);
-            } else {
-                $attributes .= ' class="tmu-lazy-image"';
+                            $attributes = preg_replace('/class=["\']([^"\']*)["\']/', 'class="$1 lazy-load"', $attributes);
+        } else {
+            $attributes .= ' class="lazy-load"';
             }
             
             // Add loading attribute

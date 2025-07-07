@@ -35,6 +35,11 @@ class DatabaseOptimizer {
      * Initialize database optimizer
      */
     public function init(): void {
+        // Enable persistent connections
+        if (!defined('DB_PERSISTENT')) {
+            define('DB_PERSISTENT', true);
+        }
+        
         // Optimize database settings
         add_action('init', [$this, 'optimize_database_settings']);
         
@@ -209,9 +214,11 @@ class DatabaseOptimizer {
         $post_type = $query->get('post_type');
         
         if ($post_type === 'movie') {
-            return $this->optimize_movie_query_clauses($clauses, $query);
-        } elseif (in_array($post_type, ['tv', 'drama'])) {
-            return $this->optimize_tv_query_clauses($clauses, $query);
+            return $this->optimize_movie_queries($clauses, $query);
+        } elseif ($post_type === 'tv') {
+            return $this->optimize_tv_queries($clauses, $query);
+        } elseif ($post_type === 'drama') {
+            return $this->optimize_drama_queries($clauses, $query);
         } elseif ($post_type === 'people') {
             return $this->optimize_people_query_clauses($clauses, $query);
         }
@@ -220,9 +227,9 @@ class DatabaseOptimizer {
     }
     
     /**
-     * Optimize movie query clauses
+     * Optimize movie queries
      */
-    private function optimize_movie_query_clauses($clauses, $query): array {
+    public function optimize_movie_queries($clauses, $query): array {
         global $wpdb;
         
         // Join with TMU movies table for better performance
@@ -249,9 +256,9 @@ class DatabaseOptimizer {
     }
     
     /**
-     * Optimize TV query clauses
+     * Optimize TV queries
      */
-    private function optimize_tv_query_clauses($clauses, $query): array {
+    public function optimize_tv_queries($clauses, $query): array {
         global $wpdb;
         
         // Join with TMU TV series table
@@ -270,6 +277,30 @@ class DatabaseOptimizer {
             $clauses['orderby'] = 'ttv.first_air_date DESC';
         } elseif ($query->get('orderby') === 'rating') {
             $clauses['orderby'] = 'ttv.tmdb_vote_average DESC';
+        }
+        
+        return $clauses;
+    }
+    
+    /**
+     * Optimize drama queries
+     */
+    public function optimize_drama_queries($clauses, $query): array {
+        global $wpdb;
+        
+        if (!is_admin() && $query->is_main_query() && $query->get('post_type') === 'drama') {
+            // Join with custom table for better performance
+            $clauses['join'] .= " LEFT JOIN {$wpdb->prefix}tmu_dramas td ON {$wpdb->posts}.ID = td.post_id";
+            
+            // Add commonly used fields to SELECT
+            $clauses['fields'] .= ", td.tmdb_id, td.first_air_date, td.number_of_episodes, td.tmdb_vote_average";
+            
+            // Optimize ordering
+            if ($query->get('orderby') === 'first_air_date') {
+                $clauses['orderby'] = 'td.first_air_date DESC';
+            } elseif ($query->get('orderby') === 'rating') {
+                $clauses['orderby'] = 'td.tmdb_vote_average DESC';
+            }
         }
         
         return $clauses;
