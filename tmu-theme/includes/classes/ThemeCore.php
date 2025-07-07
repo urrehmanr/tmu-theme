@@ -182,6 +182,17 @@ class ThemeCore {
         // Load API REST endpoints
         require_once TMU_INCLUDES_DIR . '/classes/API/REST/SearchEndpoints.php';
         
+        // Load Step 18 - Maintenance and Updates classes
+        require_once TMU_INCLUDES_DIR . '/classes/Backup/BackupManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/MaintenanceScheduler.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/DatabaseOptimizer.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Updates/UpdateManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/SecurityAuditor.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationManager.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/TmdbDataUpdater.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/PerformanceOptimizer.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/SuccessMetrics.php';
+        
         // Load placeholder classes - will be created in future steps
         // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
         // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
@@ -229,6 +240,17 @@ class ThemeCore {
         // Initialize API REST endpoints
         $search_endpoints = new API\REST\SearchEndpoints();
         $search_endpoints->init();
+        
+        // Initialize Step 18 - Maintenance and Updates
+        new Backup\BackupManager();
+        new Maintenance\MaintenanceScheduler();
+        new Maintenance\DatabaseOptimizer();
+        new Updates\UpdateManager();
+        new Maintenance\SecurityAuditor();
+        new Migration\MigrationManager();
+        new Maintenance\TmdbDataUpdater();
+        new Maintenance\PerformanceOptimizer();
+        new Maintenance\SuccessMetrics();
         
         // Initialize managers - will be activated in future steps
         // API\TMDBClient::getInstance();
