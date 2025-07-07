@@ -73,7 +73,7 @@ class DatabaseOptimizer {
         // Set optimal MySQL session variables
         $optimizations = [
             "SET SESSION query_cache_type = 'ON'",
-            "SET SESSION query_cache_size = 33554432", // 32MB
+            "SET SESSION query_cache_size = 32M",
             "SET SESSION tmp_table_size = 67108864",   // 64MB
             "SET SESSION max_heap_table_size = 67108864", // 64MB
             "SET SESSION join_buffer_size = 2097152",  // 2MB

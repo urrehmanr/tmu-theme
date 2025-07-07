@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 /**
  * CDN Integration and Management
  */
-class CDNManager {
+class CdnIntegration {
     
     /**
      * CDN URL
