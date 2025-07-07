@@ -8,6 +8,7 @@ module.exports = (env, argv) => {
     entry: {
       main: './assets/src/js/main.js',
       admin: './assets/src/js/admin.js',
+      'tmdb-sync': './assets/src/js/tmdb-sync.js',
       'admin-styles': './assets/src/scss/admin.scss'
     },
     output: {
