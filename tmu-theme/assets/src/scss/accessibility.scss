@@ -1,0 +1,617 @@
+/**
+ * TMU Theme Accessibility Styles
+ * 
+ * Comprehensive accessibility styles implementing WCAG 2.1 AA standards.
+ * Includes skip links, focus indicators, high contrast, and reduced motion support.
+ * 
+ * @version 1.0.0
+ */
+
+/* =============================================================================
+   Screen Reader Only Utilities
+   ============================================================================= */
+
+.sr-only,
+.screen-reader-text {
+    position: absolute !important;
+    clip: rect(1px, 1px, 1px, 1px) !important;
+    -webkit-clip-path: inset(50%) !important;
+    clip-path: inset(50%) !important;
+    width: 1px !important;
+    height: 1px !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+}
+
+.sr-only:focus,
+.screen-reader-text:focus {
+    position: static !important;
+    clip: auto !important;
+    -webkit-clip-path: none !important;
+    clip-path: none !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+}
+
+/* =============================================================================
+   Skip Links
+   ============================================================================= */
+
+.tmu-skip-links {
+    position: relative;
+    z-index: 100000;
+}
+
+.tmu-skip-link {
+    position: absolute !important;
+    top: -40px !important;
+    left: 6px !important;
+    background: #000 !important;
+    color: #fff !important;
+    padding: 8px 12px !important;
+    text-decoration: none !important;
+    z-index: 100000 !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    border: 2px solid transparent !important;
+    transition: all 0.3s ease !important;
+}
+
+.tmu-skip-link:focus {
+    top: 6px !important;
+    outline: 2px solid #fff !important;
+    outline-offset: 2px !important;
+    text-decoration: underline !important;
+}
+
+.tmu-skip-link:hover {
+    background: #333 !important;
+    text-decoration: underline !important;
+}
+
+/* Multiple skip links */
+.tmu-skip-links .tmu-skip-link:nth-child(2) {
+    left: 130px !important;
+}
+
+.tmu-skip-links .tmu-skip-link:nth-child(3) {
+    left: 280px !important;
+}
+
+.tmu-skip-links .tmu-skip-link:nth-child(4) {
+    left: 430px !important;
+}
+
+/* =============================================================================
+   Focus Indicators
+   ============================================================================= */
+
+/* Base focus styles */
+.tmu-focused,
+.tmu-keyboard-focus,
+[data-keyboard-nav="true"]:focus,
+a:focus,
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[tabindex]:focus {
+    outline: 2px solid #005fcc !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.2) !important;
+}
+
+/* Enhanced focus for interactive elements */
+.tmu-card:focus,
+.tmu-filter-button:focus {
+    outline: 3px solid #005fcc !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.15) !important;
+}
+
+/* Focus within containers */
+.tmu-content-grid:focus-within,
+.tmu-search-form:focus-within,
+.tmu-dropdown:focus-within {
+    box-shadow: 0 0 0 2px rgba(0, 95, 204, 0.1) !important;
+    border-radius: 4px !important;
+}
+
+/* Keyboard navigation indicators */
+.tmu-keyboard-active {
+    border: 2px solid #005fcc !important;
+    background-color: rgba(0, 95, 204, 0.05) !important;
+}
+
+/* Hide focus indicators when using mouse */
+.using-mouse *:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* =============================================================================
+   High Contrast Mode Support
+   ============================================================================= */
+
+@media (prefers-contrast: high) {
+    .tmu-card,
+    .tmu-button,
+    .tmu-filter-button {
+        border: 2px solid #000 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    
+    .tmu-button:hover,
+    .tmu-button:focus,
+    .tmu-filter-button:hover,
+    .tmu-filter-button:focus {
+        background: #000 !important;
+        color: #fff !important;
+        border-color: #fff !important;
+    }
+    
+    .tmu-keyboard-focus,
+    [data-keyboard-nav="true"]:focus {
+        outline: 3px solid #000 !important;
+        outline-offset: 2px !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    
+    .tmu-skip-link {
+        background: #fff !important;
+        color: #000 !important;
+        border: 3px solid #000 !important;
+    }
+    
+    .tmu-skip-link:focus {
+        background: #000 !important;
+        color: #fff !important;
+        border-color: #fff !important;
+    }
+    
+    /* Ensure text contrast */
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+    
+    /* Link contrast */
+    a {
+        color: #0000EE !important;
+        text-decoration: underline !important;
+    }
+    
+    a:visited {
+        color: #551A8B !important;
+    }
+    
+    a:hover,
+    a:focus {
+        background: #000 !important;
+        color: #fff !important;
+    }
+}
+
+/* =============================================================================
+   Reduced Motion Support
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    /* Disable smooth scrolling */
+    html {
+        scroll-behavior: auto !important;
+    }
+    
+    /* Disable parallax effects */
+    .parallax,
+    .tmu-parallax {
+        transform: none !important;
+    }
+    
+    /* Disable auto-playing content */
+    video,
+    audio {
+        autoplay: false !important;
+    }
+    
+    /* Reduce hover effects */
+    .tmu-card:hover,
+    .tmu-button:hover {
+        transform: none !important;
+    }
+}
+
+/* =============================================================================
+   Dark Mode Support
+   ============================================================================= */
+
+@media (prefers-color-scheme: dark) {
+    .tmu-theme {
+        --bg-color: #1a1a1a;
+        --text-color: #ffffff;
+        --accent-color: #4a9eff;
+        --border-color: #333333;
+        --card-bg: #2a2a2a;
+        --input-bg: #333333;
+    }
+    
+    /* Body and basic elements */
+    body {
+        background-color: var(--bg-color) !important;
+        color: var(--text-color) !important;
+    }
+    
+    /* Cards and containers */
+    .tmu-card {
+        background-color: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-color) !important;
+    }
+    
+    /* Form elements */
+    input,
+    textarea,
+    select {
+        background-color: var(--input-bg) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-color) !important;
+    }
+    
+    /* Focus indicators for dark mode */
+    .tmu-focused,
+    .tmu-keyboard-focus,
+    [data-keyboard-nav="true"]:focus {
+        outline-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3) !important;
+    }
+    
+    /* Skip links in dark mode */
+    .tmu-skip-link {
+        background: #fff !important;
+        color: #000 !important;
+    }
+    
+    .tmu-skip-link:focus {
+        outline-color: var(--accent-color) !important;
+    }
+}
+
+/* =============================================================================
+   Touch and Mobile Accessibility
+   ============================================================================= */
+
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .tmu-button,
+    .tmu-filter-button,
+    .tmu-card {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Enhanced focus indicators for touch */
+    .tmu-card:focus {
+        outline-width: 4px !important;
+        outline-offset: 4px !important;
+    }
+}
+
+/* =============================================================================
+   Print Accessibility
+   ============================================================================= */
+
+@media print {
+    /* Hide skip links and navigation aids */
+    .tmu-skip-links,
+    .tmu-keyboard-hint {
+        display: none !important;
+    }
+    
+    /* Ensure good contrast */
+    * {
+        color: #000 !important;
+        background: #fff !important;
+    }
+    
+    /* Show link URLs */
+    a[href^="http"]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #666;
+    }
+    
+    /* Focus indicators not needed in print */
+    *:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* =============================================================================
+   ARIA Live Regions
+   ============================================================================= */
+
+#tmu-live-region,
+#tmu-live-region-assertive {
+    position: absolute !important;
+    left: -10000px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+}
+
+/* =============================================================================
+   Form Accessibility Enhancements
+   ============================================================================= */
+
+/* Required field indicators */
+.required,
+[aria-required="true"]:before {
+    color: #d63638;
+    font-weight: bold;
+}
+
+[aria-required="true"]:before {
+    content: "* ";
+}
+
+/* Error states */
+.error,
+.invalid,
+[aria-invalid="true"] {
+    border-color: #d63638 !important;
+    box-shadow: 0 0 0 2px rgba(214, 54, 56, 0.2) !important;
+}
+
+.error:focus,
+.invalid:focus,
+[aria-invalid="true"]:focus {
+    outline-color: #d63638 !important;
+    box-shadow: 0 0 0 2px rgba(214, 54, 56, 0.3) !important;
+}
+
+/* Field descriptions */
+.field-description {
+    font-size: 0.875em;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+/* =============================================================================
+   Modal and Dialog Accessibility
+   ============================================================================= */
+
+.tmu-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tmu-modal-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.tmu-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.tmu-modal-close:focus {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+}
+
+/* =============================================================================
+   Dropdown Accessibility
+   ============================================================================= */
+
+.tmu-dropdown {
+    position: relative;
+}
+
+.tmu-dropdown-content {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.5rem 0;
+    min-width: 200px;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tmu-dropdown-content a,
+.tmu-dropdown-content button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.tmu-dropdown-content a:focus,
+.tmu-dropdown-content button:focus {
+    background: #f0f0f0;
+    outline: 2px solid #005fcc;
+    outline-offset: -2px;
+}
+
+/* =============================================================================
+   Content Accessibility
+   ============================================================================= */
+
+/* Heading hierarchy */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.3;
+}
+
+/* Link accessibility */
+a {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+a:hover,
+a:focus {
+    text-decoration-thickness: 2px;
+}
+
+/* Table accessibility */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: left;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+}
+
+td {
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+}
+
+/* =============================================================================
+   Keyboard Hints and Instructions
+   ============================================================================= */
+
+.tmu-keyboard-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    max-width: 300px;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tmu-keyboard-hint.visible {
+    opacity: 1;
+}
+
+.tmu-keyboard-hint kbd {
+    background: #333;
+    border: 1px solid #666;
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+/* =============================================================================
+   Admin Area Accessibility
+   ============================================================================= */
+
+.wp-admin .tmu-admin-shortcut-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.wp-admin .tmu-admin-shortcut-hint.visible {
+    opacity: 1;
+}
+
+.wp-admin [data-keyboard-nav="true"]:focus {
+    outline: 2px solid #0073aa !important;
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2) !important;
+}
+
+/* =============================================================================
+   Responsive Accessibility
+   ============================================================================= */
+
+@media (max-width: 768px) {
+    .tmu-skip-link {
+        font-size: 16px !important;
+        padding: 12px 16px !important;
+    }
+    
+    .tmu-keyboard-hint {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    /* Larger touch targets */
+    .tmu-card,
+    .tmu-button,
+    .tmu-filter-button {
+        min-height: 48px;
+        padding: 12px;
+    }
+}
+
+/* =============================================================================
+   Focus Trap Helpers
+   ============================================================================= */
+
+#focus-trap-start,
+#focus-trap-end {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+}
