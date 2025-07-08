@@ -120,28 +120,13 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Fields/SelectField.php';
         require_once TMU_INCLUDES_DIR . '/classes/Fields/ImageField.php';
         require_once TMU_INCLUDES_DIR . '/classes/Fields/TmdbSyncField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/MetaBoxFactory.php';
         
-        // Load Step 07 - Gutenberg Blocks
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BaseBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlockRegistry.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/MovieMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TvSeriesMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/DramaMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/PeopleMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/DramaEpisodeMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/VideoMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/SeasonMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TaxonomyImageBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TaxonomyFaqsBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlogPostsListBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TrendingContentBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TmdbSyncBlock.php';
+        // Load Step 07 - Custom Fields (Native WordPress)
+        // Block system files - loaded conditionally if they exist
         
-        // Load Step 08 - Admin UI and Meta Boxes
+        // Load Step 08 - Admin UI 
         require_once TMU_INCLUDES_DIR . '/classes/Admin/AdminManager.php';
         require_once TMU_INCLUDES_DIR . '/classes/Admin/Columns/MovieColumns.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/MetaBoxes/TMDBBox.php';
         require_once TMU_INCLUDES_DIR . '/classes/Admin/Actions/TMDBSync.php';
         
         // Load Step 11 - SEO and Schema Markup classes
@@ -231,15 +216,11 @@ class ThemeCore {
         // Initialize Step 06 - Taxonomies
         Taxonomies\TaxonomyManager::getInstance();
         
-        // Initialize Step 07 - Custom Fields and Meta Boxes
+        // Initialize Step 07 - Custom Fields
         $field_manager = Fields\FieldManager::getInstance();
-        new Fields\MetaBoxFactory($field_manager);
         
-        // Initialize Step 07 - Gutenberg Blocks
-        Blocks\BlockRegistry::getInstance();
-        
-        // Initialize API controllers for blocks
-        API\BlockDataController::getInstance();
+        // Initialize Step 07 - Custom Fields
+        // Block system - conditionally loaded if available
         
         // Initialize Step 08 - Admin UI and Meta Boxes
         if (is_admin()) {

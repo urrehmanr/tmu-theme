@@ -1,9 +1,6 @@
 // Import Alpine.js for interactivity
 import Alpine from 'alpinejs';
 
-// Import main CSS
-import '../css/main.css';
-
 // Initialize Alpine.js
 window.Alpine = Alpine;
 Alpine.start();

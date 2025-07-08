@@ -326,22 +326,43 @@ class ThemeInitializer {
     }
     
     /**
-     * Check required plugins
+     * Check theme requirements
      */
     private function checkRequiredPlugins(): void {
-        // Check if Meta Box plugin was deactivated
-        if (!function_exists('rwmb_meta')) {
-            // Meta Box was deactivated, theme can handle this
-            add_action('admin_notices', [$this, 'showMetaBoxNotice']);
+        // Theme is standalone - no external plugins required
+        $this->verifyThemeRequirements();
+    }
+    
+    /**
+     * Verify theme requirements are met
+     */
+    private function verifyThemeRequirements(): void {
+        // Check PHP version
+        if (version_compare(PHP_VERSION, '7.4', '<')) {
+            add_action('admin_notices', [$this, 'showPhpVersionNotice']);
+        }
+        
+        // Check WordPress version
+        if (version_compare(get_bloginfo('version'), '5.5', '<')) {
+            add_action('admin_notices', [$this, 'showWpVersionNotice']);
         }
     }
     
     /**
-     * Show Meta Box deactivation notice
+     * Show PHP version notice
      */
-    public function showMetaBoxNotice(): void {
-        echo '<div class="notice notice-info is-dismissible">';
-        echo '<p><strong>TMU Theme:</strong> Meta Box plugin was detected as deactivated. The theme will use native WordPress meta fields.</p>';
+    public function showPhpVersionNotice(): void {
+        echo '<div class="notice notice-error">';
+        echo '<p><strong>TMU Theme:</strong> This theme requires PHP 7.4 or higher. You are running PHP ' . PHP_VERSION . '.</p>';
+        echo '</div>';
+    }
+    
+    /**
+     * Show WordPress version notice
+     */
+    public function showWpVersionNotice(): void {
+        echo '<div class="notice notice-error">';
+        echo '<p><strong>TMU Theme:</strong> This theme requires WordPress 5.5 or higher. You are running WordPress ' . get_bloginfo('version') . '.</p>';
         echo '</div>';
     }
     

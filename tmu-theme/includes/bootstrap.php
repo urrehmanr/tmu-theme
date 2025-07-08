@@ -178,14 +178,7 @@ function tmu_check_requirements(): bool {
  * Initialize theme compatibility
  */
 function tmu_init_compatibility(): void {
-    // Handle legacy Meta Box plugin compatibility
-    if (function_exists('rwmb_meta')) {
-        add_action('admin_notices', function() {
-            echo '<div class="notice notice-info is-dismissible">';
-            echo '<p><strong>TMU Theme:</strong> Meta Box plugin detected. The theme will use its own field system but can import existing data.</p>';
-            echo '</div>';
-        });
-    }
+    // Theme is completely standalone - no external plugin dependencies
     
     // Handle other plugin compatibility
     add_action('plugins_loaded', function() {
