@@ -106,24 +106,24 @@ class AdminManager {
             $this->components['widgets'] = new Dashboard\Widgets();
         }
         
-        // Load enhanced meta boxes
-        if (class_exists('TMU\Admin\MetaBoxes\TMDBBox')) {
-            $this->components['tmdb_box'] = new MetaBoxes\TMDBBox();
-        }
-        
-        if (class_exists('TMU\Admin\MetaBoxes\RelationshipBox')) {
-            $this->components['relationship_box'] = new MetaBoxes\RelationshipBox();
-        }
+        // Load enhanced meta boxes - Disabled for standalone theme
+        // if (class_exists('TMU\Admin\MetaBoxes\TMDBBox')) {
+        //     $this->components['tmdb_box'] = new MetaBoxes\TMDBBox();
+        // }
+        // 
+        // if (class_exists('TMU\Admin\MetaBoxes\RelationshipBox')) {
+        //     $this->components['relationship_box'] = new MetaBoxes\RelationshipBox();
+        // }
         
         // Load data import tools
         if (class_exists('TMU\Admin\Actions\DataImport')) {
             $this->components['data_import'] = new Actions\DataImport();
         }
         
-        // Load additional meta boxes
-        if (class_exists('TMU\Admin\MetaBoxes\QuickActions')) {
-            $this->components['quick_actions'] = new MetaBoxes\QuickActions();
-        }
+        // Load additional meta boxes - Disabled for standalone theme
+        // if (class_exists('TMU\Admin\MetaBoxes\QuickActions')) {
+        //     $this->components['quick_actions'] = new MetaBoxes\QuickActions();
+        // }
         
         // Load additional dashboard components
         if (class_exists('TMU\Admin\Dashboard\QuickStats')) {
@@ -221,7 +221,7 @@ class AdminManager {
             
             wp_enqueue_style(
                 'tmu-admin',
-                TMU_ASSETS_BUILD_URL . '/css/admin-styles.css',
+                TMU_ASSETS_BUILD_URL . '/css/admin.css',
                 [],
                 TMU_VERSION
             );
@@ -229,7 +229,7 @@ class AdminManager {
             wp_enqueue_script(
                 'tmu-admin',
                 TMU_ASSETS_BUILD_URL . '/js/admin.js',
-                ['jquery', 'wp-util'],
+                ['jquery'],
                 TMU_VERSION,
                 true
             );
