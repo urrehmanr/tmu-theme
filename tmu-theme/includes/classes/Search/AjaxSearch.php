@@ -24,7 +24,7 @@ class AjaxSearch {
             'orderby' => sanitize_text_field($_POST['orderby'] ?? 'relevance')
         ];
         
-        $search_manager = new SearchManager();
+        $search_manager = SearchManager::getInstance();
         $results = $search_manager->search($query, $filters, $options);
         
         $response = [
