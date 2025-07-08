@@ -232,13 +232,4 @@ class TVShow extends AbstractPostType {
                 break;
         }
     }
-    
-    /**
-     * Check if post type should be registered
-     *
-     * @return bool
-     */
-    protected function shouldRegister(): bool {
-        return tmu_get_option('tmu_tv_series', 'off') === 'on';
-    }
 }
