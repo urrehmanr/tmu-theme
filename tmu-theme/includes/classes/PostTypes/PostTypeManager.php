@@ -53,18 +53,32 @@ class PostTypeManager {
     }
     
     /**
-     * Private constructor
+     * Constructor
      */
     private function __construct() {
-        $this->initHooks();
         $this->initializePostTypes();
+        
+        // Don't register post types in constructor to avoid early registration
+        // $this->registerAllPostTypes();
+        
+        // Add WordPress hooks
+        $this->initHooks();
+        
+        // Register activation hook for flushing rewrite rules
+        add_action('after_switch_theme', [$this, 'flushRewriteRules']);
+        
+        // Register deactivation hook
+        add_action('switch_theme', [$this, 'deactivatePostTypes']);
     }
     
     /**
      * Initialize WordPress hooks
      */
     private function initHooks(): void {
-        add_action('init', [$this, 'registerAllPostTypes'], 10);
+        // Register post types on init with priority 5
+        add_action('init', [$this, 'registerAllPostTypes'], 5);
+        
+        // Admin hooks
         add_action('admin_menu', [$this, 'organizeAdminMenus'], 20);
         add_action('admin_init', [$this, 'setupAdminCustomizations']);
     }
@@ -73,6 +87,15 @@ class PostTypeManager {
      * Initialize post type instances
      */
     private function initializePostTypes(): void {
+        // Load post type configuration
+        $post_type_config = [];
+        $config_file = TMU_INCLUDES_DIR . '/config/post-types.php';
+        
+        if (file_exists($config_file)) {
+            $post_type_config = include $config_file;
+        }
+        
+        // Create post type instances
         $this->post_type_instances = [
             'movie' => new Movie(),
             'tv' => new TVShow(),
@@ -83,25 +106,51 @@ class PostTypeManager {
             'episode' => new Episode(),
             'drama-episode' => new DramaEpisode(),
         ];
+        
+        // Log post type initialization
+        if (function_exists('tmu_log')) {
+            tmu_log('Initialized ' . count($this->post_type_instances) . ' post type instances', 'info');
+        }
     }
     
     /**
      * Register all post types
      */
     public function registerAllPostTypes(): void {
+        // Enable feature flags for post types based on options
+        $this->setFeatureFlags();
+        
         foreach ($this->post_type_instances as $slug => $post_type) {
             if ($post_type instanceof AbstractPostType) {
                 $post_type->register();
                 
                 if ($post_type->exists()) {
                     $this->post_types[$slug] = $post_type;
-                    tmu_log("Registered post type: {$slug}", 'info');
+                    if (function_exists('tmu_log')) {
+                        tmu_log("Registered post type: {$slug}", 'info');
+                    }
                 }
             }
         }
         
         // Flush rewrite rules if needed
         $this->maybeFlushRewriteRules();
+    }
+    
+    /**
+     * Set feature flags for post types based on options
+     */
+    private function setFeatureFlags(): void {
+        // If no options are set, enable all post types by default
+        if (!get_option('tmu_movies') && !get_option('tmu_tv_series') && !get_option('tmu_dramas')) {
+            update_option('tmu_movies', 'on');
+            update_option('tmu_tv_series', 'on');
+            update_option('tmu_dramas', 'on');
+            
+            if (function_exists('tmu_log')) {
+                tmu_log('No post type options found, enabling all by default', 'info');
+            }
+        }
     }
     
     /**
@@ -365,5 +414,27 @@ class PostTypeManager {
     public function resetPostTypes(): void {
         $this->post_types = [];
         $this->initializePostTypes();
+    }
+
+    /**
+     * Flush rewrite rules on theme activation
+     */
+    public function flushRewriteRules(): void {
+        // First, register all post types
+        $this->registerAllPostTypes();
+        
+        // Then flush rewrite rules
+        flush_rewrite_rules();
+        
+        // Store activation timestamp
+        update_option('tmu_post_types_activated', time());
+    }
+    
+    /**
+     * Deactivate post types on theme switch
+     */
+    public function deactivatePostTypes(): void {
+        // Store deactivation timestamp
+        update_option('tmu_post_types_deactivated', time());
     }
 }

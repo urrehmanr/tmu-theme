@@ -63,17 +63,34 @@ abstract class AbstractTaxonomy {
             return;
         }
         
-        register_taxonomy(
-            $this->taxonomy,
-            $this->object_types,
-            $this->getArgs()
-        );
-        
-        // Register meta fields
-        $this->registerMetaFields();
-        
-        // Add admin customizations
-        $this->addAdminHooks();
+        // Check if taxonomy already exists to avoid duplicate registration
+        if (!taxonomy_exists($this->taxonomy)) {
+            register_taxonomy(
+                $this->taxonomy,
+                $this->object_types,
+                $this->getArgs()
+            );
+            
+            // Register meta fields
+            $this->registerMetaFields();
+            
+            // Add admin customizations
+            $this->addAdminHooks();
+            
+            // Log successful registration
+            if (function_exists('tmu_log')) {
+                tmu_log("Registered taxonomy: {$this->taxonomy}", 'info');
+            }
+        } else {
+            // If taxonomy exists, just register it for our post types
+            foreach ($this->object_types as $object_type) {
+                register_taxonomy_for_object_type($this->taxonomy, $object_type);
+            }
+            
+            if (function_exists('tmu_log')) {
+                tmu_log("Added existing taxonomy {$this->taxonomy} to post types", 'info');
+            }
+        }
     }
     
     /**

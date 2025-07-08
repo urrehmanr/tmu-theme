@@ -839,7 +839,7 @@ class QuickStats {
                 'tmu-quick-stats',
                 get_template_directory_uri() . '/assets/build/js/quick-stats.js',
                 ['jquery', 'wp-util'],
-                get_theme_file_version('assets/build/js/quick-stats.js'),
+                \get_theme_file_version('assets/build/js/quick-stats.js'),
                 true
             );
             

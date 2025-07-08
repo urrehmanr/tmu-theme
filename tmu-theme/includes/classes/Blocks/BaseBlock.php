@@ -320,4 +320,37 @@ abstract class BaseBlock {
     public function get_style_handle(): string {
         return 'tmu-blocks';
     }
+
+    /**
+     * Register the block with WordPress
+     */
+    public function register(): void {
+        if (!function_exists('register_block_type')) {
+            return;
+        }
+        
+        // Check if block is enabled in theme settings
+        if (!$this->is_block_enabled()) {
+            return;
+        }
+        
+        register_block_type($this->get_block_name(), [
+            'editor_script' => $this->get_editor_script_handle(),
+            'editor_style' => $this->get_editor_style_handle(),
+            'style' => $this->get_style_handle(),
+            'render_callback' => [static::class, 'render'],
+            'attributes' => static::get_attributes(),
+            'supports' => $this->supports,
+        ]);
+    }
+    
+    /**
+     * Check if block is enabled in theme settings
+     * 
+     * @return bool Whether block is enabled
+     */
+    protected function is_block_enabled(): bool {
+        $option_name = 'tmu_block_' . str_replace('-', '_', $this->name) . '_enabled';
+        return get_option($option_name, true);
+    }
 }

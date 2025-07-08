@@ -152,7 +152,20 @@ class TVShow extends AbstractPostType {
      * @return bool
      */
     protected function shouldRegister(): bool {
-        return tmu_get_option('tmu_tv_series', 'off') === 'on';
+        // First check if the post type is enabled in the config
+        $config_file = TMU_INCLUDES_DIR . '/config/post-types.php';
+        
+        if (file_exists($config_file)) {
+            $post_types_config = include $config_file;
+            if (isset($post_types_config['tv-series']['enabled'])) {
+                return (bool) $post_types_config['tv-series']['enabled'];
+            }
+        }
+        
+        // Fall back to option check
+        return function_exists('tmu_get_option') ? 
+            tmu_get_option('tmu_tv_series', 'on') === 'on' : 
+            true;
     }
     
     /**

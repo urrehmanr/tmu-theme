@@ -279,3 +279,19 @@ function tmu_get_template_part(string $slug, string $name = '', array $args = []
 function tmu_get_template_args(): array {
     return get_query_var('tmu_template_args', []);
 }
+
+/**
+ * Get file version based on file modification time
+ * 
+ * @param string $file_path Path to file relative to theme directory
+ * @return string File version
+ */
+function get_theme_file_version(string $file_path): string {
+    $absolute_path = get_template_directory() . '/' . $file_path;
+    
+    if (file_exists($absolute_path)) {
+        return (string) filemtime($absolute_path);
+    }
+    
+    return TMU_VERSION ?? '1.0.0';
+}

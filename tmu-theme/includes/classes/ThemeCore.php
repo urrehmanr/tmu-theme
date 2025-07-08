@@ -112,12 +112,26 @@ class ThemeCore {
             
             // Initialize Step 05 - Post Types
             if (class_exists('TMU\\PostTypes\\PostTypeManager')) {
+                // Initialize post types directly instead of using init hook
                 PostTypes\PostTypeManager::getInstance();
+                
+                // Also register on init hook to ensure proper WordPress integration
+                add_action('init', function() {
+                    // Force post types to register again on init
+                    PostTypes\PostTypeManager::getInstance()->registerAllPostTypes();
+                }, 5);
             }
             
             // Initialize Step 06 - Taxonomies
             if (class_exists('TMU\\Taxonomies\\TaxonomyManager')) {
+                // Initialize taxonomies directly instead of using init hook
                 Taxonomies\TaxonomyManager::getInstance();
+                
+                // Also register on init hook to ensure proper WordPress integration
+                add_action('init', function() {
+                    // Force taxonomies to register again on init
+                    Taxonomies\TaxonomyManager::getInstance()->registerTaxonomies();
+                }, 5);
             }
             
             // Initialize Step 07 - Custom Fields

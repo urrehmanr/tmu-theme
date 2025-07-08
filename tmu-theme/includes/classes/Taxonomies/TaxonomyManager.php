@@ -35,11 +35,29 @@ class TaxonomyManager {
     private $taxonomies = [];
     
     /**
+     * Taxonomy configuration
+     *
+     * @var array
+     */
+    private $config = [];
+    
+    /**
      * Constructor
      */
     private function __construct() {
         $this->initializeTaxonomies();
+        
+        // Don't register taxonomies in constructor to avoid early registration
+        // $this->registerTaxonomies();
+        
+        // Add WordPress hooks
         $this->addHooks();
+        
+        // Register activation hook for flushing rewrite rules
+        add_action('after_switch_theme', [$this, 'flushRewriteRules']);
+        
+        // Register deactivation hook
+        add_action('switch_theme', [$this, 'deactivateTaxonomies']);
     }
     
     /**
@@ -56,29 +74,47 @@ class TaxonomyManager {
     }
     
     /**
-     * Initialize all taxonomies
+     * Initialize taxonomies
      */
     private function initializeTaxonomies(): void {
-        $taxonomy_classes = [
-            'Genre',
-            'Country',
-            'Language',
-            'ByYear',
-            'ProductionCompany',
-            'Network',
-            'Profession',
-            'Channel',
-            'Keyword',
-            'Nationality',
-        ];
+        // Load taxonomy configuration
+        $this->loadTaxonomyConfig();
         
-        foreach ($taxonomy_classes as $class) {
-            $full_class = "TMU\\Taxonomies\\{$class}";
-            
-            if (class_exists($full_class)) {
-                $taxonomy = new $full_class();
-                $this->taxonomies[$taxonomy->getTaxonomy()] = $taxonomy;
-            }
+        // Create taxonomy instances
+        $this->taxonomies = [
+            'genre' => new Genre(),
+            'country' => new Country(),
+            'language' => new Language(),
+            'network' => new Network(),
+            'production-company' => new ProductionCompany(),
+            'by-year' => new ByYear(),
+            'profession' => new Profession(),
+            'nationality' => new Nationality(),
+        ];
+    }
+    
+    /**
+     * Load taxonomy configuration
+     */
+    private function loadTaxonomyConfig(): void {
+        $config_file = TMU_INCLUDES_DIR . '/config/taxonomies.php';
+        
+        if (file_exists($config_file)) {
+            $this->config = include $config_file;
+        }
+        
+        // Set default configuration if not loaded
+        if (empty($this->config)) {
+            $this->config = [
+                'genre' => ['enabled' => true],
+                'country' => ['enabled' => true],
+                'language' => ['enabled' => true],
+                'network' => ['enabled' => true],
+                'production-company' => ['enabled' => true],
+                'by-year' => ['enabled' => true],
+                'profession' => ['enabled' => true],
+                'nationality' => ['enabled' => true],
+            ];
         }
     }
     
@@ -86,34 +122,66 @@ class TaxonomyManager {
      * Add WordPress hooks
      */
     private function addHooks(): void {
+        // Register taxonomies on init with priority 5 (before post types at priority 10)
         add_action('init', [$this, 'registerTaxonomies'], 5);
-        add_action('admin_init', [$this, 'flushRewriteRules']);
+        
+        // Only flush rewrite rules when needed, not on every admin_init
+        add_action('admin_init', [$this, 'maybeFlushRewriteRules']);
+        
         add_action('wp_loaded', [$this, 'afterTaxonomiesRegistered']);
+    }
+    
+    /**
+     * Maybe flush rewrite rules if needed
+     */
+    public function maybeFlushRewriteRules(): void {
+        if (get_option('tmu_taxonomies_rewrite_flush') === '1') {
+            flush_rewrite_rules();
+            delete_option('tmu_taxonomies_rewrite_flush');
+        }
     }
     
     /**
      * Register all taxonomies
      */
     public function registerTaxonomies(): void {
+        // Load taxonomy configuration
+        $this->loadTaxonomyConfig();
+        
         foreach ($this->taxonomies as $taxonomy) {
             $taxonomy->register();
         }
         
         // Log registered taxonomies
-        if (tmu_get_option('tmu_debug_mode', 'off') === 'on') {
+        if (function_exists('tmu_log') && tmu_get_option('tmu_debug_mode', 'off') === 'on') {
             $registered_taxonomies = array_keys($this->taxonomies);
             tmu_log('Registered taxonomies: ' . implode(', ', $registered_taxonomies), 'debug');
         }
+        
+        // Set flag to flush rewrite rules
+        update_option('tmu_taxonomies_rewrite_flush', '1');
     }
     
     /**
      * Flush rewrite rules when needed
      */
     public function flushRewriteRules(): void {
-        if (get_option('tmu_taxonomies_rewrite_flush') === '1') {
-            flush_rewrite_rules();
-            delete_option('tmu_taxonomies_rewrite_flush');
-        }
+        // First, register all taxonomies
+        $this->registerTaxonomies();
+        
+        // Then flush rewrite rules
+        flush_rewrite_rules();
+        
+        // Store activation timestamp
+        update_option('tmu_taxonomies_activated', time());
+    }
+    
+    /**
+     * Deactivate taxonomies on theme switch
+     */
+    public function deactivateTaxonomies(): void {
+        // Store deactivation timestamp
+        update_option('tmu_taxonomies_deactivated', time());
     }
     
     /**
