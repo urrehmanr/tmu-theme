@@ -188,10 +188,13 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Migration/SettingsMigrator.php';
         require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationValidator.php';
         
+        // Load Core classes first
+        require_once TMU_INCLUDES_DIR . '/classes/Core/BaseClass.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Core/Step19Validator.php';
+        
         // Load classes from their correct directories
         require_once TMU_INCLUDES_DIR . '/classes/Performance/PerformanceBenchmark.php';
         require_once TMU_INCLUDES_DIR . '/classes/Testing/TestValidator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Core/Step19Validator.php';
         
         // Load Migration classes that exist
         if (file_exists(TMU_INCLUDES_DIR . '/classes/Migration/MigrationExecutor.php')) {
