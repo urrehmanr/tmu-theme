@@ -185,13 +185,21 @@ class ThemeCore {
         require_once TMU_INCLUDES_DIR . '/classes/Utils/MemoryOptimizer.php';
         
         // Load Migration classes
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationExecutor.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/DataMigrator.php';
         require_once TMU_INCLUDES_DIR . '/classes/Migration/SettingsMigrator.php';
         require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationValidator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/PerformanceBenchmark.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/TestValidator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/Step19Validator.php';
+        
+        // Load classes from their correct directories
+        require_once TMU_INCLUDES_DIR . '/classes/Performance/PerformanceBenchmark.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Testing/TestValidator.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Core/Step19Validator.php';
+        
+        // Load Migration classes that exist
+        if (file_exists(TMU_INCLUDES_DIR . '/classes/Migration/MigrationExecutor.php')) {
+            require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationExecutor.php';
+        }
+        if (file_exists(TMU_INCLUDES_DIR . '/classes/Migration/DataMigrator.php')) {
+            require_once TMU_INCLUDES_DIR . '/classes/Migration/DataMigrator.php';
+        }
         
         // Load placeholder classes - will be created in future steps
         // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
