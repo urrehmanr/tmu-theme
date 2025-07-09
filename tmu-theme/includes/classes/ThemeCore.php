@@ -90,13 +90,14 @@ class ThemeCore {
     }
     
     /**
-     * Initialize theme functionality
-     * 
-     * All classes are autoloaded when referenced, following the 19-step architecture
+     * Initialize theme
      */
     public function initTheme(): void {
         try {
-            // Initialize Step 02 - Theme Initialization
+            // Load dependencies
+            $this->loadDependencies();
+            
+            // Initialize theme core components
             if (class_exists('TMU\\ThemeInitializer')) {
                 ThemeInitializer::getInstance();
             }
@@ -110,28 +111,59 @@ class ThemeCore {
                 Database\Migration::getInstance();
             }
             
-            // Initialize Step 05 - Post Types
-            if (class_exists('TMU\\PostTypes\\PostTypeManager')) {
-                // Initialize post types directly instead of using init hook
-                PostTypes\PostTypeManager::getInstance();
-                
-                // Also register on init hook to ensure proper WordPress integration
-                add_action('init', function() {
-                    // Force post types to register again on init
-                    PostTypes\PostTypeManager::getInstance()->registerAllPostTypes();
-                }, 5);
-            }
-            
+            // CRITICAL FIX: Register taxonomies BEFORE post types
             // Initialize Step 06 - Taxonomies
             if (class_exists('TMU\\Taxonomies\\TaxonomyManager')) {
-                // Initialize taxonomies directly instead of using init hook
-                Taxonomies\TaxonomyManager::getInstance();
+                // Initialize taxonomies directly
+                $taxonomy_manager = Taxonomies\TaxonomyManager::getInstance();
+                
+                // Register taxonomies immediately
+                tmu_log("Directly registering taxonomies from ThemeCore", 'debug');
+                $taxonomy_manager->registerTaxonomies();
                 
                 // Also register on init hook to ensure proper WordPress integration
+                add_action('init', function() use ($taxonomy_manager) {
+                    // Force taxonomies to register again on init with priority 1
+                    tmu_log("Registering taxonomies via init hook with priority 1", 'debug');
+                    $taxonomy_manager->registerTaxonomies();
+                }, 1);
+                
+                // Debug taxonomies
                 add_action('init', function() {
-                    // Force taxonomies to register again on init
-                    Taxonomies\TaxonomyManager::getInstance()->registerTaxonomies();
+                    global $wp_taxonomies;
+                    $registered_taxonomies = isset($wp_taxonomies) ? array_keys($wp_taxonomies) : [];
+                    tmu_log("After init priority 1: Registered taxonomies: " . implode(', ', $registered_taxonomies), 'debug');
+                }, 2);
+            }
+            
+            // Initialize Step 05 - Post Types - CRITICAL FIX
+            if (class_exists('TMU\\PostTypes\\PostTypeManager')) {
+                // Initialize post types directly
+                $post_type_manager = PostTypes\PostTypeManager::getInstance();
+                
+                // Register post types immediately
+                tmu_log("Directly registering post types from ThemeCore", 'debug');
+                $post_type_manager->registerAllPostTypes();
+                
+                // Also register on init hook to ensure proper WordPress integration
+                add_action('init', function() use ($post_type_manager) {
+                    // Force post types to register again on init with priority 5 (after taxonomies)
+                    tmu_log("Registering post types via init hook with priority 5", 'debug');
+                    $post_type_manager->registerAllPostTypes();
                 }, 5);
+                
+                // Debug post types
+                add_action('init', function() {
+                    global $wp_post_types;
+                    $registered_types = isset($wp_post_types) ? array_keys($wp_post_types) : [];
+                    tmu_log("After init priority 5: Registered post types: " . implode(', ', $registered_types), 'debug');
+                }, 6);
+                
+                // Force flush rewrite rules
+                add_action('wp_loaded', function() {
+                    tmu_log("Flushing rewrite rules after post type registration", 'debug');
+                    flush_rewrite_rules();
+                }, 20);
             }
             
             // Initialize Step 07 - Custom Fields

@@ -545,9 +545,9 @@ function tmu_make_admin_columns_sortable(array $columns): array {
 /**
  * Handle sorting for custom admin columns
  *
- * @param WP_Query $query Query object
+ * @param \WP_Query $query Query object
  */
-function tmu_handle_admin_sorting(WP_Query $query): void {
+function tmu_handle_admin_sorting(\WP_Query $query): void {
     if (!is_admin() || !$query->is_main_query()) {
         return;
     }

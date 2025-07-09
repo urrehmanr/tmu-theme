@@ -205,35 +205,57 @@ function tmu_load_config(): void {
 }
 
 /**
- * Initialize the theme bootstrap
+ * Bootstrap the theme
  */
 function tmu_bootstrap(): void {
-    // Check system requirements first
+    // Check requirements first
     if (!tmu_check_requirements()) {
         return;
     }
     
-    // Initialize error handling
-    tmu_init_error_handling();
-    
-    // Load configuration
-    tmu_load_config();
-    
     // Initialize autoloading
     tmu_init_autoloader();
     
-    // Initialize theme core if autoloading is working
+    // Initialize error handling
+    tmu_init_error_handling();
+    
+    // Load configuration files
+    tmu_load_config();
+    
+    // Initialize the theme
     if (class_exists('TMU\\ThemeCore')) {
-        TMU\ThemeCore::getInstance();
-    } else {
-        // Fallback: try to load ThemeCore manually
-        $theme_core_file = TMU_INCLUDES_DIR . '/classes/ThemeCore.php';
-        if (file_exists($theme_core_file)) {
-            require_once $theme_core_file;
-            if (class_exists('TMU\\ThemeCore')) {
-                TMU\ThemeCore::getInstance();
-            }
+        // Initialize theme core
+        $theme_core = TMU\ThemeCore::getInstance();
+        
+        // Force post types registration for debugging
+        if (class_exists('TMU\\PostTypes\\PostTypeManager')) {
+            add_action('init', function() {
+                tmu_log("Explicitly registering post types from bootstrap", 'debug');
+                TMU\PostTypes\PostTypeManager::getInstance()->registerAllPostTypes();
+            }, 5);
         }
+        
+        // Force taxonomies registration for debugging
+        if (class_exists('TMU\\Taxonomies\\TaxonomyManager')) {
+            add_action('init', function() {
+                tmu_log("Explicitly registering taxonomies from bootstrap", 'debug');
+                TMU\Taxonomies\TaxonomyManager::getInstance()->registerTaxonomies();
+            }, 5);
+        }
+        
+        // Force flush rewrite rules
+        add_action('wp_loaded', function() {
+            tmu_log("Flushing rewrite rules from bootstrap", 'debug');
+            flush_rewrite_rules();
+        });
+        
+        // Debug post types and taxonomies registration after WordPress is fully loaded
+        add_action('wp_loaded', function() {
+            tmu_log("Checking post types and taxonomies registration status", 'debug');
+            tmu_debug_registrations();
+        }, 999);
+    } else {
+        tmu_log('ThemeCore class not found', 'error');
     }
 }
 

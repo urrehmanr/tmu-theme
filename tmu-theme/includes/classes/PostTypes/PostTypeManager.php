@@ -120,21 +120,77 @@ class PostTypeManager {
         // Enable feature flags for post types based on options
         $this->setFeatureFlags();
         
+        tmu_log("Starting post type registration", 'debug');
+        
+        // Force enable all post types for debugging
+        update_option('tmu_movies', 'on');
+        update_option('tmu_tv_series', 'on');
+        update_option('tmu_dramas', 'on');
+        update_option('tmu_people', 'on');
+        
+        // Store registered post types
+        $registered = [];
+        
         foreach ($this->post_type_instances as $slug => $post_type) {
+            tmu_log("Registering post type: {$slug}", 'debug');
+            
             if ($post_type instanceof AbstractPostType) {
+                // Force registration for debugging
                 $post_type->register();
                 
                 if ($post_type->exists()) {
                     $this->post_types[$slug] = $post_type;
-                    if (function_exists('tmu_log')) {
-                        tmu_log("Registered post type: {$slug}", 'info');
+                    $registered[] = $slug;
+                    tmu_log("Successfully registered post type: {$slug}", 'info');
+                } else {
+                    tmu_log("Failed to register post type: {$slug} - trying direct registration", 'error');
+                    
+                    // Try direct registration as fallback
+                    $args = $post_type->getArgs();
+                    if (!empty($args)) {
+                        register_post_type($slug, $args);
+                        
+                        if (post_type_exists($slug)) {
+                            $this->post_types[$slug] = $post_type;
+                            $registered[] = $slug;
+                            tmu_log("Successfully registered post type {$slug} directly", 'info');
+                        } else {
+                            tmu_log("Failed to register post type {$slug} even with direct registration", 'error');
+                        }
                     }
                 }
+            } else {
+                tmu_log("Invalid post type instance for: {$slug}", 'error');
             }
         }
         
+        // Log registered post types
+        tmu_log("Registered post types: " . implode(', ', $registered), 'info');
+        
         // Flush rewrite rules if needed
         $this->maybeFlushRewriteRules();
+        
+        // Force flush rewrite rules for debugging
+        flush_rewrite_rules();
+        tmu_log("Flushed rewrite rules after post type registration", 'debug');
+        
+        // Debug: Check if post types are registered
+        global $wp_post_types;
+        if (isset($wp_post_types) && is_array($wp_post_types)) {
+            $registered_types = array_keys($wp_post_types);
+            tmu_log("Registered post types in WP: " . implode(', ', $registered_types), 'debug');
+            
+            // Check our expected post types
+            foreach ($this->post_type_instances as $slug => $post_type) {
+                if (in_array($slug, $registered_types)) {
+                    tmu_log("Post type {$slug} is registered in WordPress", 'debug');
+                } else {
+                    tmu_log("Post type {$slug} is NOT registered in WordPress", 'error');
+                }
+            }
+        } else {
+            tmu_log("No post types registered in WordPress", 'error');
+        }
     }
     
     /**

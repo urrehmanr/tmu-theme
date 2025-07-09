@@ -296,7 +296,7 @@ class DataMigrator {
     /**
      * Migrate a single post
      *
-     * @param WP_Post $post Post to migrate
+     * @param \WP_Post $post Post to migrate
      * @return bool Success status
      */
     private function migratePost(\WP_Post $post): bool {
@@ -317,7 +317,7 @@ class DataMigrator {
     /**
      * Migrate a single term
      *
-     * @param WP_Term $term Term to migrate
+     * @param \WP_Term $term Term to migrate
      * @param string $new_taxonomy New taxonomy name
      * @return bool Success status
      */
@@ -360,7 +360,7 @@ class DataMigrator {
     /**
      * Migrate a single user
      *
-     * @param WP_User $user User to migrate
+     * @param \WP_User $user User to migrate
      * @return bool Success status
      */
     private function migrateUser(\WP_User $user): bool {

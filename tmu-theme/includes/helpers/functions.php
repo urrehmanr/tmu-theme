@@ -295,3 +295,48 @@ function get_theme_file_version(string $file_path): string {
     
     return TMU_VERSION ?? '1.0.0';
 }
+
+/**
+ * Debug post types and taxonomies registration
+ * 
+ * @return array Registration status
+ */
+function tmu_debug_registrations(): array {
+    global $wp_post_types, $wp_taxonomies;
+    
+    $result = [
+        'post_types' => [],
+        'taxonomies' => [],
+    ];
+    
+    // Check post types
+    $expected_post_types = [
+        'movie', 'tv', 'drama', 'people', 'video', 'season', 'episode', 'drama-episode'
+    ];
+    
+    foreach ($expected_post_types as $post_type) {
+        $result['post_types'][$post_type] = [
+            'registered' => post_type_exists($post_type),
+            'object' => isset($wp_post_types[$post_type]) ? $wp_post_types[$post_type] : null,
+        ];
+    }
+    
+    // Check taxonomies
+    $expected_taxonomies = [
+        'genre', 'country', 'language', 'network', 'production-company', 
+        'by-year', 'profession', 'nationality'
+    ];
+    
+    foreach ($expected_taxonomies as $taxonomy) {
+        $result['taxonomies'][$taxonomy] = [
+            'registered' => taxonomy_exists($taxonomy),
+            'object' => isset($wp_taxonomies[$taxonomy]) ? $wp_taxonomies[$taxonomy] : null,
+        ];
+    }
+    
+    // Log the results
+    tmu_log('Post types registration status: ' . wp_json_encode($result['post_types']), 'debug');
+    tmu_log('Taxonomies registration status: ' . wp_json_encode($result['taxonomies']), 'debug');
+    
+    return $result;
+}

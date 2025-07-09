@@ -148,18 +148,76 @@ class TaxonomyManager {
         // Load taxonomy configuration
         $this->loadTaxonomyConfig();
         
-        foreach ($this->taxonomies as $taxonomy) {
+        tmu_log("Starting taxonomy registration", 'debug');
+        
+        // Force enable all taxonomies for debugging
+        $this->config = [
+            'genre' => ['enabled' => true],
+            'country' => ['enabled' => true],
+            'language' => ['enabled' => true],
+            'network' => ['enabled' => true],
+            'production-company' => ['enabled' => true],
+            'by-year' => ['enabled' => true],
+            'profession' => ['enabled' => true],
+            'nationality' => ['enabled' => true],
+        ];
+        
+        // Store taxonomies that were registered
+        $registered = [];
+        
+        foreach ($this->taxonomies as $taxonomy_slug => $taxonomy) {
+            tmu_log("Registering taxonomy: {$taxonomy_slug}", 'debug');
             $taxonomy->register();
+            
+            // Check if registration was successful
+            if (taxonomy_exists($taxonomy_slug)) {
+                $registered[] = $taxonomy_slug;
+                tmu_log("Successfully registered taxonomy: {$taxonomy_slug}", 'info');
+            } else {
+                tmu_log("Failed to register taxonomy: {$taxonomy_slug} - trying again directly", 'error');
+                
+                // Try direct registration as fallback
+                $object_types = $taxonomy->getObjectTypes();
+                $args = $taxonomy->getArgs();
+                
+                if (!empty($args)) {
+                    register_taxonomy($taxonomy_slug, $object_types, $args);
+                    
+                    if (taxonomy_exists($taxonomy_slug)) {
+                        $registered[] = $taxonomy_slug;
+                        tmu_log("Successfully registered taxonomy {$taxonomy_slug} directly", 'info');
+                    } else {
+                        tmu_log("Failed to register taxonomy {$taxonomy_slug} even with direct registration", 'error');
+                    }
+                }
+            }
         }
         
         // Log registered taxonomies
-        if (function_exists('tmu_log') && tmu_get_option('tmu_debug_mode', 'off') === 'on') {
-            $registered_taxonomies = array_keys($this->taxonomies);
-            tmu_log('Registered taxonomies: ' . implode(', ', $registered_taxonomies), 'debug');
+        if (function_exists('tmu_log')) {
+            tmu_log('Registered taxonomies: ' . implode(', ', $registered), 'debug');
         }
         
         // Set flag to flush rewrite rules
         update_option('tmu_taxonomies_rewrite_flush', '1');
+        
+        // Debug: Check if taxonomies are registered
+        global $wp_taxonomies;
+        if (isset($wp_taxonomies) && is_array($wp_taxonomies)) {
+            $registered_taxonomies = array_keys($wp_taxonomies);
+            tmu_log("Registered taxonomies in WP: " . implode(', ', $registered_taxonomies), 'debug');
+            
+            // Check our expected taxonomies
+            foreach ($this->taxonomies as $taxonomy_slug => $taxonomy) {
+                if (in_array($taxonomy_slug, $registered_taxonomies)) {
+                    tmu_log("Taxonomy {$taxonomy_slug} is registered in WordPress", 'debug');
+                } else {
+                    tmu_log("Taxonomy {$taxonomy_slug} is NOT registered in WordPress", 'error');
+                }
+            }
+        } else {
+            tmu_log("No taxonomies registered in WordPress", 'error');
+        }
     }
     
     /**
@@ -480,5 +538,5 @@ class TaxonomyManager {
     /**
      * Prevent unserialization
      */
-    private function __wakeup() {}
+    public function __wakeup() {}
 }
