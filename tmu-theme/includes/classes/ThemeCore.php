@@ -123,11 +123,27 @@ class ThemeCore {
         
         // Load Step 07 - Custom Fields (Native WordPress)
         // Block system files - loaded conditionally if they exist
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BaseBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlockRegistry.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/MovieMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TvSeriesMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/DramaMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/PeopleMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TvEpisodeMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/DramaEpisodeMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/SeasonMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/VideoMetadataBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TaxonomyImageBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TaxonomyFaqsBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlogPostsListBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TrendingContentBlock.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TmdbSyncBlock.php';
         
         // Load Step 08 - Admin UI 
         require_once TMU_INCLUDES_DIR . '/classes/Admin/AdminManager.php';
         require_once TMU_INCLUDES_DIR . '/classes/Admin/Columns/MovieColumns.php';
         require_once TMU_INCLUDES_DIR . '/classes/Admin/Actions/TMDBSync.php';
+        require_once TMU_INCLUDES_DIR . '/classes/Admin/BlocksDebug.php';
         
         // Load Step 11 - SEO and Schema Markup classes
         require_once TMU_INCLUDES_DIR . '/classes/SEO/SEOManager.php';
@@ -219,12 +235,13 @@ class ThemeCore {
         // Initialize Step 07 - Custom Fields
         $field_manager = Fields\FieldManager::getInstance();
         
-        // Initialize Step 07 - Custom Fields
-        // Block system - conditionally loaded if available
+        // Initialize Block system
+        Blocks\BlockRegistry::getInstance();
         
         // Initialize Step 08 - Admin UI and Meta Boxes
         if (is_admin()) {
             Admin\AdminManager::getInstance();
+            Admin\BlocksDebug::init();
         }
         
         // Initialize Step 11 - SEO and Schema Markup
