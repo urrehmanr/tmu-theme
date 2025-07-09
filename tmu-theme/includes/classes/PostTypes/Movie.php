@@ -152,7 +152,26 @@ class Movie extends AbstractPostType {
      * @return bool
      */
     protected function shouldRegister(): bool {
-        return tmu_get_option('tmu_movies', 'off') === 'on';
+        // DEBUG: Always enable the post type for debugging
+        tmu_log("Movie post type shouldRegister called - returning TRUE", 'debug');
+        return true;
+        
+        /*
+        // First check if the post type is enabled in the config
+        $config_file = TMU_INCLUDES_DIR . '/config/post-types.php';
+        
+        if (file_exists($config_file)) {
+            $post_types_config = include $config_file;
+            if (isset($post_types_config['movie']['enabled'])) {
+                return (bool) $post_types_config['movie']['enabled'];
+            }
+        }
+        
+        // Fall back to option check
+        return function_exists('tmu_get_option') ? 
+            tmu_get_option('tmu_movies', 'on') === 'on' : 
+            true;
+        */
     }
     
     /**
@@ -265,9 +284,9 @@ class Movie extends AbstractPostType {
     /**
      * Handle sorting for custom columns
      *
-     * @param WP_Query $query Query object
+     * @param \WP_Query $query Query object
      */
-    public function handleSorting(WP_Query $query): void {
+    public function handleSorting(\WP_Query $query): void {
         if (!is_admin() || !$query->is_main_query()) {
             return;
         }
@@ -301,10 +320,10 @@ class Movie extends AbstractPostType {
      * Add row actions
      *
      * @param array $actions Existing actions
-     * @param WP_Post $post Post object
+     * @param \WP_Post $post Post object
      * @return array
      */
-    public function addRowActions(array $actions, WP_Post $post): array {
+    public function addRowActions(array $actions, \WP_Post $post): array {
         if ($post->post_type === $this->post_type) {
             $tmdb_id = get_post_meta($post->ID, 'tmdb_id', true);
             
@@ -392,9 +411,9 @@ class Movie extends AbstractPostType {
      * Handle movie saved
      *
      * @param int $post_id Post ID
-     * @param WP_Post $post Post object
+     * @param \WP_Post $post Post object
      */
-    public function onMovieSaved(int $post_id, WP_Post $post): void {
+    public function onMovieSaved(int $post_id, \WP_Post $post): void {
         // Clear cache when movie is saved
         tmu_delete_cache("movie_{$post_id}");
         

@@ -1,6 +1,6 @@
 <?php
 /**
- * TMU Admin Helper Functions
+ * TMU Theme Admin Helper Functions
  *
  * @package TMU
  * @version 1.0.0
@@ -12,10 +12,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Add TMU admin notice
+ * Add admin notice
  *
  * @param string $message Notice message
- * @param string $type Notice type (success, error, warning, info)
+ * @param string $type Notice type (success, warning, error, info)
  * @param bool $dismissible Whether notice is dismissible
  */
 function tmu_add_admin_notice(string $message, string $type = 'info', bool $dismissible = true): void {
@@ -25,43 +25,18 @@ function tmu_add_admin_notice(string $message, string $type = 'info', bool $dism
     }
     
     add_action('admin_notices', function() use ($message, $class) {
-        echo "<div class=\"{$class}\"><p>{$message}</p></div>";
+        printf('<div class="%s"><p>%s</p></div>', esc_attr($class), wp_kses_post($message));
     });
-}
-
-/**
- * Get TMU admin setting
- *
- * @param string $setting Setting name
- * @param mixed $default Default value
- * @return mixed
- */
-function tmu_get_admin_setting(string $setting, $default = null) {
-    $settings = get_option('tmu_settings', []);
-    return $settings[$setting] ?? $default;
-}
-
-/**
- * Save TMU admin setting
- *
- * @param string $setting Setting name
- * @param mixed $value Setting value
- * @return bool
- */
-function tmu_save_admin_setting(string $setting, $value): bool {
-    $settings = get_option('tmu_settings', []);
-    $settings[$setting] = $value;
-    return update_option('tmu_settings', $settings);
 }
 
 /**
  * Check if current screen is TMU admin page
  *
- * @param string $page_slug Optional specific page slug
- * @return bool
+ * @param string $page_slug Optional specific page slug to check
+ * @return bool Whether current screen is TMU admin page
  */
-function is_tmu_admin_page(string $page_slug = ''): bool {
-    if (!is_admin()) {
+function tmu_is_admin_page(string $page_slug = ''): bool {
+    if (!function_exists('get_current_screen')) {
         return false;
     }
     
@@ -71,229 +46,389 @@ function is_tmu_admin_page(string $page_slug = ''): bool {
         return false;
     }
     
-    $tmu_pages = [
-        'toplevel_page_tmu-settings',
-        'tmu_page_tmu-welcome',
-        'tools_page_tmu-migration',
-        'edit-movie',
-        'edit-tv_series',
-        'edit-drama',
-        'edit-person',
-        'movie',
-        'tv_series',
-        'drama',
-        'person',
-    ];
+    // Check for TMU post types
+    $tmu_post_types = ['movie', 'tv', 'drama', 'season', 'episode', 'drama-episode', 'people', 'video'];
+    if (in_array($screen->post_type, $tmu_post_types)) {
+        return true;
+    }
     
-    if ($page_slug) {
+    // Check for TMU taxonomies
+    $tmu_taxonomies = ['genre', 'country', 'language', 'by-year', 'production-company', 'network', 'profession'];
+    if (in_array($screen->taxonomy, $tmu_taxonomies)) {
+        return true;
+    }
+    
+    // Check for specific TMU admin pages
+    if (!empty($page_slug)) {
         return $screen->id === $page_slug;
     }
     
-    return in_array($screen->id, $tmu_pages) || strpos($screen->id, 'tmu') !== false;
+    // Check for general TMU admin pages
+    return strpos($screen->id, 'tmu') !== false || strpos($screen->base, 'tmu') !== false;
 }
 
 /**
- * Enqueue TMU admin assets
+ * Get TMU admin menu position
+ *
+ * @return int Menu position
+ */
+function tmu_get_admin_menu_position(): int {
+    return apply_filters('tmu_admin_menu_position', 25);
+}
+
+/**
+ * Add TMU admin menu separator
+ *
+ * @param int $position Menu position
+ */
+function tmu_add_admin_menu_separator(int $position): void {
+    global $menu;
+    $menu[$position] = [
+        '',
+        'read',
+        'separator-tmu',
+        '',
+        'wp-menu-separator tmu-separator'
+    ];
+}
+
+/**
+ * Enqueue TMU admin scripts and styles
  *
  * @param string $hook Current admin page hook
  */
 function tmu_enqueue_admin_assets(string $hook): void {
-    if (!is_tmu_admin_page()) {
+    // Only load on TMU admin pages
+    if (!tmu_is_admin_page()) {
         return;
     }
     
-    // Admin CSS
+    $version = tmu_get_version();
+    
+    // Admin styles
     wp_enqueue_style(
-        'tmu-admin-style',
-        tmu_get_build_asset_url('css/admin.css'),
+        'tmu-admin',
+        tmu_asset_url('css/admin.css'),
         [],
-        tmu_get_version()
+        $version
     );
     
-    // Admin JavaScript
+    // Admin scripts
     wp_enqueue_script(
-        'tmu-admin-script',
-        tmu_get_build_asset_url('js/admin.js'),
+        'tmu-admin',
+        tmu_asset_url('js/admin.js'),
         ['jquery', 'wp-api'],
-        tmu_get_version(),
+        $version,
         true
     );
     
-    // Localize admin scripts
-    wp_localize_script('tmu-admin-script', 'tmuAdmin', [
+    // Localize script
+    wp_localize_script('tmu-admin', 'tmuAdmin', [
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'restUrl' => rest_url('tmu/v1/'),
-        'nonce' => wp_create_nonce('tmu_admin_nonce'),
+        'nonce' => tmu_create_nonce('admin'),
         'restNonce' => wp_create_nonce('wp_rest'),
-        'userId' => get_current_user_id(),
         'strings' => [
             'loading' => __('Loading...', 'tmu'),
             'error' => __('An error occurred. Please try again.', 'tmu'),
             'success' => __('Operation completed successfully.', 'tmu'),
-            'confirmDelete' => __('Are you sure you want to delete this item?', 'tmu'),
-            'confirmAction' => __('Are you sure you want to perform this action?', 'tmu'),
-            'syncSuccess' => __('Data synchronized successfully!', 'tmu'),
-            'syncError' => __('Error synchronizing data. Please try again.', 'tmu'),
-            'tmdbIdRequired' => __('TMDB ID is required for synchronization.', 'tmu'),
-            'invalidApiKey' => __('Invalid TMDB API key.', 'tmu'),
-            'networkError' => __('Network error. Please check your connection.', 'tmu'),
-        ],
-        'settings' => [
-            'tmdbApiKey' => tmu_get_option('tmu_tmdb_api_key', ''),
-            'debugMode' => tmu_is_development(),
-            'autoSave' => tmu_get_option('tmu_admin_autosave', true),
-            'refreshInterval' => tmu_get_option('tmu_admin_refresh_interval', 30000),
+            'confirm' => __('Are you sure?', 'tmu'),
+            'cancel' => __('Cancel', 'tmu'),
+            'save' => __('Save', 'tmu'),
+            'delete' => __('Delete', 'tmu'),
         ]
     ]);
-    
-    // Alpine.js for enhanced interactivity in admin
-    wp_enqueue_script(
-        'alpinejs',
-        'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
-        [],
-        '3.13.0',
-        true
-    );
-    
-    // Add defer attribute to Alpine.js
-    add_filter('script_loader_tag', function($tag, $handle) {
-        if ($handle === 'alpinejs') {
-            return str_replace(' src', ' defer src', $tag);
-        }
-        return $tag;
-    }, 10, 2);
 }
 
 /**
- * Add TMU admin menu pages
- */
-function tmu_add_admin_menus(): void {
-    // Main settings page
-    add_menu_page(
-        __('TMU Settings', 'tmu'),
-        __('TMU', 'tmu'),
-        'manage_options',
-        'tmu-settings',
-        'tmu_render_settings_page',
-        'dashicons-video-alt3',
-        30
-    );
-    
-    // Welcome submenu
-    add_submenu_page(
-        'tmu-settings',
-        __('Welcome', 'tmu'),
-        __('Welcome', 'tmu'),
-        'manage_options',
-        'tmu-welcome',
-        'tmu_render_welcome_page'
-    );
-    
-    // Migration submenu under Tools
-    add_management_page(
-        __('TMU Migration', 'tmu'),
-        __('TMU Migration', 'tmu'),
-        'manage_options',
-        'tmu-migration',
-        'tmu_render_migration_page'
-    );
-}
-
-/**
- * Render TMU settings page
- */
-function tmu_render_settings_page(): void {
-    if (class_exists('TMU\\Admin\\Settings')) {
-        TMU\Admin\Settings::getInstance()->renderPage();
-    } else {
-        echo '<div class="wrap">';
-        echo '<h1>' . __('TMU Settings', 'tmu') . '</h1>';
-        echo '<p>' . __('Settings page is loading...', 'tmu') . '</p>';
-        echo '</div>';
-    }
-}
-
-/**
- * Render TMU welcome page
- */
-function tmu_render_welcome_page(): void {
-    if (class_exists('TMU\\Admin\\Welcome')) {
-        TMU\Admin\Welcome::getInstance()->renderPage();
-    } else {
-        echo '<div class="wrap">';
-        echo '<h1>' . __('Welcome to TMU Theme', 'tmu') . '</h1>';
-        echo '<p>' . __('Welcome page is loading...', 'tmu') . '</p>';
-        echo '</div>';
-    }
-}
-
-/**
- * Render TMU migration page
- */
-function tmu_render_migration_page(): void {
-    if (class_exists('TMU\\Database\\Migration')) {
-        $migration = TMU\Database\Migration::getInstance();
-        $status = $migration->getMigrationStatus();
-        
-        echo '<div class="wrap">';
-        echo '<h1>' . __('TMU Database Migration', 'tmu') . '</h1>';
-        
-        echo '<div class="card">';
-        echo '<h2>' . __('Migration Status', 'tmu') . '</h2>';
-        echo '<p><strong>' . __('Current Version:', 'tmu') . '</strong> ' . esc_html($status['installed_version']) . '</p>';
-        echo '<p><strong>' . __('Target Version:', 'tmu') . '</strong> ' . esc_html($status['current_version']) . '</p>';
-        
-        if ($status['needs_migration']) {
-            echo '<p class="notice notice-warning inline">' . __('Migration required!', 'tmu') . '</p>';
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            echo '<input type="hidden" name="action" value="tmu_run_migration">';
-            wp_nonce_field('tmu_migration_nonce');
-            echo '<p class="submit">';
-            echo '<input type="submit" name="submit" class="button-primary" value="' . __('Run Migration', 'tmu') . '">';
-            echo '</p>';
-            echo '</form>';
-        } else {
-            echo '<p class="notice notice-success inline">' . __('Database is up to date!', 'tmu') . '</p>';
-        }
-        
-        echo '</div>';
-        echo '</div>';
-    } else {
-        echo '<div class="wrap">';
-        echo '<h1>' . __('TMU Migration', 'tmu') . '</h1>';
-        echo '<p>' . __('Migration system is not available.', 'tmu') . '</p>';
-        echo '</div>';
-    }
-}
-
-/**
- * Add custom admin columns for TMU post types
+ * Get admin page URL
  *
- * @param array $columns Existing columns
- * @param string $post_type Post type
- * @return array
+ * @param string $page Page slug
+ * @param array $args URL arguments
+ * @return string Admin page URL
  */
-function tmu_add_custom_admin_columns(array $columns, string $post_type): array {
-    $tmu_post_types = tmu_get_post_types();
+function tmu_get_admin_page_url(string $page, array $args = []): string {
+    $url = admin_url("admin.php?page={$page}");
     
-    if (!in_array($post_type, $tmu_post_types)) {
-        return $columns;
+    if (!empty($args)) {
+        $url = add_query_arg($args, $url);
     }
     
-    // Add rating column for movies, TV series, and dramas
-    if (in_array($post_type, ['movie', 'tv_series', 'drama'])) {
-        $columns['tmu_rating'] = __('Rating', 'tmu');
-        $columns['tmu_release_date'] = __('Release Date', 'tmu');
-        $columns['tmu_tmdb_id'] = __('TMDB ID', 'tmu');
+    return $url;
+}
+
+/**
+ * Add meta box to TMU post types
+ *
+ * @param string $id Meta box ID
+ * @param string $title Meta box title
+ * @param callable $callback Callback function
+ * @param string|array $screen Post type(s) or screen
+ * @param string $context Meta box context
+ * @param string $priority Meta box priority
+ * @param array $callback_args Callback arguments
+ */
+function tmu_add_meta_box(string $id, string $title, callable $callback, $screen = null, string $context = 'advanced', string $priority = 'default', array $callback_args = []): void {
+    if ($screen === null) {
+        $screen = ['movie', 'tv', 'drama', 'season', 'episode', 'drama-episode', 'people', 'video'];
     }
     
-    // Add specific columns for people
-    if ($post_type === 'person') {
-        $columns['tmu_profession'] = __('Profession', 'tmu');
-        $columns['tmu_birth_date'] = __('Birth Date', 'tmu');
+    add_meta_box($id, $title, $callback, $screen, $context, $priority, $callback_args);
+}
+
+/**
+ * Save TMU meta box data
+ *
+ * @param int $post_id Post ID
+ * @param array $meta_fields Meta fields to save
+ * @param string $nonce_action Nonce action
+ */
+function tmu_save_meta_box(int $post_id, array $meta_fields, string $nonce_action = 'tmu_meta_box'): void {
+    // Check nonce
+    if (!isset($_POST['tmu_meta_box_nonce']) || !tmu_verify_nonce($_POST['tmu_meta_box_nonce'], $nonce_action)) {
+        return;
     }
     
-    return $columns;
+    // Check user permissions
+    if (!tmu_current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    
+    // Check autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    
+    // Save meta fields
+    foreach ($meta_fields as $field_key => $field_config) {
+        if (isset($_POST[$field_key])) {
+            $value = $_POST[$field_key];
+            
+            // Sanitize based on field type
+            if (isset($field_config['type'])) {
+                $value = tmu_sanitize_input($value, $field_config['type']);
+            } else {
+                $value = tmu_sanitize_input($value);
+            }
+            
+            update_post_meta($post_id, $field_key, $value);
+        }
+    }
+}
+
+/**
+ * Display admin field
+ *
+ * @param array $field Field configuration
+ * @param mixed $value Field value
+ */
+function tmu_display_admin_field(array $field, $value = ''): void {
+    $field_id = $field['id'] ?? '';
+    $field_name = $field['name'] ?? $field_id;
+    $field_type = $field['type'] ?? 'text';
+    $field_label = $field['label'] ?? '';
+    $field_description = $field['description'] ?? '';
+    $field_placeholder = $field['placeholder'] ?? '';
+    $field_options = $field['options'] ?? [];
+    $field_class = $field['class'] ?? '';
+    $field_required = $field['required'] ?? false;
+    
+    echo '<div class="tmu-field-wrapper tmu-field-' . esc_attr($field_type) . '">';
+    
+    // Label
+    if (!empty($field_label)) {
+        echo '<label for="' . esc_attr($field_id) . '" class="tmu-field-label">';
+        echo esc_html($field_label);
+        if ($field_required) {
+            echo ' <span class="required">*</span>';
+        }
+        echo '</label>';
+    }
+    
+    // Field
+    echo '<div class="tmu-field-input">';
+    
+    switch ($field_type) {
+        case 'text':
+        case 'email':
+        case 'url':
+        case 'number':
+            echo '<input type="' . esc_attr($field_type) . '" ';
+            echo 'id="' . esc_attr($field_id) . '" ';
+            echo 'name="' . esc_attr($field_name) . '" ';
+            echo 'value="' . esc_attr($value) . '" ';
+            echo 'class="regular-text ' . esc_attr($field_class) . '" ';
+            if (!empty($field_placeholder)) {
+                echo 'placeholder="' . esc_attr($field_placeholder) . '" ';
+            }
+            if ($field_required) {
+                echo 'required ';
+            }
+            echo '/>';
+            break;
+            
+        case 'textarea':
+            echo '<textarea ';
+            echo 'id="' . esc_attr($field_id) . '" ';
+            echo 'name="' . esc_attr($field_name) . '" ';
+            echo 'class="large-text ' . esc_attr($field_class) . '" ';
+            echo 'rows="5" ';
+            if (!empty($field_placeholder)) {
+                echo 'placeholder="' . esc_attr($field_placeholder) . '" ';
+            }
+            if ($field_required) {
+                echo 'required ';
+            }
+            echo '>' . esc_textarea($value) . '</textarea>';
+            break;
+            
+        case 'select':
+            echo '<select ';
+            echo 'id="' . esc_attr($field_id) . '" ';
+            echo 'name="' . esc_attr($field_name) . '" ';
+            echo 'class="regular-text ' . esc_attr($field_class) . '" ';
+            if ($field_required) {
+                echo 'required ';
+            }
+            echo '>';
+            
+            if (!empty($field_placeholder)) {
+                echo '<option value="">' . esc_html($field_placeholder) . '</option>';
+            }
+            
+            foreach ($field_options as $option_value => $option_label) {
+                echo '<option value="' . esc_attr($option_value) . '"';
+                if ($value == $option_value) {
+                    echo ' selected';
+                }
+                echo '>' . esc_html($option_label) . '</option>';
+            }
+            echo '</select>';
+            break;
+            
+        case 'checkbox':
+            echo '<label>';
+            echo '<input type="checkbox" ';
+            echo 'id="' . esc_attr($field_id) . '" ';
+            echo 'name="' . esc_attr($field_name) . '" ';
+            echo 'value="1" ';
+            echo 'class="' . esc_attr($field_class) . '" ';
+            if ($value) {
+                echo 'checked ';
+            }
+            echo '/>';
+            if (!empty($field_description)) {
+                echo ' ' . esc_html($field_description);
+            }
+            echo '</label>';
+            break;
+            
+        case 'radio':
+            foreach ($field_options as $option_value => $option_label) {
+                echo '<label class="tmu-radio-option">';
+                echo '<input type="radio" ';
+                echo 'name="' . esc_attr($field_name) . '" ';
+                echo 'value="' . esc_attr($option_value) . '" ';
+                echo 'class="' . esc_attr($field_class) . '" ';
+                if ($value == $option_value) {
+                    echo 'checked ';
+                }
+                echo '/>';
+                echo ' ' . esc_html($option_label);
+                echo '</label><br>';
+            }
+            break;
+            
+        case 'image':
+            echo '<div class="tmu-image-field">';
+            echo '<input type="hidden" ';
+            echo 'id="' . esc_attr($field_id) . '" ';
+            echo 'name="' . esc_attr($field_name) . '" ';
+            echo 'value="' . esc_attr($value) . '" ';
+            echo 'class="' . esc_attr($field_class) . '" />';
+            
+            echo '<div class="image-preview">';
+            if (!empty($value)) {
+                echo '<img src="' . esc_url($value) . '" alt="" style="max-width: 150px; height: auto;" />';
+            }
+            echo '</div>';
+            
+            echo '<button type="button" class="button tmu-select-image" data-target="' . esc_attr($field_id) . '">';
+            echo esc_html__('Select Image', 'tmu');
+            echo '</button>';
+            
+            if (!empty($value)) {
+                echo ' <button type="button" class="button tmu-remove-image" data-target="' . esc_attr($field_id) . '">';
+                echo esc_html__('Remove', 'tmu');
+                echo '</button>';
+            }
+            echo '</div>';
+            break;
+    }
+    
+    echo '</div>';
+    
+    // Description
+    if (!empty($field_description) && $field_type !== 'checkbox') {
+        echo '<p class="description">' . esc_html($field_description) . '</p>';
+    }
+    
+    echo '</div>';
+}
+
+/**
+ * Get admin table columns for TMU post types
+ *
+ * @param string $post_type Post type
+ * @return array Table columns
+ */
+function tmu_get_admin_columns(string $post_type): array {
+    $columns = [];
+    
+    switch ($post_type) {
+        case 'movie':
+            $columns = [
+                'cb' => '<input type="checkbox" />',
+                'title' => __('Title', 'tmu'),
+                'poster' => __('Poster', 'tmu'),
+                'rating' => __('Rating', 'tmu'),
+                'runtime' => __('Runtime', 'tmu'),
+                'release_date' => __('Release Date', 'tmu'),
+                'genres' => __('Genres', 'tmu'),
+                'tmdb_id' => __('TMDB ID', 'tmu'),
+                'date' => __('Date', 'tmu'),
+            ];
+            break;
+            
+        case 'tv':
+            $columns = [
+                'cb' => '<input type="checkbox" />',
+                'title' => __('Title', 'tmu'),
+                'poster' => __('Poster', 'tmu'),
+                'rating' => __('Rating', 'tmu'),
+                'seasons' => __('Seasons', 'tmu'),
+                'episodes' => __('Episodes', 'tmu'),
+                'status' => __('Status', 'tmu'),
+                'genres' => __('Genres', 'tmu'),
+                'tmdb_id' => __('TMDB ID', 'tmu'),
+                'date' => __('Date', 'tmu'),
+            ];
+            break;
+            
+        case 'people':
+            $columns = [
+                'cb' => '<input type="checkbox" />',
+                'title' => __('Name', 'tmu'),
+                'profile' => __('Profile', 'tmu'),
+                'profession' => __('Profession', 'tmu'),
+                'birth_date' => __('Birth Date', 'tmu'),
+                'tmdb_id' => __('TMDB ID', 'tmu'),
+                'date' => __('Date', 'tmu'),
+            ];
+            break;
+    }
+    
+    return apply_filters("tmu_{$post_type}_admin_columns", $columns);
 }
 
 /**
@@ -302,249 +437,141 @@ function tmu_add_custom_admin_columns(array $columns, string $post_type): array 
  * @param string $column Column name
  * @param int $post_id Post ID
  */
-function tmu_display_custom_admin_column_content(string $column, int $post_id): void {
+function tmu_display_admin_column_content(string $column, int $post_id): void {
     switch ($column) {
-        case 'tmu_rating':
-            $rating = tmu_get_meta($post_id, 'average_rating', 0);
-            $vote_count = tmu_get_meta($post_id, 'vote_count', 0);
-            
-            if ($rating > 0) {
-                echo sprintf('%.1f (%d)', $rating, $vote_count);
+        case 'poster':
+        case 'profile':
+            $image_url = tmu_get_poster_url($post_id, 'w200');
+            if (!empty($image_url)) {
+                echo '<img src="' . esc_url($image_url) . '" alt="" style="width: 50px; height: auto;" />';
             } else {
                 echo '—';
             }
             break;
             
-        case 'tmu_release_date':
-            $release_date = tmu_get_meta($post_id, 'release_date', '');
-            
-            if ($release_date) {
-                $timestamp = strtotime($release_date);
-                echo $timestamp ? date('M j, Y', $timestamp) : $release_date;
+        case 'rating':
+            $rating = tmu_get_post_meta($post_id, 'average_rating');
+            $vote_count = tmu_get_post_meta($post_id, 'vote_count');
+            if (!empty($rating)) {
+                echo number_format((float) $rating, 1) . '/10';
+                if (!empty($vote_count)) {
+                    echo ' (' . number_format((int) $vote_count) . ')';
+                }
             } else {
                 echo '—';
             }
             break;
             
-        case 'tmu_tmdb_id':
-            $tmdb_id = tmu_get_meta($post_id, 'tmdb_id', '');
+        case 'runtime':
+            $runtime = tmu_get_post_meta($post_id, 'runtime');
+            if (!empty($runtime)) {
+                echo tmu_format_runtime((int) $runtime);
+            } else {
+                echo '—';
+            }
+            break;
             
-            if ($tmdb_id) {
+        case 'release_date':
+        case 'birth_date':
+            $date = tmu_get_post_meta($post_id, $column);
+            if (!empty($date)) {
+                $timestamp = strtotime($date);
+                echo $timestamp ? date('M j, Y', $timestamp) : $date;
+            } else {
+                echo '—';
+            }
+            break;
+            
+        case 'seasons':
+            $seasons = tmu_get_post_meta($post_id, 'number_of_seasons');
+            echo !empty($seasons) ? (int) $seasons : '—';
+            break;
+            
+        case 'episodes':
+            $episodes = tmu_get_post_meta($post_id, 'number_of_episodes');
+            echo !empty($episodes) ? (int) $episodes : '—';
+            break;
+            
+        case 'status':
+            $status = tmu_get_post_meta($post_id, 'status');
+            if (!empty($status)) {
+                echo '<span class="tmu-status status-' . esc_attr($status) . '">' . esc_html(ucfirst($status)) . '</span>';
+            } else {
+                echo '—';
+            }
+            break;
+            
+        case 'genres':
+            $genres = tmu_get_post_terms($post_id, 'genre');
+            echo !empty($genres) ? esc_html(implode(', ', $genres)) : '—';
+            break;
+            
+        case 'profession':
+            $professions = tmu_get_post_terms($post_id, 'profession');
+            echo !empty($professions) ? esc_html(implode(', ', $professions)) : '—';
+            break;
+            
+        case 'tmdb_id':
+            $tmdb_id = tmu_get_post_meta($post_id, 'tmdb_id');
+            if (!empty($tmdb_id)) {
                 echo '<code>' . esc_html($tmdb_id) . '</code>';
             } else {
                 echo '—';
             }
             break;
-            
-        case 'tmu_profession':
-            $profession = tmu_get_meta($post_id, 'profession', '');
-            echo $profession ? esc_html($profession) : '—';
-            break;
-            
-        case 'tmu_birth_date':
-            $birth_date = tmu_get_meta($post_id, 'date_of_birth', '');
-            
-            if ($birth_date) {
-                $timestamp = strtotime($birth_date);
-                echo $timestamp ? date('M j, Y', $timestamp) : $birth_date;
-            } else {
-                echo '—';
-            }
-            break;
     }
 }
 
 /**
- * Make custom admin columns sortable
+ * Make admin columns sortable
  *
  * @param array $columns Sortable columns
- * @param string $post_type Post type
- * @return array
+ * @return array Modified sortable columns
  */
-function tmu_make_admin_columns_sortable(array $columns, string $post_type): array {
-    $tmu_post_types = tmu_get_post_types();
+function tmu_make_admin_columns_sortable(array $columns): array {
+    $tmu_sortable = [
+        'rating' => 'average_rating',
+        'runtime' => 'runtime',
+        'release_date' => 'release_date',
+        'birth_date' => 'birth_date',
+        'seasons' => 'number_of_seasons',
+        'episodes' => 'number_of_episodes',
+        'tmdb_id' => 'tmdb_id',
+    ];
     
-    if (!in_array($post_type, $tmu_post_types)) {
-        return $columns;
-    }
-    
-    $columns['tmu_rating'] = 'tmu_rating';
-    $columns['tmu_release_date'] = 'tmu_release_date';
-    $columns['tmu_tmdb_id'] = 'tmu_tmdb_id';
-    
-    if ($post_type === 'person') {
-        $columns['tmu_birth_date'] = 'tmu_birth_date';
-    }
-    
-    return $columns;
+    return array_merge($columns, $tmu_sortable);
 }
 
 /**
- * Handle custom admin column sorting
+ * Handle sorting for custom admin columns
  *
- * @param WP_Query $query Query object
+ * @param \WP_Query $query Query object
  */
-function tmu_handle_admin_column_sorting(WP_Query $query): void {
+function tmu_handle_admin_sorting(\WP_Query $query): void {
     if (!is_admin() || !$query->is_main_query()) {
         return;
     }
     
     $orderby = $query->get('orderby');
     
-    switch ($orderby) {
-        case 'tmu_rating':
-            $query->set('meta_key', 'average_rating');
-            $query->set('orderby', 'meta_value_num');
-            break;
-            
-        case 'tmu_release_date':
-            $query->set('meta_key', 'release_date');
-            $query->set('orderby', 'meta_value');
-            break;
-            
-        case 'tmu_tmdb_id':
-            $query->set('meta_key', 'tmdb_id');
-            $query->set('orderby', 'meta_value_num');
-            break;
-            
-        case 'tmu_birth_date':
-            $query->set('meta_key', 'date_of_birth');
-            $query->set('orderby', 'meta_value');
-            break;
-    }
-}
-
-/**
- * Add admin actions for TMU posts
- *
- * @param array $actions Existing actions
- * @param WP_Post $post Post object
- * @return array
- */
-function tmu_add_post_row_actions(array $actions, WP_Post $post): array {
-    if (!is_tmu_post_type($post->ID)) {
-        return $actions;
-    }
+    $meta_fields = [
+        'average_rating',
+        'runtime',
+        'release_date',
+        'birth_date',
+        'number_of_seasons',
+        'number_of_episodes',
+        'tmdb_id'
+    ];
     
-    $tmdb_id = tmu_get_meta($post->ID, 'tmdb_id', '');
-    
-    if ($tmdb_id && tmu_is_tmdb_available()) {
-        $sync_url = wp_nonce_url(
-            admin_url("admin-post.php?action=tmu_sync_post&post_id={$post->ID}"),
-            'tmu_sync_' . $post->ID
-        );
+    if (in_array($orderby, $meta_fields)) {
+        $query->set('meta_key', $orderby);
         
-        $actions['tmu_sync'] = sprintf(
-            '<a href="%s" class="tmu-sync-link" data-post-id="%d">%s</a>',
-            $sync_url,
-            $post->ID,
-            __('Sync with TMDB', 'tmu')
-        );
-    }
-    
-    return $actions;
-}
-
-/**
- * Add admin bulk actions for TMU posts
- *
- * @param array $actions Existing actions
- * @return array
- */
-function tmu_add_bulk_actions(array $actions): array {
-    global $typenow;
-    
-    if (!in_array($typenow, tmu_get_post_types())) {
-        return $actions;
-    }
-    
-    if (tmu_is_tmdb_available()) {
-        $actions['tmu_bulk_sync'] = __('Sync with TMDB', 'tmu');
-    }
-    
-    $actions['tmu_clear_cache'] = __('Clear TMU Cache', 'tmu');
-    
-    return $actions;
-}
-
-/**
- * Handle admin bulk actions for TMU posts
- *
- * @param string $redirect_to Redirect URL
- * @param string $doaction Action name
- * @param array $post_ids Post IDs
- * @return string
- */
-function tmu_handle_bulk_actions(string $redirect_to, string $doaction, array $post_ids): string {
-    switch ($doaction) {
-        case 'tmu_bulk_sync':
-            if (tmu_is_tmdb_available() && class_exists('TMU\\API\\TMDBClient')) {
-                $synced = 0;
-                $client = TMU\API\TMDBClient::getInstance();
-                
-                foreach ($post_ids as $post_id) {
-                    if ($client->syncPost($post_id)) {
-                        $synced++;
-                    }
-                }
-                
-                $redirect_to = add_query_arg('tmu_synced', $synced, $redirect_to);
-            }
-            break;
-            
-        case 'tmu_clear_cache':
-            foreach ($post_ids as $post_id) {
-                tmu_delete_cache("post_{$post_id}");
-            }
-            
-            $redirect_to = add_query_arg('tmu_cache_cleared', count($post_ids), $redirect_to);
-            break;
-    }
-    
-    return $redirect_to;
-}
-
-/**
- * Display admin notices for TMU bulk actions
- */
-function tmu_display_bulk_action_notices(): void {
-    if (isset($_GET['tmu_synced'])) {
-        $synced = intval($_GET['tmu_synced']);
-        $message = sprintf(
-            _n('Synced %d item with TMDB.', 'Synced %d items with TMDB.', $synced, 'tmu'),
-            $synced
-        );
-        tmu_add_admin_notice($message, 'success');
-    }
-    
-    if (isset($_GET['tmu_cache_cleared'])) {
-        $cleared = intval($_GET['tmu_cache_cleared']);
-        $message = sprintf(
-            _n('Cleared cache for %d item.', 'Cleared cache for %d items.', $cleared, 'tmu'),
-            $cleared
-        );
-        tmu_add_admin_notice($message, 'success');
+        // Determine sort type based on field
+        if (in_array($orderby, ['average_rating', 'runtime', 'number_of_seasons', 'number_of_episodes', 'tmdb_id'])) {
+            $query->set('orderby', 'meta_value_num');
+        } else {
+            $query->set('orderby', 'meta_value');
+        }
     }
 }
-
-// Hook admin functions
-add_action('admin_enqueue_scripts', 'tmu_enqueue_admin_assets');
-add_action('admin_menu', 'tmu_add_admin_menus');
-add_action('admin_notices', 'tmu_display_bulk_action_notices');
-
-// Hook custom columns
-add_filter('manage_posts_columns', 'tmu_add_custom_admin_columns', 10, 2);
-add_action('manage_posts_custom_column', 'tmu_display_custom_admin_column_content', 10, 2);
-add_filter('manage_edit-{post_type}_sortable_columns', 'tmu_make_admin_columns_sortable', 10, 2);
-add_action('pre_get_posts', 'tmu_handle_admin_column_sorting');
-
-// Hook post actions
-add_filter('post_row_actions', 'tmu_add_post_row_actions', 10, 2);
-add_filter('bulk_actions-edit-movie', 'tmu_add_bulk_actions');
-add_filter('bulk_actions-edit-tv_series', 'tmu_add_bulk_actions');
-add_filter('bulk_actions-edit-drama', 'tmu_add_bulk_actions');
-add_filter('bulk_actions-edit-person', 'tmu_add_bulk_actions');
-add_filter('handle_bulk_actions-edit-movie', 'tmu_handle_bulk_actions', 10, 3);
-add_filter('handle_bulk_actions-edit-tv_series', 'tmu_handle_bulk_actions', 10, 3);
-add_filter('handle_bulk_actions-edit-drama', 'tmu_handle_bulk_actions', 10, 3);
-add_filter('handle_bulk_actions-edit-person', 'tmu_handle_bulk_actions', 10, 3);

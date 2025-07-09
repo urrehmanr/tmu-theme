@@ -210,11 +210,11 @@ class SubMenus {
     /**
      * Highlight active submenu
      * 
-     * @param string $submenu_file Current submenu file
-     * @param string $parent_file Current parent file
-     * @return string Modified submenu file
+     * @param string|null $submenu_file Current submenu file
+     * @param string|null $parent_file Current parent file
+     * @return string|null Modified submenu file
      */
-    public function highlightActiveSubmenu(string $submenu_file, string $parent_file): string {
+    public function highlightActiveSubmenu(?string $submenu_file, ?string $parent_file): ?string {
         global $post_type;
         
         // Highlight TMU content hub for TMU pages
@@ -225,8 +225,8 @@ class SubMenus {
         }
         
         // Highlight appropriate submenu for post types
-        if (in_array($post_type, ['movie', 'tv', 'drama', 'people'])) {
-            if (strpos($submenu_file, $post_type) !== false) {
+        if ($post_type && in_array($post_type, ['movie', 'tv', 'drama', 'people'])) {
+            if ($submenu_file && strpos($submenu_file, $post_type) !== false) {
                 return $submenu_file;
             }
         }

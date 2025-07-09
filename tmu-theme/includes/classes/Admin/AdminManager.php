@@ -141,7 +141,7 @@ class AdminManager {
         
         // Load TMDB settings
         if (class_exists('TMU\Admin\Settings\TMDBSettings')) {
-            $this->components['tmdb_settings'] = new Settings\TMDBSettings();
+            $this->components['tmdb_settings'] = Settings\TMDBSettings::getInstance();
         }
     }
     

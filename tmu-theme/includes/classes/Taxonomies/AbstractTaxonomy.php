@@ -59,21 +59,67 @@ abstract class AbstractTaxonomy {
      * Register the taxonomy
      */
     public function register(): void {
-        if (!$this->shouldRegister()) {
-            return;
+        tmu_log("Registering taxonomy: {$this->taxonomy}", 'debug');
+        
+        // Force registration for debugging - always register taxonomies
+        // if (!$this->shouldRegister()) {
+        //     tmu_log("Taxonomy {$this->taxonomy} should not register, but forcing for debug", 'debug');
+        //     // return;
+        // }
+        
+        // Check if taxonomy already exists to avoid duplicate registration
+        if (!taxonomy_exists($this->taxonomy)) {
+            tmu_log("Taxonomy {$this->taxonomy} does not exist, registering now", 'debug');
+            
+            // Get taxonomy arguments
+            $args = $this->getArgs();
+            tmu_log("Taxonomy {$this->taxonomy} args: " . wp_json_encode($args), 'debug');
+            
+            // Register taxonomy
+            $result = register_taxonomy(
+                $this->taxonomy,
+                $this->object_types,
+                $args
+            );
+            
+            // Check if registration was successful
+            if (taxonomy_exists($this->taxonomy)) {
+                tmu_log("Taxonomy {$this->taxonomy} registered successfully", 'info');
+                
+                // Register meta fields
+                $this->registerMetaFields();
+                
+                // Add admin customizations
+                $this->addAdminHooks();
+                
+                // Log successful registration
+                if (function_exists('tmu_log')) {
+                    tmu_log("Registered taxonomy: {$this->taxonomy}", 'info');
+                }
+            } else {
+                tmu_log("Failed to register taxonomy: {$this->taxonomy}", 'error');
+                
+                if (is_wp_error($result)) {
+                    tmu_log("Taxonomy registration error: " . $result->get_error_message(), 'error');
+                }
+            }
+        } else {
+            tmu_log("Taxonomy {$this->taxonomy} already exists, adding to post types", 'debug');
+            
+            // If taxonomy exists, just register it for our post types
+            foreach ($this->object_types as $object_type) {
+                $success = register_taxonomy_for_object_type($this->taxonomy, $object_type);
+                if ($success) {
+                    tmu_log("Added taxonomy {$this->taxonomy} to post type {$object_type}", 'debug');
+                } else {
+                    tmu_log("Failed to add taxonomy {$this->taxonomy} to post type {$object_type}", 'error');
+                }
+            }
+            
+            if (function_exists('tmu_log')) {
+                tmu_log("Added existing taxonomy {$this->taxonomy} to post types", 'info');
+            }
         }
-        
-        register_taxonomy(
-            $this->taxonomy,
-            $this->object_types,
-            $this->getArgs()
-        );
-        
-        // Register meta fields
-        $this->registerMetaFields();
-        
-        // Add admin customizations
-        $this->addAdminHooks();
     }
     
     /**
@@ -194,7 +240,7 @@ abstract class AbstractTaxonomy {
     /**
      * Add form fields to edit term form
      *
-     * @param WP_Term $term Term object
+     * @param \WP_Term $term Term object
      */
     public function editFormFields(\WP_Term $term): void {
         if (empty($this->meta_fields)) {

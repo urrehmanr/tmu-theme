@@ -66,7 +66,7 @@ class TMDBBox {
             'tmu-tmdb-metabox',
             get_template_directory_uri() . '/assets/build/js/tmdb-metabox.js',
             ['jquery', 'wp-util'],
-            get_theme_file_version('assets/build/js/tmdb-metabox.js'),
+            \get_theme_file_version('assets/build/js/tmdb-metabox.js'),
             true
         );
         

@@ -1,6 +1,6 @@
 <?php
 /**
- * TMU Core Helper Functions
+ * TMU Theme Helper Functions
  *
  * @package TMU
  * @version 1.0.0
@@ -12,324 +12,183 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Get TMU option with fallback
+ * Log a message with TMU theme context
  *
- * @param string $option_name Option name
- * @param mixed $default Default value
- * @return mixed
- */
-function tmu_get_option(string $option_name, $default = null) {
-    if (class_exists('TMU\\Config\\ThemeConfig')) {
-        $config = TMU\Config\ThemeConfig::getInstance();
-        $defaults = $config->getDefaultSettings();
-        
-        $default_value = $defaults[$option_name]['default'] ?? $default;
-        return get_option($option_name, $default_value);
-    }
-    
-    return get_option($option_name, $default);
-}
-
-/**
- * Update TMU option
- *
- * @param string $option_name Option name
- * @param mixed $value Option value
- * @return bool
- */
-function tmu_update_option(string $option_name, $value): bool {
-    return update_option($option_name, $value);
-}
-
-/**
- * Check if TMU feature is enabled
- *
- * @param string $feature Feature name (movies, tv_series, dramas)
- * @return bool
- */
-function tmu_is_feature_enabled(string $feature): bool {
-    if (class_exists('TMU\\Config\\ThemeConfig')) {
-        $config = TMU\Config\ThemeConfig::getInstance();
-        return $config->isFeatureEnabled($feature);
-    }
-    
-    // Fallback
-    return tmu_get_option("tmu_{$feature}", 'off') === 'on';
-}
-
-/**
- * Get TMDB API key
- *
- * @return string
- */
-function tmu_get_tmdb_api_key(): string {
-    if (class_exists('TMU\\Config\\ThemeConfig')) {
-        $config = TMU\Config\ThemeConfig::getInstance();
-        return $config->getTmdbApiKey();
-    }
-    
-    return tmu_get_option('tmu_tmdb_api_key', '');
-}
-
-/**
- * Log TMU message
- *
- * @param string $message Message to log
+ * @param string $message Log message
  * @param string $level Log level (info, warning, error, debug)
+ * @param array $context Additional context data
  */
-function tmu_log(string $message, string $level = 'info'): void {
-    if (class_exists('TMU\\Utils\\Logger')) {
-        TMU\Utils\Logger::getInstance()->log($level, $message);
-    } else {
-        // Fallback to error_log
-        $prefix = strtoupper($level);
-        error_log("TMU [{$prefix}]: {$message}");
+function tmu_log(string $message, string $level = 'info', array $context = []): void {
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        return;
     }
+    
+    $log_message = sprintf('[TMU %s] %s', strtoupper($level), $message);
+    
+    if (!empty($context)) {
+        $log_message .= ' Context: ' . wp_json_encode($context);
+    }
+    
+    error_log($log_message);
 }
 
 /**
- * Sanitize TMU input
+ * Get TMU theme option with default fallback
  *
- * @param mixed $input Input to sanitize
- * @param string $type Sanitization type
- * @return mixed
+ * @param string $key Option key
+ * @param mixed $default Default value
+ * @return mixed Option value
  */
-function tmu_sanitize($input, string $type = 'text') {
-    if (class_exists('TMU\\Utils\\Sanitizer')) {
-        return TMU\Utils\Sanitizer::sanitize($input, $type);
-    }
-    
-    // Fallback sanitization
-    switch ($type) {
-        case 'email':
-            return sanitize_email($input);
-        case 'url':
-            return esc_url_raw($input);
-        case 'textarea':
-            return sanitize_textarea_field($input);
-        case 'html':
-            return wp_kses_post($input);
-        case 'int':
-            return intval($input);
-        case 'float':
-            return floatval($input);
-        case 'array':
-            return is_array($input) ? array_map('sanitize_text_field', $input) : [];
-        case 'json':
-            if (is_string($input)) {
-                $decoded = json_decode($input, true);
-                return is_array($decoded) ? $decoded : [];
-            }
-            return is_array($input) ? $input : [];
-        default:
-            return sanitize_text_field($input);
-    }
+function tmu_get_option(string $key, $default = null) {
+    return get_option($key, $default);
 }
 
 /**
- * Validate TMU data
+ * Set TMU theme option
  *
- * @param mixed $data Data to validate
- * @param array $rules Validation rules
- * @return bool|WP_Error
+ * @param string $key Option key
+ * @param mixed $value Option value
+ * @return bool Success status
  */
-function tmu_validate($data, array $rules) {
-    if (class_exists('TMU\\Utils\\Validator')) {
-        return TMU\Utils\Validator::validate($data, $rules);
-    }
-    
-    // Basic validation fallback
-    foreach ($rules as $rule) {
-        if ($rule === 'required' && empty($data)) {
-            return new WP_Error('validation_failed', 'Required field is empty');
-        }
-    }
-    
-    return true;
+function tmu_set_option(string $key, $value): bool {
+    return update_option($key, $value);
 }
 
 /**
- * Get TMU cache
+ * Check if TMDB API is available and configured
+ *
+ * @return bool TMDB availability status
+ */
+function tmu_is_tmdb_available(): bool {
+    $api_key = tmu_get_option('tmu_tmdb_api_key', '');
+    return !empty($api_key);
+}
+
+/**
+ * Delete cache for a specific key
  *
  * @param string $key Cache key
- * @param mixed $default Default value
- * @return mixed
+ * @return bool Success status
  */
-function tmu_get_cache(string $key, $default = null) {
-    return get_transient("tmu_{$key}") ?: $default;
+function tmu_delete_cache(string $key): bool {
+    return wp_cache_delete($key, 'tmu');
 }
 
 /**
- * Set TMU cache
+ * Get cache for a specific key
+ *
+ * @param string $key Cache key
+ * @return mixed Cached value or false
+ */
+function tmu_get_cache(string $key) {
+    return wp_cache_get($key, 'tmu');
+}
+
+/**
+ * Set cache for a specific key
  *
  * @param string $key Cache key
  * @param mixed $value Value to cache
  * @param int $expiration Expiration time in seconds
- * @return bool
+ * @return bool Success status
  */
-function tmu_set_cache(string $key, $value, int $expiration = null): bool {
-    if ($expiration === null) {
-        $expiration = tmu_get_option('tmu_cache_timeout', 3600);
-    }
-    
-    return set_transient("tmu_{$key}", $value, $expiration);
+function tmu_set_cache(string $key, $value, int $expiration = 3600): bool {
+    return wp_cache_set($key, $value, 'tmu', $expiration);
 }
 
 /**
- * Delete TMU cache
+ * Format bytes to human readable format
  *
- * @param string $key Cache key
- * @return bool
+ * @param int $bytes Number of bytes
+ * @return string Formatted string
  */
-function tmu_delete_cache(string $key): bool {
-    return delete_transient("tmu_{$key}");
+function tmu_format_bytes(int $bytes): string {
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    
+    $bytes /= pow(1024, $pow);
+    
+    return round($bytes, 2) . ' ' . $units[$pow];
 }
 
 /**
- * Clear all TMU cache
- */
-function tmu_clear_all_cache(): void {
-    global $wpdb;
-    
-    // Delete all TMU transients
-    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_tmu_%'");
-    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_tmu_%'");
-    
-    // Clear object cache if available
-    if (function_exists('wp_cache_flush')) {
-        wp_cache_flush();
-    }
-    
-    tmu_log('All TMU cache cleared', 'info');
-}
-
-/**
- * Get TMU version
+ * Check if we're in development mode
  *
- * @return string
+ * @return bool Development mode status
  */
-function tmu_get_version(): string {
-    return TMU_VERSION;
-}
-
-/**
- * Check if in development mode
- *
- * @return bool
- */
-function tmu_is_development(): bool {
+function tmu_is_dev_mode(): bool {
     return defined('WP_DEBUG') && WP_DEBUG;
 }
 
 /**
- * Get TMU URL
+ * Get theme version
  *
- * @param string $path Optional path to append
- * @return string
+ * @return string Theme version
  */
-function tmu_get_url(string $path = ''): string {
-    return TMU_THEME_URL . ($path ? '/' . ltrim($path, '/') : '');
+function tmu_get_version(): string {
+    return defined('TMU_VERSION') ? TMU_VERSION : '1.0.0';
 }
 
 /**
- * Get TMU asset URL
+ * Check if a feature is enabled in theme settings
  *
- * @param string $asset Asset path
- * @return string
+ * @param string $feature Feature name
+ * @return bool Feature status
  */
-function tmu_get_asset_url(string $asset): string {
-    return TMU_ASSETS_URL . '/' . ltrim($asset, '/');
+function tmu_is_feature_enabled(string $feature): bool {
+    return tmu_get_option("tmu_{$feature}", 'off') === 'on';
 }
 
 /**
- * Get TMU build asset URL
+ * Sanitize and validate input
  *
- * @param string $asset Asset path
- * @return string
+ * @param mixed $input Input to sanitize
+ * @param string $type Data type (string, int, email, url, etc.)
+ * @return mixed Sanitized input
  */
-function tmu_get_build_asset_url(string $asset): string {
-    return TMU_ASSETS_BUILD_URL . '/' . ltrim($asset, '/');
-}
-
-/**
- * Check if TMDB API is available
- *
- * @return bool
- */
-function tmu_is_tmdb_available(): bool {
-    $api_key = tmu_get_tmdb_api_key();
-    return !empty($api_key) && tmu_get_option('tmu_tmdb_api_enabled', false);
-}
-
-/**
- * Format rating for display
- *
- * @param float $rating Rating value
- * @param int $precision Decimal precision
- * @return string
- */
-function tmu_format_rating(float $rating, int $precision = 1): string {
-    return number_format($rating, $precision);
-}
-
-/**
- * Format duration in minutes to human readable
- *
- * @param int $minutes Duration in minutes
- * @return string
- */
-function tmu_format_duration(int $minutes): string {
-    if ($minutes < 60) {
-        return sprintf(_n('%d minute', '%d minutes', $minutes, 'tmu'), $minutes);
+function tmu_sanitize_input($input, string $type = 'string') {
+    switch ($type) {
+        case 'string':
+            return sanitize_text_field($input);
+        case 'textarea':
+            return sanitize_textarea_field($input);
+        case 'email':
+            return sanitize_email($input);
+        case 'url':
+            return esc_url_raw($input);
+        case 'int':
+        case 'integer':
+            return (int) $input;
+        case 'float':
+            return (float) $input;
+        case 'bool':
+        case 'boolean':
+            return (bool) $input;
+        case 'array':
+            return is_array($input) ? $input : [];
+        default:
+            return $input;
     }
-    
-    $hours = floor($minutes / 60);
-    $remaining_minutes = $minutes % 60;
-    
-    if ($remaining_minutes === 0) {
-        return sprintf(_n('%d hour', '%d hours', $hours, 'tmu'), $hours);
-    }
-    
-    return sprintf(
-        __('%d hour %d minutes', 'tmu'),
-        $hours,
-        $remaining_minutes
-    );
 }
 
 /**
- * Format file size
- *
- * @param int $bytes File size in bytes
- * @param int $precision Decimal precision
- * @return string
- */
-function tmu_format_file_size(int $bytes, int $precision = 2): string {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    
-    for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-        $bytes /= 1024;
-    }
-    
-    return round($bytes, $precision) . ' ' . $units[$i];
-}
-
-/**
- * Generate nonce for TMU actions
+ * Generate a nonce for TMU actions
  *
  * @param string $action Action name
- * @return string
+ * @return string Nonce value
  */
 function tmu_create_nonce(string $action): string {
     return wp_create_nonce("tmu_{$action}");
 }
 
 /**
- * Verify TMU nonce
+ * Verify a TMU nonce
  *
- * @param string $nonce Nonce value
+ * @param string $nonce Nonce to verify
  * @param string $action Action name
- * @return bool
+ * @return bool Verification result
  */
 function tmu_verify_nonce(string $nonce, string $action): bool {
     return wp_verify_nonce($nonce, "tmu_{$action}") !== false;
@@ -338,112 +197,146 @@ function tmu_verify_nonce(string $nonce, string $action): bool {
 /**
  * Get current user capabilities for TMU
  *
- * @return array
+ * @return array User capabilities
  */
 function tmu_get_user_capabilities(): array {
     if (!is_user_logged_in()) {
         return [];
     }
     
-    $capabilities = [];
     $user = wp_get_current_user();
+    return $user->allcaps ?? [];
+}
+
+/**
+ * Check if current user can perform TMU action
+ *
+ * @param string $capability Required capability
+ * @return bool Permission status
+ */
+function tmu_current_user_can(string $capability): bool {
+    return current_user_can($capability);
+}
+
+/**
+ * Format runtime in minutes to human readable format
+ *
+ * @param int $minutes Runtime in minutes
+ * @return string Formatted runtime
+ */
+function tmu_format_runtime(int $minutes): string {
+    if ($minutes <= 0) {
+        return '';
+    }
     
-    $tmu_caps = [
-        'manage_tmu_settings' => 'manage_options',
-        'edit_tmu_content' => 'edit_posts',
-        'publish_tmu_content' => 'publish_posts',
-        'delete_tmu_content' => 'delete_posts',
+    $hours = floor($minutes / 60);
+    $mins = $minutes % 60;
+    
+    if ($hours > 0) {
+        return $hours . 'h' . ($mins > 0 ? ' ' . $mins . 'm' : '');
+    }
+    
+    return $mins . 'm';
+}
+
+/**
+ * Get asset URL with cache busting
+ *
+ * @param string $asset Asset path relative to assets directory
+ * @return string Full asset URL
+ */
+function tmu_asset_url(string $asset): string {
+    $base_url = defined('TMU_ASSETS_BUILD_URL') ? TMU_ASSETS_BUILD_URL : TMU_ASSETS_URL;
+    $version = tmu_get_version();
+    
+    return $base_url . '/' . ltrim($asset, '/') . '?v=' . $version;
+}
+
+/**
+ * Get template part with TMU theme context
+ *
+ * @param string $slug Template slug
+ * @param string $name Template name
+ * @param array $args Arguments to pass to template
+ */
+function tmu_get_template_part(string $slug, string $name = '', array $args = []): void {
+    if (!empty($args)) {
+        set_query_var('tmu_template_args', $args);
+    }
+    
+    get_template_part($slug, $name);
+    
+    if (!empty($args)) {
+        set_query_var('tmu_template_args', null);
+    }
+}
+
+/**
+ * Get template arguments in template files
+ *
+ * @return array Template arguments
+ */
+function tmu_get_template_args(): array {
+    return get_query_var('tmu_template_args', []);
+}
+
+/**
+ * Get file version based on file modification time
+ * 
+ * @param string $file_path Path to file relative to theme directory
+ * @return string File version
+ */
+function get_theme_file_version(string $file_path): string {
+    $absolute_path = get_template_directory() . '/' . $file_path;
+    
+    if (file_exists($absolute_path)) {
+        return (string) filemtime($absolute_path);
+    }
+    
+    return TMU_VERSION ?? '1.0.0';
+}
+
+/**
+ * Debug post types and taxonomies registration
+ * 
+ * @return array Registration status
+ */
+function tmu_debug_registrations(): array {
+    global $wp_post_types, $wp_taxonomies;
+    
+    $result = [
+        'post_types' => [],
+        'taxonomies' => [],
     ];
     
-    foreach ($tmu_caps as $tmu_cap => $wp_cap) {
-        $capabilities[$tmu_cap] = $user->has_cap($wp_cap);
-    }
-    
-    return $capabilities;
-}
-
-/**
- * Check if user can perform TMU action
- *
- * @param string $capability Capability name
- * @return bool
- */
-function tmu_user_can(string $capability): bool {
-    $capabilities = tmu_get_user_capabilities();
-    return $capabilities[$capability] ?? false;
-}
-
-/**
- * Get TMU post types
- *
- * @return array
- */
-function tmu_get_post_types(): array {
-    $post_types = [];
-    
-    if (tmu_is_feature_enabled('movies')) {
-        $post_types[] = 'movie';
-    }
-    
-    if (tmu_is_feature_enabled('tv_series')) {
-        $post_types[] = 'tv_series';
-    }
-    
-    if (tmu_is_feature_enabled('dramas')) {
-        $post_types[] = 'drama';
-    }
-    
-    $post_types[] = 'person';
-    
-    return $post_types;
-}
-
-/**
- * Get TMU taxonomies
- *
- * @return array
- */
-function tmu_get_taxonomies(): array {
-    return [
-        'genre',
-        'country',
-        'language',
-        'production_company',
-        'director',
-        'writer',
-        'network',
+    // Check post types
+    $expected_post_types = [
+        'movie', 'tv', 'drama', 'people', 'video', 'season', 'episode', 'drama-episode'
     ];
-}
-
-/**
- * Debug function for development
- *
- * @param mixed $data Data to debug
- * @param string $label Optional label
- */
-function tmu_debug($data, string $label = ''): void {
-    if (!tmu_is_development()) {
-        return;
+    
+    foreach ($expected_post_types as $post_type) {
+        $result['post_types'][$post_type] = [
+            'registered' => post_type_exists($post_type),
+            'object' => isset($wp_post_types[$post_type]) ? $wp_post_types[$post_type] : null,
+        ];
     }
     
-    $debug_output = $label ? "TMU Debug - {$label}: " : "TMU Debug: ";
-    $debug_output .= print_r($data, true);
+    // Check taxonomies
+    $expected_taxonomies = [
+        'genre', 'country', 'language', 'network', 'production-company', 
+        'by-year', 'profession', 'nationality'
+    ];
     
-    error_log($debug_output);
-}
-
-/**
- * Get memory usage for debugging
- *
- * @param bool $formatted Whether to format the output
- * @return string|int
- */
-function tmu_get_memory_usage(bool $formatted = true) {
-    $memory = memory_get_usage(true);
-    
-    if ($formatted) {
-        return tmu_format_file_size($memory);
+    foreach ($expected_taxonomies as $taxonomy) {
+        $result['taxonomies'][$taxonomy] = [
+            'registered' => taxonomy_exists($taxonomy),
+            'object' => isset($wp_taxonomies[$taxonomy]) ? $wp_taxonomies[$taxonomy] : null,
+        ];
     }
     
-    return $memory;
+    // Log the results
+    tmu_log('Post types registration status: ' . wp_json_encode($result['post_types']), 'debug');
+    tmu_log('Taxonomies registration status: ' . wp_json_encode($result['taxonomies']), 'debug');
+    
+    return $result;
 }

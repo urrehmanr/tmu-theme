@@ -2,16 +2,40 @@
 namespace TMU\Search;
 
 class SearchManager {
+    /**
+     * Instance
+     * @var SearchManager|null
+     */
+    private static $instance = null;
+    
     private $search_engine;
     private $filter_manager;
     private $ajax_search;
     private $recommendation_engine;
     
+    /**
+     * Get instance
+     * 
+     * @return SearchManager
+     */
+    public static function getInstance(): SearchManager {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * Constructor
+     */
     public function __construct() {
         $this->search_engine = new SearchEngine();
         $this->filter_manager = new FilterManager();
         $this->ajax_search = new AjaxSearch();
         $this->recommendation_engine = new RecommendationEngine();
+        
+        // Initialize right away
+        $this->init();
     }
     
     public function init(): void {

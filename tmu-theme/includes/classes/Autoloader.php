@@ -52,7 +52,7 @@ class Autoloader {
      * @param string $base_dir Base directory for the namespace prefix
      */
     public function __construct(string $base_dir = null) {
-        $this->base_dir = $base_dir ?: (defined('TMU_INCLUDES_DIR') ? TMU_INCLUDES_DIR . '/classes/' : __DIR__ . '/');
+        $this->base_dir = $base_dir ?: TMU_INCLUDES_DIR . '/classes/';
         $this->setupDefaultNamespaces();
         $this->setupAliases();
     }
@@ -78,6 +78,7 @@ class Autoloader {
      */
     private function setupDefaultNamespaces(): void {
         $this->namespaces = [
+            'TMU\\Core\\' => $this->base_dir . 'Core/',
             'TMU\\Admin\\' => $this->base_dir . 'Admin/',
             'TMU\\API\\' => $this->base_dir . 'API/',
             'TMU\\Config\\' => $this->base_dir . 'Config/',
@@ -88,7 +89,14 @@ class Autoloader {
             'TMU\\Taxonomies\\' => $this->base_dir . 'Taxonomies/',
             'TMU\\Utils\\' => $this->base_dir . 'Utils/',
             'TMU\\Migration\\' => $this->base_dir . 'Migration/',
+            'TMU\\Testing\\' => $this->base_dir . 'Testing/',
+            'TMU\\Performance\\' => $this->base_dir . 'Performance/',
+            'TMU\\SEO\\' => $this->base_dir . 'SEO/',
+            'TMU\\Search\\' => $this->base_dir . 'Search/',
             'TMU\\Blocks\\' => $this->base_dir . 'Blocks/',
+            'TMU\\Backup\\' => $this->base_dir . 'Backup/',
+            'TMU\\Maintenance\\' => $this->base_dir . 'Maintenance/',
+            'TMU\\Updates\\' => $this->base_dir . 'Updates/',
             'TMU\\' => $this->base_dir,
         ];
     }
@@ -102,8 +110,6 @@ class Autoloader {
             'TMU_Settings' => 'TMU\\Admin\\Settings',
             'TMU_PostTypes' => 'TMU\\PostTypes\\PostTypeManager',
             'TMU_Taxonomies' => 'TMU\\Taxonomies\\TaxonomyManager',
-            'TMU_Migration' => 'TMU\\Database\\Migration',
-            'TMU_Config' => 'TMU\\Config\\ThemeConfig',
         ];
     }
     
@@ -213,19 +219,5 @@ class Autoloader {
      */
     public function canLoadClass(string $class): bool {
         return $this->loadClass($class) !== false;
-    }
-    
-    /**
-     * Get autoloader statistics
-     *
-     * @return array
-     */
-    public function getStats(): array {
-        return [
-            'namespaces_count' => count($this->namespaces),
-            'aliases_count' => count($this->aliases),
-            'base_directory' => $this->base_dir,
-            'prefix' => $this->prefix,
-        ];
     }
 }
