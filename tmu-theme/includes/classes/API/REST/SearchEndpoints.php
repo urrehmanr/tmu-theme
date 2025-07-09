@@ -185,7 +185,7 @@ class SearchEndpoints {
             'orderby' => $request->get_param('orderby')
         ];
         
-        $search_manager = new \TMU\Search\SearchManager();
+        $search_manager = \TMU\Search\SearchManager::getInstance();
         $results = $search_manager->search($query, $filters, $options);
         
         return new \WP_REST_Response([

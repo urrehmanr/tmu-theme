@@ -147,7 +147,19 @@ class People extends AbstractPostType {
      * @return bool
      */
     protected function shouldRegister(): bool {
-        // People are always enabled as they're needed for cast/crew
-        return true;
+        // First check if the post type is enabled in the config
+        $config_file = TMU_INCLUDES_DIR . '/config/post-types.php';
+        
+        if (file_exists($config_file)) {
+            $post_types_config = include $config_file;
+            if (isset($post_types_config['people']['enabled'])) {
+                return (bool) $post_types_config['people']['enabled'];
+            }
+        }
+        
+        // Fall back to option check
+        return function_exists('tmu_get_option') ? 
+            tmu_get_option('tmu_people', 'on') === 'on' : 
+            true;
     }
 }

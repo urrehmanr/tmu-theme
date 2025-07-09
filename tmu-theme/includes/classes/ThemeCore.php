@@ -65,210 +65,177 @@ class ThemeCore {
     
     /**
      * Load required dependencies
+     * 
+     * Classes are now loaded via PSR-4 autoloading (Composer or fallback autoloader)
+     * This method now only loads configuration files.
      */
     private function loadDependencies(): void {
-        // Load configuration files
-        require_once TMU_INCLUDES_DIR . '/config/constants.php';
-        require_once TMU_INCLUDES_DIR . '/config/database.php';
-        require_once TMU_INCLUDES_DIR . '/config/assets.php';
+        // Load configuration files only - classes are autoloaded
+        $config_files = [
+            TMU_INCLUDES_DIR . '/config/constants.php',
+            TMU_INCLUDES_DIR . '/config/database.php',
+            TMU_INCLUDES_DIR . '/config/assets.php'
+        ];
         
-        // Load Step 02 - Theme Initialization classes
-        require_once TMU_INCLUDES_DIR . '/classes/ThemeInitializer.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/SettingsMigrator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Config/ThemeConfig.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Config/DefaultSettings.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/Settings.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/Welcome.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/SettingsAPI.php';
+        foreach ($config_files as $config_file) {
+            if (file_exists($config_file)) {
+                require_once $config_file;
+            }
+        }
         
-        // Load Step 03 - Database Migration classes
-        require_once TMU_INCLUDES_DIR . '/classes/Database/Schema.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Database/DataValidator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Database/QueryBuilder.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Database/DataManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Database/Migration.php';
-        
-        // Load Step 05 - Post Types
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/AbstractPostType.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/PostTypeManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/Movie.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/TVShow.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/Season.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/Episode.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/Drama.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/DramaEpisode.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/People.php';
-        require_once TMU_INCLUDES_DIR . '/classes/PostTypes/Video.php';
-        
-        // Load Step 06 - Taxonomies
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/AbstractTaxonomy.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/TaxonomyManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/Genre.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/Country.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/Language.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/ByYear.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/ProductionCompany.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/Network.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Taxonomies/Profession.php';
-        
-        // Load Step 07 - Custom Fields and Meta Boxes
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/AbstractField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/FieldManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/TextField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/TextareaField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/NumberField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/SelectField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/ImageField.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Fields/TmdbSyncField.php';
-        
-        // Load Step 07 - Custom Fields (Native WordPress)
-        // Block system files - loaded conditionally if they exist
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BaseBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlockRegistry.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/MovieMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TvSeriesMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/DramaMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/PeopleMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TvEpisodeMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/DramaEpisodeMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/SeasonMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/VideoMetadataBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TaxonomyImageBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TaxonomyFaqsBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/BlogPostsListBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TrendingContentBlock.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Blocks/TmdbSyncBlock.php';
-        
-        // Load Step 08 - Admin UI 
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/AdminManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/Columns/MovieColumns.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/Actions/TMDBSync.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Admin/BlocksDebug.php';
-        
-        // Load Step 11 - SEO and Schema Markup classes
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/SEOManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/SchemaManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/MetaTags.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/SitemapGenerator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/OpenGraph.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/TwitterCard.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/BreadcrumbManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/Analytics.php';
-        
-        // Load individual Schema classes
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/MovieSchema.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/TVShowSchema.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/PersonSchema.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/EpisodeSchema.php';
-        require_once TMU_INCLUDES_DIR . '/classes/SEO/Schema/SeasonSchema.php';
-        
-        // Load Step 12 - Search and Filtering classes
-        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchEngine.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchIndexManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/QueryBuilder.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/ResultProcessor.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/FilterManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/AjaxSearch.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/RecommendationEngine.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/SearchResult.php';
-        
-        // Load Facet classes
-        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/PostTypeFacet.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/TaxonomyFacet.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/YearFacet.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/RatingFacet.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Search/Facets/RuntimeFacet.php';
-        
-        // Load API REST endpoints
-        require_once TMU_INCLUDES_DIR . '/classes/API/REST/SearchEndpoints.php';
-        
-        // Load Step 18 - Maintenance and Updates classes
-        require_once TMU_INCLUDES_DIR . '/classes/Backup/BackupManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/MaintenanceScheduler.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/DatabaseOptimizer.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Updates/UpdateManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/SecurityAuditor.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationManager.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/TmdbDataUpdater.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/PerformanceOptimizer.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Maintenance/SuccessMetrics.php';
-        
-        // Load Step 19 - Final Implementation specific classes
-        require_once TMU_INCLUDES_DIR . '/classes/Database/MovieQuery.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Database/DatabaseConnectivityChecker.php';
-        require_once TMU_INCLUDES_DIR . '/classes/API/TMDBRateLimiter.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Utils/MemoryOptimizer.php';
-        
-        // Load Migration classes
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationExecutor.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/DataMigrator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/SettingsMigrator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/MigrationValidator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/PerformanceBenchmark.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/TestValidator.php';
-        require_once TMU_INCLUDES_DIR . '/classes/Migration/Step19Validator.php';
-        
-        // Load placeholder classes - will be created in future steps
-        // require_once TMU_INCLUDES_DIR . '/classes/API/TMDBClient.php';
-        // require_once TMU_INCLUDES_DIR . '/classes/Frontend/TemplateLoader.php';
-        // require_once TMU_INCLUDES_DIR . '/classes/Frontend/AssetManager.php';
+        // Log successful dependency loading
+        if (function_exists('tmu_log')) {
+            tmu_log('Dependencies loaded using PSR-4 autoloading', 'info');
+        }
     }
     
     /**
-     * Initialize theme functionality
+     * Initialize theme
      */
     public function initTheme(): void {
-        // Initialize Step 02 - Theme Initialization
-        ThemeInitializer::getInstance();
-        Admin\SettingsAPI::getInstance();
-        
-        // Initialize Step 03 - Database Migration
-        Database\Migration::getInstance();
-        
-        // Initialize Step 05 - Post Types
-        PostTypes\PostTypeManager::getInstance();
-        
-        // Initialize Step 06 - Taxonomies
-        Taxonomies\TaxonomyManager::getInstance();
-        
-        // Initialize Step 07 - Custom Fields
-        $field_manager = Fields\FieldManager::getInstance();
-        
-        // Initialize Block system
-        Blocks\BlockRegistry::getInstance();
-        
-        // Initialize Step 08 - Admin UI and Meta Boxes
-        if (is_admin()) {
-            Admin\AdminManager::getInstance();
-            Admin\BlocksDebug::init();
+        try {
+            // Initialize theme core components
+            if (class_exists('TMU\\ThemeInitializer')) {
+                ThemeInitializer::getInstance();
+            }
+            
+            if (class_exists('TMU\\Admin\\SettingsAPI')) {
+                Admin\SettingsAPI::getInstance();
+            }
+            
+            // Initialize Step 03 - Database Migration
+            if (class_exists('TMU\\Database\\Migration')) {
+                Database\Migration::getInstance();
+            }
+            
+            // CRITICAL FIX: Register taxonomies BEFORE post types
+            // Initialize Step 06 - Taxonomies
+            if (class_exists('TMU\\Taxonomies\\TaxonomyManager')) {
+                // Initialize taxonomies directly
+                $taxonomy_manager = Taxonomies\TaxonomyManager::getInstance();
+                
+                // Register taxonomies immediately
+                tmu_log("Directly registering taxonomies from ThemeCore", 'debug');
+                $taxonomy_manager->registerTaxonomies();
+                
+                // Also register on init hook to ensure proper WordPress integration
+                add_action('init', function() use ($taxonomy_manager) {
+                    // Force taxonomies to register again on init with priority 1
+                    tmu_log("Registering taxonomies via init hook with priority 1", 'debug');
+                    $taxonomy_manager->registerTaxonomies();
+                }, 1);
+                
+                // Debug taxonomies
+                add_action('init', function() {
+                    global $wp_taxonomies;
+                    $registered_taxonomies = isset($wp_taxonomies) ? array_keys($wp_taxonomies) : [];
+                    tmu_log("After init priority 1: Registered taxonomies: " . implode(', ', $registered_taxonomies), 'debug');
+                }, 2);
+            }
+            
+            // Initialize Step 05 - Post Types - CRITICAL FIX
+            if (class_exists('TMU\\PostTypes\\PostTypeManager')) {
+                // Initialize post types directly
+                $post_type_manager = PostTypes\PostTypeManager::getInstance();
+                
+                // Register post types immediately
+                tmu_log("Directly registering post types from ThemeCore", 'debug');
+                $post_type_manager->registerAllPostTypes();
+                
+                // Also register on init hook to ensure proper WordPress integration
+                add_action('init', function() use ($post_type_manager) {
+                    // Force post types to register again on init with priority 5 (after taxonomies)
+                    tmu_log("Registering post types via init hook with priority 5", 'debug');
+                    $post_type_manager->registerAllPostTypes();
+                }, 5);
+                
+                // Debug post types
+                add_action('init', function() {
+                    global $wp_post_types;
+                    $registered_types = isset($wp_post_types) ? array_keys($wp_post_types) : [];
+                    tmu_log("After init priority 5: Registered post types: " . implode(', ', $registered_types), 'debug');
+                }, 6);
+                
+                // Force flush rewrite rules
+                add_action('wp_loaded', function() {
+                    tmu_log("Flushing rewrite rules after post type registration", 'debug');
+                    flush_rewrite_rules();
+                }, 20);
+            }
+            
+            // Initialize Step 07 - Custom Fields
+            if (class_exists('TMU\\Fields\\FieldManager')) {
+                Fields\FieldManager::getInstance();
+            }
+            
+            // Initialize Block system with proper priority (after post types and taxonomies)
+            if (class_exists('TMU\\Blocks\\BlockRegistry')) {
+                add_action('init', function() {
+                    tmu_log("Registering blocks via init hook with priority 15", 'debug');
+                    Blocks\BlockRegistry::getInstance();
+                }, 15);
+            }
+            
+            // Initialize Step 08 - Admin UI and Meta Boxes
+            if (is_admin() && class_exists('TMU\\Admin\\AdminManager')) {
+                Admin\AdminManager::getInstance();
+                
+                if (class_exists('TMU\\Admin\\BlocksDebug')) {
+                    Admin\BlocksDebug::init();
+                }
+            }
+            
+            // Initialize Step 11 - SEO and Schema Markup
+            if (class_exists('TMU\\SEO\\SEOManager')) {
+                SEO\SEOManager::getInstance();
+            }
+            
+            // Initialize Step 12 - Search and Filtering
+            if (class_exists('TMU\\Search\\SearchManager')) {
+                Search\SearchManager::getInstance();
+            }
+            
+            // Initialize API REST endpoints
+            if (class_exists('TMU\\API\\REST\\SearchEndpoints')) {
+                $search_endpoints = new API\REST\SearchEndpoints();
+                $search_endpoints->init();
+            }
+            
+            // Initialize Step 18 - Maintenance and Updates
+            $maintenance_classes = [
+                'TMU\\Backup\\BackupManager',
+                'TMU\\Maintenance\\MaintenanceScheduler', 
+                'TMU\\Maintenance\\DatabaseOptimizer',
+                'TMU\\Updates\\UpdateManager',
+                'TMU\\Maintenance\\SecurityAuditor',
+                'TMU\\Migration\\MigrationManager',
+                'TMU\\Maintenance\\TmdbDataUpdater',
+                'TMU\\Maintenance\\PerformanceOptimizer',
+                'TMU\\Maintenance\\SuccessMetrics'
+            ];
+            
+            foreach ($maintenance_classes as $class) {
+                if (class_exists($class)) {
+                    new $class();
+                }
+            }
+            
+            // Log successful initialization
+            if (function_exists('tmu_log')) {
+                tmu_log('Theme initialization completed with autoloading', 'info');
+            }
+            
+        } catch (\Exception $e) {
+            // Log initialization errors
+            if (function_exists('tmu_log')) {
+                tmu_log('Theme initialization error: ' . $e->getMessage(), 'error');
+            }
+            
+            // In debug mode, show the error
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                wp_die('TMU Theme Initialization Error: ' . $e->getMessage());
+            }
         }
-        
-        // Initialize Step 11 - SEO and Schema Markup
-        SEO\SEOManager::getInstance();
-        
-        // Initialize Step 12 - Search and Filtering
-        Search\SearchManager::getInstance();
-        
-        // Initialize API REST endpoints
-        $search_endpoints = new API\REST\SearchEndpoints();
-        $search_endpoints->init();
-        
-        // Initialize Step 18 - Maintenance and Updates
-        new Backup\BackupManager();
-        new Maintenance\MaintenanceScheduler();
-        new Maintenance\DatabaseOptimizer();
-        new Updates\UpdateManager();
-        new Maintenance\SecurityAuditor();
-        new Migration\MigrationManager();
-        new Maintenance\TmdbDataUpdater();
-        new Maintenance\PerformanceOptimizer();
-        new Maintenance\SuccessMetrics();
-        
-        // Initialize managers - will be activated in future steps
-        // API\TMDBClient::getInstance();
-        // Frontend\TemplateLoader::getInstance();
-        // Frontend\AssetManager::getInstance();
     }
     
     /**

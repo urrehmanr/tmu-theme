@@ -281,13 +281,13 @@ class RewriteRules {
     }
     
     /**
-     * Custom post type links
+     * Custom post type permalinks
      *
-     * @param string $link Post link
-     * @param WP_Post $post Post object
-     * @return string
+     * @param string $link Default link
+     * @param \WP_Post $post Post object
+     * @return string Modified link
      */
-    public function customPostTypeLinks(string $link, WP_Post $post): string {
+    public function customPostTypeLinks(string $link, \WP_Post $post): string {
         switch ($post->post_type) {
             case 'season':
                 return $this->getSeasonLink($post);
@@ -297,26 +297,25 @@ class RewriteRules {
                 
             case 'drama-episode':
                 return $this->getDramaEpisodeLink($post);
-                
-            default:
-                return $link;
         }
+        
+        return $link;
     }
     
     /**
      * Get season link
      *
-     * @param WP_Post $post Season post object
-     * @return string
+     * @param \WP_Post $post Season post object
+     * @return string Season link
      */
-    private function getSeasonLink(WP_Post $post): string {
-        $tv_show_id = get_post_meta($post->ID, 'tv_show_id', true);
+    private function getSeasonLink(\WP_Post $post): string {
+        $tv_id = get_post_meta($post->ID, 'tv_show_id', true);
         $season_number = get_post_meta($post->ID, 'season_number', true);
         
-        if ($tv_show_id && $season_number) {
-            $tv_show = get_post($tv_show_id);
-            if ($tv_show) {
-                return home_url("/tv-show/{$tv_show->post_name}/season-{$season_number}/");
+        if ($tv_id && $season_number) {
+            $tv_post = get_post($tv_id);
+            if ($tv_post) {
+                return home_url(sprintf('%s/season/%s/', $tv_post->post_name, $season_number));
             }
         }
         
@@ -326,18 +325,18 @@ class RewriteRules {
     /**
      * Get episode link
      *
-     * @param WP_Post $post Episode post object
-     * @return string
+     * @param \WP_Post $post Episode post object
+     * @return string Episode link
      */
-    private function getEpisodeLink(WP_Post $post): string {
-        $tv_show_id = get_post_meta($post->ID, 'tv_show_id', true);
+    private function getEpisodeLink(\WP_Post $post): string {
+        $tv_id = get_post_meta($post->ID, 'tv_show_id', true);
         $season_number = get_post_meta($post->ID, 'season_number', true);
         $episode_number = get_post_meta($post->ID, 'episode_number', true);
         
-        if ($tv_show_id && $season_number && $episode_number) {
-            $tv_show = get_post($tv_show_id);
-            if ($tv_show) {
-                return home_url("/tv-show/{$tv_show->post_name}/season-{$season_number}/episode-{$episode_number}/");
+        if ($tv_id && $season_number && $episode_number) {
+            $tv_post = get_post($tv_id);
+            if ($tv_post) {
+                return home_url(sprintf('%s/season/%s/episode/%s/', $tv_post->post_name, $season_number, $episode_number));
             }
         }
         
@@ -347,17 +346,17 @@ class RewriteRules {
     /**
      * Get drama episode link
      *
-     * @param WP_Post $post Drama episode post object
-     * @return string
+     * @param \WP_Post $post Drama episode post object
+     * @return string Drama episode link
      */
-    private function getDramaEpisodeLink(WP_Post $post): string {
+    private function getDramaEpisodeLink(\WP_Post $post): string {
         $drama_id = get_post_meta($post->ID, 'drama_id', true);
         $episode_number = get_post_meta($post->ID, 'episode_number', true);
         
         if ($drama_id && $episode_number) {
-            $drama = get_post($drama_id);
-            if ($drama) {
-                return home_url("/drama/{$drama->post_name}/episode-{$episode_number}/");
+            $drama_post = get_post($drama_id);
+            if ($drama_post) {
+                return home_url(sprintf('%s/episode/%s/', $drama_post->post_name, $episode_number));
             }
         }
         

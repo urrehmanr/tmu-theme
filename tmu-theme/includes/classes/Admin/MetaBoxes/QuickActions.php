@@ -609,7 +609,7 @@ class QuickActions {
                 'tmu-quick-actions',
                 get_template_directory_uri() . '/assets/build/js/quick-actions.js',
                 ['jquery', 'wp-util'],
-                get_theme_file_version('assets/build/js/quick-actions.js'),
+                \get_theme_file_version('assets/build/js/quick-actions.js'),
                 true
             );
             

@@ -1,6 +1,6 @@
 <?php
 /**
- * TMU Template Helper Functions
+ * TMU Theme Template Helper Functions
  *
  * @package TMU
  * @version 1.0.0
@@ -12,493 +12,438 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Get TMU post meta
+ * Get the current post type safely
+ *
+ * @return string Current post type
+ */
+function tmu_get_current_post_type(): string {
+    global $post;
+    
+    if (is_admin() && isset($_GET['post_type'])) {
+        return sanitize_text_field($_GET['post_type']);
+    }
+    
+    if (is_admin() && isset($_GET['post'])) {
+        $post_id = (int) $_GET['post'];
+        return get_post_type($post_id) ?: '';
+    }
+    
+    if (isset($post->post_type)) {
+        return $post->post_type;
+    }
+    
+    return get_post_type() ?: '';
+}
+
+/**
+ * Check if current page is a TMU content type
+ *
+ * @return bool Whether current page is TMU content
+ */
+function tmu_is_tmu_content(): bool {
+    $tmu_post_types = ['movie', 'tv', 'drama', 'season', 'episode', 'drama-episode', 'people', 'video'];
+    return in_array(tmu_get_current_post_type(), $tmu_post_types);
+}
+
+/**
+ * Get TMU post meta safely
  *
  * @param int $post_id Post ID
  * @param string $key Meta key
  * @param mixed $default Default value
- * @return mixed
+ * @return mixed Meta value
  */
-function tmu_get_meta(int $post_id, string $key, $default = '') {
-    // Try custom table first
-    if (class_exists('TMU\\Database\\DataManager')) {
-        $data_manager = TMU\Database\DataManager::getInstance();
-        $value = $data_manager->getMeta($post_id, $key);
-        
-        if ($value !== null) {
-            return $value;
-        }
-    }
-    
-    // Fallback to WordPress meta
-    return get_post_meta($post_id, $key, true) ?: $default;
+function tmu_get_post_meta(int $post_id, string $key, $default = '') {
+    $value = get_post_meta($post_id, $key, true);
+    return !empty($value) ? $value : $default;
 }
 
 /**
- * Update TMU post meta
+ * Display TMU post meta
  *
  * @param int $post_id Post ID
  * @param string $key Meta key
- * @param mixed $value Meta value
- * @return bool
+ * @param mixed $default Default value
  */
-function tmu_update_meta(int $post_id, string $key, $value): bool {
-    // Try custom table first
-    if (class_exists('TMU\\Database\\DataManager')) {
-        $data_manager = TMU\Database\DataManager::getInstance();
-        return $data_manager->updateMeta($post_id, $key, $value);
-    }
-    
-    // Fallback to WordPress meta
-    return update_post_meta($post_id, $key, $value) !== false;
+function tmu_the_post_meta(int $post_id, string $key, $default = ''): void {
+    echo esc_html(tmu_get_post_meta($post_id, $key, $default));
 }
 
 /**
- * Get TMU template part
- *
- * @param string $template Template name
- * @param array $variables Variables to pass to template
- */
-function tmu_get_template_part(string $template, array $variables = []): void {
-    if (class_exists('TMU\\Frontend\\TemplateLoader')) {
-        TMU\Frontend\TemplateLoader::getInstance()->getTemplatePart($template, $variables);
-    } else {
-        // Fallback - extract variables and load template
-        if (!empty($variables)) {
-            extract($variables, EXTR_SKIP);
-        }
-        
-        $template_path = locate_template("templates/parts/{$template}.php");
-        
-        if ($template_path) {
-            include $template_path;
-        } else {
-            // Try in theme directory
-            $fallback_path = TMU_THEME_DIR . "/templates/parts/{$template}.php";
-            if (file_exists($fallback_path)) {
-                include $fallback_path;
-            }
-        }
-    }
-}
-
-/**
- * Display TMU rating
+ * Get formatted release date
  *
  * @param int $post_id Post ID
- * @param bool $echo Whether to echo or return
- * @return string|void
+ * @param string $format Date format
+ * @return string Formatted date
  */
-function tmu_rating(int $post_id, bool $echo = true) {
-    $average_rating = tmu_get_meta($post_id, 'average_rating', 0);
-    $vote_count = tmu_get_meta($post_id, 'vote_count', 0);
+function tmu_get_release_date(int $post_id, string $format = 'F j, Y'): string {
+    $date = tmu_get_post_meta($post_id, 'release_date');
     
-    $output = sprintf(
-        '<div class="tmu-rating flex items-center space-x-2" data-rating="%.1f" data-count="%d">',
-        $average_rating,
-        $vote_count
-    );
-    
-    // Star display
-    $output .= '<div class="stars flex space-x-1">';
-    for ($i = 1; $i <= 10; $i++) {
-        $class = $i <= round($average_rating) ? 'text-yellow-400' : 'text-gray-300';
-        $output .= "<span class=\"star {$class}\">★</span>";
+    if (empty($date)) {
+        return '';
     }
-    $output .= '</div>';
     
-    $output .= sprintf(
-        '<span class="rating-text text-sm text-gray-600">%.1f (%s)</span>',
-        $average_rating,
-        sprintf(_n('%d vote', '%d votes', $vote_count, 'tmu'), $vote_count)
-    );
-    
-    $output .= '</div>';
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
+    $timestamp = strtotime($date);
+    return $timestamp ? date($format, $timestamp) : $date;
+}
+
+/**
+ * Display formatted release date
+ *
+ * @param int $post_id Post ID
+ * @param string $format Date format
+ */
+function tmu_the_release_date(int $post_id, string $format = 'F j, Y'): void {
+    $date = tmu_get_release_date($post_id, $format);
+    if (!empty($date)) {
+        echo esc_html($date);
     }
 }
 
 /**
- * Display TMU breadcrumbs
+ * Get movie/TV show rating
  *
- * @param bool $echo Whether to echo or return
- * @return string|void
+ * @param int $post_id Post ID
+ * @param int $decimals Number of decimal places
+ * @return string Formatted rating
  */
-function tmu_breadcrumbs(bool $echo = true) {
-    $output = '<nav class="tmu-breadcrumbs text-sm" aria-label="Breadcrumb">';
-    $output .= '<ol class="flex items-center space-x-2">';
+function tmu_get_rating(int $post_id, int $decimals = 1): string {
+    $rating = tmu_get_post_meta($post_id, 'average_rating', 0);
+    return $rating > 0 ? number_format((float) $rating, $decimals) : '';
+}
+
+/**
+ * Display movie/TV show rating
+ *
+ * @param int $post_id Post ID
+ * @param int $decimals Number of decimal places
+ */
+function tmu_the_rating(int $post_id, int $decimals = 1): void {
+    $rating = tmu_get_rating($post_id, $decimals);
+    if (!empty($rating)) {
+        echo esc_html($rating);
+    }
+}
+
+/**
+ * Get formatted runtime
+ *
+ * @param int $post_id Post ID
+ * @return string Formatted runtime
+ */
+function tmu_get_formatted_runtime(int $post_id): string {
+    $runtime = tmu_get_post_meta($post_id, 'runtime', 0);
+    return tmu_format_runtime((int) $runtime);
+}
+
+/**
+ * Display formatted runtime
+ *
+ * @param int $post_id Post ID
+ */
+function tmu_the_runtime(int $post_id): void {
+    $runtime = tmu_get_formatted_runtime($post_id);
+    if (!empty($runtime)) {
+        echo esc_html($runtime);
+    }
+}
+
+/**
+ * Get TMDB poster URL
+ *
+ * @param int $post_id Post ID
+ * @param string $size Image size (w200, w500, original, etc.)
+ * @return string Poster URL
+ */
+function tmu_get_poster_url(int $post_id, string $size = 'w500'): string {
+    $poster_path = tmu_get_post_meta($post_id, 'poster_url');
     
-    // Home link
-    $output .= '<li>';
-    $output .= '<a href="' . home_url() . '" class="text-blue-600 hover:text-blue-800">' . __('Home', 'tmu') . '</a>';
-    $output .= '</li>';
+    if (empty($poster_path)) {
+        return '';
+    }
+    
+    // If it's already a full URL, return as is
+    if (filter_var($poster_path, FILTER_VALIDATE_URL)) {
+        return $poster_path;
+    }
+    
+    // If it's a TMDB path, build the URL
+    if (strpos($poster_path, '/') === 0) {
+        return "https://image.tmdb.org/t/p/{$size}{$poster_path}";
+    }
+    
+    return $poster_path;
+}
+
+/**
+ * Display poster image
+ *
+ * @param int $post_id Post ID
+ * @param string $size Image size
+ * @param array $attr Image attributes
+ */
+function tmu_the_poster(int $post_id, string $size = 'w500', array $attr = []): void {
+    $poster_url = tmu_get_poster_url($post_id, $size);
+    
+    if (empty($poster_url)) {
+        return;
+    }
+    
+    $title = get_the_title($post_id);
+    $default_attr = [
+        'src' => $poster_url,
+        'alt' => $title,
+        'class' => 'tmu-poster',
+        'loading' => 'lazy'
+    ];
+    
+    $attr = array_merge($default_attr, $attr);
+    $attr_string = '';
+    
+    foreach ($attr as $name => $value) {
+        $attr_string .= sprintf(' %s="%s"', esc_attr($name), esc_attr($value));
+    }
+    
+    echo '<img' . $attr_string . '>';
+}
+
+/**
+ * Get TMDB backdrop URL
+ *
+ * @param int $post_id Post ID
+ * @param string $size Image size
+ * @return string Backdrop URL
+ */
+function tmu_get_backdrop_url(int $post_id, string $size = 'w1280'): string {
+    $backdrop_path = tmu_get_post_meta($post_id, 'backdrop_url');
+    
+    if (empty($backdrop_path)) {
+        return '';
+    }
+    
+    // If it's already a full URL, return as is
+    if (filter_var($backdrop_path, FILTER_VALIDATE_URL)) {
+        return $backdrop_path;
+    }
+    
+    // If it's a TMDB path, build the URL
+    if (strpos($backdrop_path, '/') === 0) {
+        return "https://image.tmdb.org/t/p/{$size}{$backdrop_path}";
+    }
+    
+    return $backdrop_path;
+}
+
+/**
+ * Get terms for a TMU post
+ *
+ * @param int $post_id Post ID
+ * @param string $taxonomy Taxonomy name
+ * @param string $field Field to return (name, slug, etc.)
+ * @return array Terms
+ */
+function tmu_get_post_terms(int $post_id, string $taxonomy, string $field = 'name'): array {
+    $terms = get_the_terms($post_id, $taxonomy);
+    
+    if (is_wp_error($terms) || empty($terms)) {
+        return [];
+    }
+    
+    return wp_list_pluck($terms, $field);
+}
+
+/**
+ * Display comma-separated terms
+ *
+ * @param int $post_id Post ID
+ * @param string $taxonomy Taxonomy name
+ * @param string $separator Separator string
+ */
+function tmu_the_terms(int $post_id, string $taxonomy, string $separator = ', '): void {
+    $terms = tmu_get_post_terms($post_id, $taxonomy);
+    
+    if (!empty($terms)) {
+        echo esc_html(implode($separator, $terms));
+    }
+}
+
+/**
+ * Get linked terms for a TMU post
+ *
+ * @param int $post_id Post ID
+ * @param string $taxonomy Taxonomy name
+ * @param string $separator Separator string
+ * @return string Linked terms HTML
+ */
+function tmu_get_linked_terms(int $post_id, string $taxonomy, string $separator = ', '): string {
+    $terms = get_the_terms($post_id, $taxonomy);
+    
+    if (is_wp_error($terms) || empty($terms)) {
+        return '';
+    }
+    
+    $term_links = [];
+    foreach ($terms as $term) {
+        $term_links[] = sprintf(
+            '<a href="%s" class="tmu-term-link tmu-%s-link">%s</a>',
+            esc_url(get_term_link($term)),
+            esc_attr($taxonomy),
+            esc_html($term->name)
+        );
+    }
+    
+    return implode($separator, $term_links);
+}
+
+/**
+ * Display linked terms
+ *
+ * @param int $post_id Post ID
+ * @param string $taxonomy Taxonomy name
+ * @param string $separator Separator string
+ */
+function tmu_the_linked_terms(int $post_id, string $taxonomy, string $separator = ', '): void {
+    echo tmu_get_linked_terms($post_id, $taxonomy, $separator);
+}
+
+/**
+ * Get archive link for a post type
+ *
+ * @param string $post_type Post type
+ * @return string Archive URL
+ */
+function tmu_get_archive_link(string $post_type): string {
+    $archive_link = get_post_type_archive_link($post_type);
+    return $archive_link ?: '';
+}
+
+/**
+ * Get search form for TMU content
+ *
+ * @param array $args Search form arguments
+ * @return string Search form HTML
+ */
+function tmu_get_search_form(array $args = []): string {
+    $defaults = [
+        'placeholder' => __('Search movies, TV shows...', 'tmu'),
+        'button_text' => __('Search', 'tmu'),
+        'show_filters' => false,
+        'post_types' => ['movie', 'tv', 'drama']
+    ];
+    
+    $args = array_merge($defaults, $args);
+    
+    ob_start();
+    ?>
+    <form role="search" method="get" class="tmu-search-form" action="<?php echo esc_url(home_url('/')); ?>">
+        <div class="search-field-wrapper">
+            <input type="search" 
+                   class="search-field" 
+                   placeholder="<?php echo esc_attr($args['placeholder']); ?>" 
+                   value="<?php echo get_search_query(); ?>" 
+                   name="s" />
+            <?php if (!empty($args['post_types'])): ?>
+                <?php foreach ($args['post_types'] as $post_type): ?>
+                    <input type="hidden" name="post_type[]" value="<?php echo esc_attr($post_type); ?>" />
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+        <button type="submit" class="search-submit">
+            <?php echo esc_html($args['button_text']); ?>
+        </button>
+    </form>
+    <?php
+    return ob_get_clean();
+}
+
+/**
+ * Display search form for TMU content
+ *
+ * @param array $args Search form arguments
+ */
+function tmu_search_form(array $args = []): void {
+    echo tmu_get_search_form($args);
+}
+
+/**
+ * Get breadcrumb trail
+ *
+ * @return array Breadcrumb items
+ */
+function tmu_get_breadcrumbs(): array {
+    $breadcrumbs = [];
+    
+    // Home
+    $breadcrumbs[] = [
+        'title' => __('Home', 'tmu'),
+        'url' => home_url('/')
+    ];
     
     if (is_singular()) {
         $post_type = get_post_type();
         $post_type_object = get_post_type_object($post_type);
         
-        if ($post_type_object && $post_type !== 'post') {
-            $output .= '<li class="flex items-center space-x-2">';
-            $output .= '<span class="text-gray-400">/</span>';
-            $output .= '<a href="' . get_post_type_archive_link($post_type) . '" class="text-blue-600 hover:text-blue-800">';
-            $output .= $post_type_object->labels->name;
-            $output .= '</a>';
-            $output .= '</li>';
+        if ($post_type_object && $post_type_object->has_archive) {
+            $breadcrumbs[] = [
+                'title' => $post_type_object->labels->name,
+                'url' => get_post_type_archive_link($post_type)
+            ];
         }
         
-        $output .= '<li class="flex items-center space-x-2">';
-        $output .= '<span class="text-gray-400">/</span>';
-        $output .= '<span class="text-gray-600">' . get_the_title() . '</span>';
-        $output .= '</li>';
-    } elseif (is_archive()) {
-        if (is_category() || is_tag() || is_tax()) {
-            $term = get_queried_object();
-            $output .= '<li class="flex items-center space-x-2">';
-            $output .= '<span class="text-gray-400">/</span>';
-            $output .= '<span class="text-gray-600">' . $term->name . '</span>';
-            $output .= '</li>';
-        } elseif (is_post_type_archive()) {
-            $post_type_object = get_queried_object();
-            $output .= '<li class="flex items-center space-x-2">';
-            $output .= '<span class="text-gray-400">/</span>';
-            $output .= '<span class="text-gray-600">' . $post_type_object->labels->name . '</span>';
-            $output .= '</li>';
-        }
-    }
-    
-    $output .= '</ol>';
-    $output .= '</nav>';
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU poster image
- *
- * @param int $post_id Post ID
- * @param string $size Image size
- * @param array $attributes Additional attributes
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_poster(int $post_id, string $size = 'tmu-poster-medium', array $attributes = [], bool $echo = true) {
-    $poster_url = tmu_get_meta($post_id, 'poster_url', '');
-    $poster_path = tmu_get_meta($post_id, 'poster_path', '');
-    
-    // Try featured image first
-    if (has_post_thumbnail($post_id)) {
-        $output = get_the_post_thumbnail($post_id, $size, $attributes);
-    } elseif ($poster_url) {
-        // Use external poster URL
-        $default_attrs = [
-            'src' => $poster_url,
-            'alt' => get_the_title($post_id),
-            'class' => 'tmu-poster'
+        $breadcrumbs[] = [
+            'title' => get_the_title(),
+            'url' => ''
         ];
-        
-        $attrs = array_merge($default_attrs, $attributes);
-        $output = '<img';
-        foreach ($attrs as $key => $value) {
-            $output .= ' ' . $key . '="' . esc_attr($value) . '"';
-        }
-        $output .= '>';
-    } else {
-        // Default placeholder
-        $output = '<div class="tmu-poster-placeholder bg-gray-200 flex items-center justify-center">';
-        $output .= '<span class="text-gray-500">' . __('No Image', 'tmu') . '</span>';
-        $output .= '</div>';
-    }
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU backdrop image
- *
- * @param int $post_id Post ID
- * @param string $size Image size
- * @param array $attributes Additional attributes
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_backdrop(int $post_id, string $size = 'tmu-backdrop-large', array $attributes = [], bool $echo = true) {
-    $backdrop_url = tmu_get_meta($post_id, 'backdrop_url', '');
-    $backdrop_path = tmu_get_meta($post_id, 'backdrop_path', '');
-    
-    if ($backdrop_url) {
-        $default_attrs = [
-            'src' => $backdrop_url,
-            'alt' => get_the_title($post_id) . ' backdrop',
-            'class' => 'tmu-backdrop'
-        ];
-        
-        $attrs = array_merge($default_attrs, $attributes);
-        $output = '<img';
-        foreach ($attrs as $key => $value) {
-            $output .= ' ' . $key . '="' . esc_attr($value) . '"';
-        }
-        $output .= '>';
-    } else {
-        $output = '';
-    }
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU release date
- *
- * @param int $post_id Post ID
- * @param string $format Date format
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_release_date(int $post_id, string $format = 'F j, Y', bool $echo = true) {
-    $release_date = tmu_get_meta($post_id, 'release_date', '');
-    
-    if (empty($release_date)) {
-        return '';
-    }
-    
-    $timestamp = strtotime($release_date);
-    $output = $timestamp ? date($format, $timestamp) : $release_date;
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU runtime
- *
- * @param int $post_id Post ID
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_runtime(int $post_id, bool $echo = true) {
-    $runtime = tmu_get_meta($post_id, 'runtime', 0);
-    
-    if (empty($runtime)) {
-        return '';
-    }
-    
-    $output = tmu_format_duration($runtime);
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU genres
- *
- * @param int $post_id Post ID
- * @param string $separator Separator between genres
- * @param bool $links Whether to show as links
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_genres(int $post_id, string $separator = ', ', bool $links = true, bool $echo = true) {
-    $genres = get_the_terms($post_id, 'genre');
-    
-    if (!$genres || is_wp_error($genres)) {
-        return '';
-    }
-    
-    $genre_list = [];
-    
-    foreach ($genres as $genre) {
-        if ($links) {
-            $genre_list[] = '<a href="' . get_term_link($genre) . '" class="text-blue-600 hover:text-blue-800">' . $genre->name . '</a>';
-        } else {
-            $genre_list[] = $genre->name;
-        }
-    }
-    
-    $output = implode($separator, $genre_list);
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU cast
- *
- * @param int $post_id Post ID
- * @param int $limit Number of cast members to show
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_cast(int $post_id, int $limit = 5, bool $echo = true) {
-    if (!class_exists('TMU\\Database\\DataManager')) {
-        return '';
-    }
-    
-    $data_manager = TMU\Database\DataManager::getInstance();
-    $cast = $data_manager->getCast($post_id, $limit);
-    
-    if (empty($cast)) {
-        return '';
-    }
-    
-    $output = '<div class="tmu-cast">';
-    $output .= '<h3 class="text-lg font-semibold mb-2">' . __('Cast', 'tmu') . '</h3>';
-    $output .= '<ul class="space-y-2">';
-    
-    foreach ($cast as $member) {
-        $output .= '<li class="flex items-center space-x-3">';
-        
-        // Profile image
-        if (!empty($member['profile_path'])) {
-            $output .= '<img src="' . esc_url($member['profile_path']) . '" alt="' . esc_attr($member['name']) . '" class="w-12 h-12 rounded-full object-cover">';
-        } else {
-            $output .= '<div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">';
-            $output .= '<span class="text-gray-500 text-xs">' . __('No Photo', 'tmu') . '</span>';
-            $output .= '</div>';
-        }
-        
-        // Name and character
-        $output .= '<div>';
-        $output .= '<div class="font-medium">' . esc_html($member['name']) . '</div>';
-        if (!empty($member['character_name'])) {
-            $output .= '<div class="text-sm text-gray-600">as ' . esc_html($member['character_name']) . '</div>';
-        }
-        $output .= '</div>';
-        
-        $output .= '</li>';
-    }
-    
-    $output .= '</ul>';
-    $output .= '</div>';
-    
-    if ($echo) {
-        echo $output;
-    } else {
-        return $output;
-    }
-}
-
-/**
- * Display TMU pagination
- *
- * @param WP_Query $query Optional query object
- * @param bool $echo Whether to echo or return
- * @return string|void
- */
-function tmu_pagination($query = null, bool $echo = true) {
-    global $wp_query;
-    
-    if (!$query) {
-        $query = $wp_query;
-    }
-    
-    $output = paginate_links([
-        'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
-        'format' => '?paged=%#%',
-        'current' => max(1, get_query_var('paged')),
-        'total' => $query->max_num_pages,
-        'type' => 'array',
-        'prev_text' => __('&laquo; Previous', 'tmu'),
-        'next_text' => __('Next &raquo;', 'tmu'),
-    ]);
-    
-    if (!$output) {
-        return '';
-    }
-    
-    $pagination = '<nav class="tmu-pagination" aria-label="Pagination">';
-    $pagination .= '<ul class="flex space-x-2 justify-center">';
-    
-    foreach ($output as $link) {
-        $pagination .= '<li>';
-        if (strpos($link, 'current') !== false) {
-            $pagination .= str_replace('page-numbers', 'page-numbers bg-blue-600 text-white px-3 py-2 rounded', $link);
-        } else {
-            $pagination .= str_replace('page-numbers', 'page-numbers text-blue-600 hover:bg-blue-100 px-3 py-2 rounded border', $link);
-        }
-        $pagination .= '</li>';
-    }
-    
-    $pagination .= '</ul>';
-    $pagination .= '</nav>';
-    
-    if ($echo) {
-        echo $pagination;
-    } else {
-        return $pagination;
-    }
-}
-
-/**
- * Check if current post is TMU post type
- *
- * @param int $post_id Optional post ID
- * @return bool
- */
-function is_tmu_post_type(int $post_id = null): bool {
-    if (!$post_id) {
-        $post_id = get_the_ID();
-    }
-    
-    $post_type = get_post_type($post_id);
-    $tmu_post_types = tmu_get_post_types();
-    
-    return in_array($post_type, $tmu_post_types);
-}
-
-/**
- * Get TMU archive title
- *
- * @return string
- */
-function tmu_get_archive_title(): string {
-    if (is_post_type_archive()) {
+    } elseif (is_post_type_archive()) {
         $post_type_object = get_queried_object();
-        return $post_type_object->labels->name;
+        $breadcrumbs[] = [
+            'title' => $post_type_object->labels->name,
+            'url' => ''
+        ];
     } elseif (is_tax()) {
         $term = get_queried_object();
-        return $term->name;
+        $breadcrumbs[] = [
+            'title' => $term->name,
+            'url' => ''
+        ];
     }
     
-    return '';
+    return $breadcrumbs;
 }
 
 /**
- * Get TMU archive description
+ * Display breadcrumb navigation
  *
- * @return string
+ * @param string $separator Breadcrumb separator
  */
-function tmu_get_archive_description(): string {
-    if (is_post_type_archive()) {
-        $post_type_object = get_queried_object();
-        return $post_type_object->description ?: '';
-    } elseif (is_tax()) {
-        $term = get_queried_object();
-        return $term->description ?: '';
+function tmu_breadcrumbs(string $separator = ' / '): void {
+    $breadcrumbs = tmu_get_breadcrumbs();
+    
+    if (count($breadcrumbs) <= 1) {
+        return;
     }
     
-    return '';
+    echo '<nav class="tmu-breadcrumbs" aria-label="' . esc_attr__('Breadcrumb', 'tmu') . '">';
+    echo '<ol class="breadcrumb-list">';
+    
+    foreach ($breadcrumbs as $index => $crumb) {
+        $is_last = ($index === count($breadcrumbs) - 1);
+        
+        echo '<li class="breadcrumb-item' . ($is_last ? ' active' : '') . '">';
+        
+        if (!$is_last && !empty($crumb['url'])) {
+            echo '<a href="' . esc_url($crumb['url']) . '">' . esc_html($crumb['title']) . '</a>';
+        } else {
+            echo esc_html($crumb['title']);
+        }
+        
+        if (!$is_last) {
+            echo '<span class="separator">' . esc_html($separator) . '</span>';
+        }
+        
+        echo '</li>';
+    }
+    
+    echo '</ol>';
+    echo '</nav>';
 }

@@ -123,11 +123,26 @@ class Genre extends AbstractTaxonomy {
      * @return bool
      */
     protected function shouldRegister(): bool {
-        return (
-            tmu_get_option('tmu_movies', 'off') === 'on' ||
-            tmu_get_option('tmu_tv_series', 'off') === 'on' ||
-            tmu_get_option('tmu_dramas', 'off') === 'on'
-        );
+        // First check if the taxonomy is enabled in the config
+        $config_file = TMU_INCLUDES_DIR . '/config/taxonomies.php';
+        
+        if (file_exists($config_file)) {
+            $taxonomies_config = include $config_file;
+            if (isset($taxonomies_config['genre']['enabled'])) {
+                return (bool) $taxonomies_config['genre']['enabled'];
+            }
+        }
+        
+        // Fall back to checking if any related post types are enabled
+        if (function_exists('tmu_get_option')) {
+            return (
+                tmu_get_option('tmu_movies', 'on') === 'on' ||
+                tmu_get_option('tmu_tv_series', 'on') === 'on' ||
+                tmu_get_option('tmu_dramas', 'on') === 'on'
+            );
+        }
+        
+        return true;
     }
     
     /**

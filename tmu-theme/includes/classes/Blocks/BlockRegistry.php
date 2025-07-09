@@ -66,11 +66,18 @@ class BlockRegistry {
      * Initialize WordPress hooks
      */
     private function init_hooks(): void {
-        add_action('init', [$this, 'register_blocks']);
+        // Register blocks on init with priority 15 (after post types and taxonomies)
+        add_action('init', [$this, 'register_blocks'], 15);
+        
+        // Enqueue assets
         add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_assets']);
         add_action('enqueue_block_assets', [$this, 'enqueue_block_assets']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
+        
+        // Register block category
         add_filter('block_categories_all', [$this, 'register_block_category']);
+        
+        // Filter allowed blocks
         add_filter('allowed_block_types_all', [$this, 'filter_allowed_blocks'], 10, 2);
         
         // Critical: Add hooks for database integration

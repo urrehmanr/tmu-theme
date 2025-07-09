@@ -78,23 +78,43 @@ abstract class AbstractPostType {
      * Register the post type
      */
     public function register(): void {
-        if ($this->shouldRegister()) {
-            $this->labels = $this->getLabels();
-            $this->args = $this->getArgs();
-            
-            $register_args = array_merge($this->args, [
-                'labels' => $this->labels,
-                'supports' => $this->supports,
-                'taxonomies' => $this->taxonomies,
-            ]);
-            
-            register_post_type($this->post_type, $register_args);
+        tmu_log("Registering post type: {$this->post_type}", 'debug');
+        
+        // Force registration for debugging - always register post types
+        // if (!$this->shouldRegister()) {
+        //    tmu_log("Post type {$this->post_type} should not register, skipping", 'debug');
+        //    return;
+        // }
+        
+        tmu_log("Post type {$this->post_type} should register, proceeding", 'debug');
+        
+        $this->labels = $this->getLabels();
+        $this->args = $this->getArgs();
+        
+        $register_args = array_merge($this->args, [
+            'labels' => $this->labels,
+            'supports' => $this->supports,
+            'taxonomies' => $this->taxonomies,
+        ]);
+        
+        tmu_log("Calling register_post_type for {$this->post_type} with args: " . wp_json_encode($register_args), 'debug');
+        $result = register_post_type($this->post_type, $register_args);
+        
+        // Check if registration was successful
+        if (post_type_exists($this->post_type)) {
+            tmu_log("Post type {$this->post_type} registered successfully", 'info');
             
             // Register meta fields if any
             $this->registerMetaFields();
             
             // Add custom hooks
             $this->addHooks();
+        } else {
+            tmu_log("Failed to register post type {$this->post_type}", 'error');
+            
+            if (is_wp_error($result)) {
+                tmu_log("Post type registration error: " . $result->get_error_message(), 'error');
+            }
         }
     }
     
@@ -173,9 +193,9 @@ abstract class AbstractPostType {
     /**
      * Get post type object
      *
-     * @return WP_Post_Type|null
+     * @return \WP_Post_Type|null
      */
-    public function getPostTypeObject(): ?WP_Post_Type {
+    public function getPostTypeObject(): ?\WP_Post_Type {
         return get_post_type_object($this->post_type);
     }
     
@@ -253,9 +273,9 @@ abstract class AbstractPostType {
     /**
      * Handle sorting for custom columns
      *
-     * @param WP_Query $query Query object
+     * @param \WP_Query $query Query object
      */
-    public function handleSorting(WP_Query $query): void {
+    public function handleSorting(\WP_Query $query): void {
         // Override in child classes to handle custom sorting
     }
     
@@ -263,10 +283,10 @@ abstract class AbstractPostType {
      * Add row actions
      *
      * @param array $actions Existing actions
-     * @param WP_Post $post Post object
+     * @param \WP_Post $post Post object
      * @return array
      */
-    public function addRowActions(array $actions, WP_Post $post): array {
+    public function addRowActions(array $actions, \WP_Post $post): array {
         // Override in child classes to add custom row actions
         return $actions;
     }
