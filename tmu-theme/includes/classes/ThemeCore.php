@@ -94,9 +94,6 @@ class ThemeCore {
      */
     public function initTheme(): void {
         try {
-            // Load dependencies
-            $this->loadDependencies();
-            
             // Initialize theme core components
             if (class_exists('TMU\\ThemeInitializer')) {
                 ThemeInitializer::getInstance();
@@ -171,9 +168,21 @@ class ThemeCore {
                 Fields\FieldManager::getInstance();
             }
             
+            // Initialize Block system with proper priority (after post types and taxonomies)
+            if (class_exists('TMU\\Blocks\\BlockRegistry')) {
+                add_action('init', function() {
+                    tmu_log("Registering blocks via init hook with priority 15", 'debug');
+                    Blocks\BlockRegistry::getInstance();
+                }, 15);
+            }
+            
             // Initialize Step 08 - Admin UI and Meta Boxes
             if (is_admin() && class_exists('TMU\\Admin\\AdminManager')) {
                 Admin\AdminManager::getInstance();
+                
+                if (class_exists('TMU\\Admin\\BlocksDebug')) {
+                    Admin\BlocksDebug::init();
+                }
             }
             
             // Initialize Step 11 - SEO and Schema Markup
